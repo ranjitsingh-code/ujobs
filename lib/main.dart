@@ -1,0 +1,73 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:upgrader/upgrader.dart';
+// import 'package:firebase_core/firebase_core.dart'; // TODO: uncomment after flutterfire configure
+import 'core/providers/locale_provider.dart';
+import 'core/providers/role_provider.dart';
+import 'core/providers/theme_provider.dart';
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
+// import 'core/firebase_options.dart';               // TODO: uncomment after flutterfire configure
+// import 'core/services/notification_service.dart';  // TODO: uncomment after flutterfire configure
+import 'l10n/app_localizations.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // ── Firebase setup (uncomment after running `flutterfire configure`) ──────
+  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // await NotificationService.init();
+
+  runApp(const ProviderScope(child: UJobApp()));
+}
+
+class UJobApp extends ConsumerWidget {
+  const UJobApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final role      = ref.watch(activeRoleProvider);
+    final router    = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
+    final locale    = ref.watch(localeProvider);
+
+    final isEmployer = role == 'employer';
+
+    // Design base: 390×844 (iPhone 14). ScreenUtil scales all .sp/.w/.h values
+    // proportionally on every device. splitScreenMode handles tablets/foldables.
+    return ScreenUtilInit(
+      designSize: const Size(390, 844),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) => UpgradeAlert(
+        upgrader: Upgrader(
+          debugLogging: false,
+          durationUntilAlertAgain: const Duration(days: 3),
+        ),
+        child: MaterialApp.router(
+          title: 'UJob',
+          debugShowCheckedModeBanner: false,
+
+          // ── Themes (light + dark per role) ──────────────────────────────────
+          theme:     isEmployer ? AppTheme.employerTheme()     : AppTheme.seekerTheme(),
+          darkTheme: isEmployer ? AppTheme.employerDarkTheme() : AppTheme.seekerDarkTheme(),
+          themeMode: themeMode,
+
+          // ── i18n ────────────────────────────────────────────────────────────
+          locale: locale,
+          supportedLocales: supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+
+          routerConfig: router,
+        ),
+      ),
+    );
+  }
+}
