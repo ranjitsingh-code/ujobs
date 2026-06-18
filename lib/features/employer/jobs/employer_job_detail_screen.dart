@@ -7,6 +7,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 import 'employer_job_provider.dart';
 
 class EmployerJobDetailScreen extends ConsumerWidget {
@@ -18,18 +19,21 @@ class EmployerJobDetailScreen extends ConsumerWidget {
     final jobAsync = ref.watch(employerJobDetailProvider(jobId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Job Details'),
-        actions: [
-          IconButton(
-            onPressed: () {}, // TODO: edit job
-            icon: HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit01, color: AppColors.text, size: 22),
-          ),
-          IconButton(
-            onPressed: () {}, // TODO: delete job
-            icon: HugeIcon(icon: HugeIcons.strokeRoundedDelete01, color: AppColors.text, size: 22),
-          ),
-        ],
+      appBar: UJobAppBar(
+        title: 'Job Details',
+        rightWidget: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () {}, // TODO: edit job
+              icon: HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit01, color: AppColors.text, size: 22),
+            ),
+            IconButton(
+              onPressed: () {}, // TODO: delete job
+              icon: HugeIcon(icon: HugeIcons.strokeRoundedDelete01, color: AppColors.text, size: 22),
+            ),
+          ],
+        ),
       ),
       body: jobAsync.when(
         loading: () => const UJobLoading(count: 1),

@@ -7,6 +7,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/l10n_extensions.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
@@ -71,18 +72,18 @@ class CompanyProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(_companyProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Company Profile'),
-        actions: [
-          GestureDetector(
-            onTap: () => context.push('/employer/settings'),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Text('Settings', style: AppText.label.copyWith(color: AppColors.surface)),
+      appBar: UJobAppBar(
+        title: 'Company Profile',
+        rightWidget: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () => context.push('/employer/settings'),
+              icon: const HugeIcon(icon: HugeIcons.strokeRoundedSettings01, color: AppColors.text, size: 24),
             ),
-          ),
-          const RoleSwitcherButton(),
-        ],
+            const RoleSwitcherButton(),
+          ],
+        ),
       ),
       body: async.when(
         loading: () => const UJobLoading(),

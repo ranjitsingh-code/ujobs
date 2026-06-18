@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,8 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
+import '../../../core/widgets/ujob_image.dart';
 import 'seeker_job_provider.dart';
 
 class SeekerJobDetailScreen extends ConsumerWidget {
@@ -18,14 +21,12 @@ class SeekerJobDetailScreen extends ConsumerWidget {
     final jobAsync = ref.watch(seekerJobDetailProvider(jobId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Job Details'),
-        actions: [
-          IconButton(
-            onPressed: () {}, // TODO: save/unsave via Ep.saveJob(jobId)
-            icon: const Icon(Icons.bookmark_border),
-          ),
-        ],
+      appBar: UJobAppBar(
+        title: 'Job Details',
+        rightWidget: IconButton(
+          onPressed: () {}, // TODO: save/unsave via Ep.saveJob(jobId)
+          icon: HugeIcon(icon: HugeIcons.strokeRoundedBookmark01, color: AppColors.text, size: 24),
+        ),
       ),
       body: jobAsync.when(
         loading: () => const UJobLoading(count: 1),
@@ -40,17 +41,14 @@ class SeekerJobDetailScreen extends ConsumerWidget {
               children: [
                 if (job.company?.logo != null)
                   Center(
-                    child: Container(
-                      width: 80.w,
-                      height: 80.w,
-                      margin: EdgeInsets.only(bottom: 16.h),
-                      decoration: BoxDecoration(
-                        color: AppColors.borderLight,
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: UJobImage(
+                        path: job.company!.logo!,
+                        width: 80.r,
+                        height: 80.r,
+                        fit: BoxFit.cover,
                         borderRadius: AppRadius.xl,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: AppRadius.xl,
-                        child: Image.network(job.company!.logo!, fit: BoxFit.cover),
                       ),
                     ),
                   ),

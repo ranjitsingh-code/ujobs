@@ -1123,4 +1123,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get roleEmployerSub => 'انشر وظائف وابحث عن موظفين';
+
+  @override
+  String get errorRequiredField => 'هذا الحقل مطلوب';
+
+  @override
+  String get errorInvalidEmail => 'يرجى إدخال عنوان بريد إلكتروني صالح';
+
+  @override
+  String get errorInvalidPhone => 'يرجى إدخال رقم هاتف صالح';
+
+  @override
+  String get errorInvalidPhoneOrEmail =>
+      'يرجى إدخال بريد إلكتروني أو رقم هاتف صالح';
+
+  @override
+  String get errorInvalidPassword =>
+      'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل تحتوي على حرف كبير وصغير ورقم ورمز خاص';
+
+  @override
+  String get errorPasswordMismatch => 'كلمات المرور غير متطابقة';
 }

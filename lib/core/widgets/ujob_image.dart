@@ -13,6 +13,7 @@ class UJobImage extends StatelessWidget {
   final Color? color;
   final Widget? placeholder;
   final Widget? errorWidget;
+  final BorderRadius? borderRadius;
 
   const UJobImage({
     required this.path,
@@ -22,6 +23,7 @@ class UJobImage extends StatelessWidget {
     this.color,
     this.placeholder,
     this.errorWidget,
+    this.borderRadius,
     super.key,
   });
 
@@ -30,13 +32,22 @@ class UJobImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget child;
     if (_isSvg) {
-      return _buildSvg();
+      child = _buildSvg();
+    } else if (_isNetwork) {
+      child = _buildNetwork();
+    } else {
+      child = _buildAsset();
     }
-    if (_isNetwork) {
-      return _buildNetwork();
+
+    if (borderRadius != null) {
+      return ClipRRect(
+        borderRadius: borderRadius!,
+        child: child,
+      );
     }
-    return _buildAsset();
+    return child;
   }
 
   Widget _buildSvg() {

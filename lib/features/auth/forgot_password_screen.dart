@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import '../../core/providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/ujob_button.dart';
@@ -39,6 +38,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     _successFade = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _successCtrl, curve: Curves.easeOut),
     );
+    
+    _emailCtrl.addListener(() {
+      if (_error != null) setState(() => _error = null);
+    });
   }
 
   @override
@@ -50,18 +53,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
   Future<void> _submit() async {
     final l10n = context.l10n;
-    if (_emailCtrl.text.trim().isEmpty) {
-      setState(() => _error = l10n.errorEnterEmail);
+    final email = _emailCtrl.text.trim();
+    
+    if (email.isEmpty || _error != null) {
+      if (email.isEmpty) setState(() => _error = l10n.errorEnterEmail);
       return;
     }
+
     setState(() { _loading = true; _error = null; });
-    try {
-      await ref.read(dioClientProvider).dio.post('/auth/forgot-password', data: {
-        'email': _emailCtrl.text.trim(),
-      });
-    } catch (_) {
-      // Treat any response as sent (email won't reveal if account exists)
-    }
+    
+    // Mock API call for UI testing
+    await Future.delayed(const Duration(seconds: 2));
+    
     if (mounted) {
       setState(() { _loading = false; _sent = true; });
       _successCtrl.forward();
@@ -111,6 +114,7 @@ class _FormView extends StatelessWidget {
       // Icon
       Container(
         width: 64.r, height: 64.r,
+        alignment: Alignment.center,
         decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(16.r)),
         child: HugeIcon(icon: HugeIcons.strokeRoundedLockKey, color: AppColors.primary, size: 30.r),
       ),
@@ -119,19 +123,17 @@ class _FormView extends StatelessWidget {
       SizedBox(height: 6.h),
       Text(l10n.resetPasswordSub, style: AppText.body.copyWith(color: AppColors.muted)),
       SizedBox(height: 28.h),
-      UJobTextField(label: l10n.email, hint: l10n.emailHint, controller: emailCtrl, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.done),
-      if (error != null) ...[
-        Container(
-          padding: EdgeInsets.all(12.r),
-          decoration: BoxDecoration(color: AppColors.errorBg, borderRadius: AppRadius.md),
-          child: Row(children: [
-            HugeIcon(icon: HugeIcons.strokeRoundedAlert01, color: AppColors.error, size: 16.r),
-            SizedBox(width: 8.w),
-            Expanded(child: Text(error!, style: AppText.small.copyWith(color: AppColors.error))),
-          ]),
-        ),
-        SizedBox(height: 12.h),
-      ],
+      UJobTextField(
+        label: l10n.email, 
+        hint: l10n.emailHint, 
+        controller: emailCtrl, 
+        keyboardType: TextInputType.emailAddress, 
+        textInputAction: TextInputAction.done,
+        errorText: error,
+        isRequired: true,
+        isEmail: true,
+      ),
+      SizedBox(height: 12.h),
       UJobButton(label: l10n.sendResetLink, onTap: onSubmit, isLoading: loading),
       SizedBox(height: 24.h),
     ]);
@@ -158,6 +160,7 @@ class _SuccessView extends StatelessWidget {
           scale: scale,
           child: Container(
             width: 88.r, height: 88.r,
+            alignment: Alignment.center,
             decoration: BoxDecoration(color: AppColors.successBg, shape: BoxShape.circle),
             child: HugeIcon(icon: HugeIcons.strokeRoundedMailOpen01, color: AppColors.success, size: 44.r),
           ),

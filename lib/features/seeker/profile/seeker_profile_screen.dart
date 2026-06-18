@@ -13,6 +13,7 @@ import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_text_field.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 import '../seeker_shell.dart';
 
 // GET /seeker/me → PUT /seeker/me
@@ -25,20 +26,21 @@ class SeekerProfileScreen extends ConsumerWidget {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          GestureDetector(
-            onTap: () => context.push('/seeker/settings'),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Text('Settings', style: AppText.label.copyWith(color: AppColors.surface)),
+      appBar: UJobAppBar(
+        title: 'Profile',
+        rightWidget: Row(
+          children: [
+            IconButton(
+              onPressed: () => context.push('/seeker/settings'),
+              icon: const HugeIcon(icon: HugeIcons.strokeRoundedSettings01, color: AppColors.text, size: 24),
             ),
-          ),
-          const SeekerRoleSwitcherButton(),
-        ],
+            const SizedBox(width: 8),
+            SeekerRoleSwitcherButton(),
+          ],
+        ),
       ),
       body: auth.when(
+
         loading: () => const UJobLoading(),
         error: (e, _) => UJobError(message: 'Error loading profile', onRetry: () => ref.refresh(authProvider)),
         data: (user) => _ProfileBody(user: user),

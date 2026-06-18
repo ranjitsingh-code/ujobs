@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../constants/app_assets.dart';
+import 'ujob_image.dart';
 
 enum LogoVariant { color, white, mark }
 
@@ -25,26 +25,13 @@ class UJobLogo extends StatelessWidget {
     }
   }
 
-  bool get _isSvg => _path.endsWith('.svg');
-
   @override
   Widget build(BuildContext context) {
-    if (_isSvg) {
-      return SvgPicture.asset(
-        _path,
-        width: width,
-        height: height,
-        fit: BoxFit.contain,
-        placeholderBuilder: (_) => SizedBox(width: width, height: height, child: const Icon(Icons.broken_image)),
-      );
-    }
-
-    return Image.asset(
-      _path,
+    return UJobImage(
+      path: _path,
       width: width,
       height: height,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => SizedBox(width: width, height: height),
     );
   }
 }

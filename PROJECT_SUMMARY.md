@@ -1,5 +1,122 @@
 # UJob App - Project Status & Master Plan
 
+---
+
+## AGENT HANDOFF (2026-06-18) — For Gemini CLI or any new agent
+
+**What this project is:** Flutter dual-portal job app. Two user types: Job Seeker and Employer. Each has their own navigation shell (bottom nav), screens, and API layer. Shared auth flow. All UI screens are built. Backend API is not yet connected to most screens.
+
+**Tech stack:**
+- Flutter SDK ^3.11.5, Dart
+- State: Riverpod 2.5.1 (StateNotifier + FutureProvider patterns)
+- Navigation: GoRouter 13.2.0 (ShellRoutes for bottom nav, role-based redirects)
+- HTTP: Dio 5.4.3 (`DioClient` singleton at `lib/core/api/dio_client.dart`)
+- Icons: `hugeicons ^1.1.7` — always use `HugeIcons.strokeRounded*` for feature icons
+- Images: `flutter_svg`, `cached_network_image`
+- Storage: `flutter_secure_storage` (auth tokens + onboarding flag)
+- Fonts: Google Fonts (Inter) — accessed ONLY via `AppText.*`, never `GoogleFonts.inter()` directly
+- Responsive: `flutter_screenutil` — ALL sizes must use `.r / .h / .w / .sp`
+
+**CRITICAL RULES — never break these:**
+```
+Text       → AppText.*          (lib/core/theme/app_text_styles.dart)
+Colors     → AppColors.*        (lib/core/theme/app_colors.dart)
+Shadows    → AppShadow.card() / .cardMd() / .button() / .modal()
+Buttons    → UJobButton / UJobTextButton / UJobBackButton
+TextField  → UJobTextField(isPassword: true) for password fields
+AppBar     → UJobAppBar(title: '...')  (lib/core/widgets/ujob_app_bar.dart)
+Toast      → UJobToast.success/error/warning/info(context, 'msg')
+SnackBar   → UJobSnackBar.success/error/warning/info(context, 'msg')
+Images     → UJobImage(path: AppAssets.*)  or  UJobImage(path: networkUrl)
+Logo       → UJobLogo(variant: LogoVariant.color/white/mark)
+ResultPage → UJobResultScreen(type: ResultType.success/error/warning, ...)
+Assets     → AppAssets.*        (lib/core/constants/app_assets.dart) — NEVER raw strings
+Icons      → HugeIcons.strokeRounded*
+Sizing     → .r / .h / .w / .sp — NEVER raw pixel values
+```
+
+**What is DONE (no need to touch unless fixing a bug):**
+- All auth screens: Splash, Onboarding, RolePicker, Login, RegisterSeeker, RegisterEmployer, OTP, ForgotPassword
+- All employer screens: Dashboard, MyJobs, PostJob, JobDetail, Applicants, CompanyProfile, Messages, Notifications, Settings
+- All seeker screens: Dashboard, BrowseJobs, JobDetail, Apply (3-step), MyApplications, Messages, Profile, Notifications, Settings
+- Shared: ChatScreen, ConversationProvider
+- Full widget system: 15+ reusable widgets in `lib/core/widgets/`
+- Router: all routes wired in `lib/core/router/app_router.dart`
+- Theme: `AppColors`, `AppText`, `AppShadow`, `AppSpacing`, `AppRadius` — all complete
+- Models: `User`, `Job`, `Company`, `Application` in `lib/core/models/`
+- API layer: `DioClient`, `ApiEndpoints (Ep)`, `ApiResponse` — HTTP layer ready
+
+**NEXT TASKS (priority order — start here):**
+
+### Priority 1 — Widget Adoption (mechanical, low risk)
+1. **Apply `UJobAppBar`** to all feature screens — every screen in `employer/` and `seeker/` still uses raw `AppBar()`. Replace with `UJobAppBar(title: '...')`. Takes ~2 lines per file.
+2. **Apply `UJobToast`/`UJobSnackBar`** to API error handlers — `apply_screen.dart` has inline `ScaffoldMessenger.of(context).showSnackBar(...)`. Replace with `UJobSnackBar.error(context, 'msg')`.
+3. **Apply `UJobImage`** wherever raw `Image.asset(...)`, `CachedNetworkImage(...)`, or `SvgPicture.asset(...)` appear in screens.
+4. **Apply `UJobResultScreen`** for success states — `apply_screen.dart` has `_SuccessView` widget inline; replace with `UJobResultScreen(type: ResultType.success, ...)`.
+
+### Priority 2 — API Integration (real data)
+5. **Seeker Dashboard** (`seeker_dashboard_screen.dart`) — has `// TODO` comments for:
+   - `GET /seeker/me` → profile completeness %
+   - `GET /seeker/applications` → application count
+   - `GET /seeker/matching-jobs?limit=5` → recommended jobs list
+6. **Employer Dashboard** (`employer_dashboard_screen.dart`) — has `// TODO` for:
+   - `GET /employer/me` → active jobs count + total applicants
+7. **Profile Completeness** — `seeker_profile_screen.dart` header shows `0%`. Pull from `GET /seeker/me`.
+8. **Save/Unsave Jobs** — bookmark button exists in `seeker_job_detail_screen.dart`. Wire `Ep.saveJob(jobId)` toggle. Endpoint is defined, logic is not.
+
+### Priority 3 — New Feature Screens
+9. **Resume Upload** — `POST /seeker/resumes` multipart/form-data. Use `file_picker` package (already in pubspec) → `FormData` → Dio POST to `Ep.seekerResumes`.
+10. **Skills / Work Experience / Education** — profile sections exist as static display in `seeker_profile_screen.dart`. Need add/edit sub-screens with their own routes.
+11. **Firebase Push Notifications** — `notification_service.dart` exists but is commented out. Run `flutterfire configure`, then activate the service.
+12. **2FA Screen** — design at `UJobs-Screens/29-2fa.png`. No Flutter file yet.
+13. **Suspended Account Screen** — design at `UJobs-Screens/30-suspended.png`. No Flutter file yet.
+
+### Priority 4 — Polish
+14. **Hero transitions** — job card → job detail. Tag the job card image and detail header with matching `Hero(tag: 'job-${job.id}')`.
+15. **Staggered list animations** — `AnimationLimiter` + `AnimationConfiguration.staggeredList` on `ListView.builder` in job lists.
+16. **Lottie splash** — `assets/animations/` is empty. Add a Lottie JSON for richer splash.
+17. **SPM warning fix** — run once in terminal: `flutter config --no-enable-swift-package-manager`
+
+**Key file locations for quick navigation:**
+```
+lib/core/api/api_endpoints.dart      ← ALL API endpoint constants (Ep.*)
+lib/core/api/dio_client.dart         ← HTTP client singleton
+lib/core/router/app_router.dart      ← all routes + redirect logic
+lib/core/theme/app_colors.dart       ← all colors
+lib/core/theme/app_text_styles.dart  ← AppText.*, AppShadow.*, AppSpacing, AppRadius
+lib/core/constants/app_assets.dart   ← all asset paths (AppAssets.*)
+lib/core/widgets/                    ← all reusable widgets (15 files)
+lib/features/auth/                   ← 8 auth screens (all complete)
+lib/features/employer/               ← 8 employer screens (UI complete, API partial)
+lib/features/seeker/                 ← 9 seeker screens (UI complete, API partial)
+lib/features/shared/chat/            ← shared chat screen + provider
+lib/l10n/                            ← English + Arabic localizations
+```
+
+**Design assets:**
+- `UJobs-Screens/` — PNG mockups for ALL screens (reference for any new screen)
+- `ujobs-xd/` — Adobe XD tokens/assets
+
+**Dev workflows (Claude Code skills — not available in Gemini CLI but document intent):**
+
+> If using **Claude Code** (`claude` CLI), these slash commands accelerate work:
+>
+> | Task | Claude Code command | Gemini CLI equivalent |
+> |---|---|---|
+> | Implement new feature | `/feature-dev:feature-dev` | Read this file + read target screen + implement |
+> | Design a new screen | `/frontend-design:frontend-design` | Reference `UJobs-Screens/` PNG + follow widget rules above |
+> | Verify feature works | `/verify` | Run `flutter run` and test manually |
+> | Run app | `/run` | `flutter run` in terminal |
+> | Review diff before commit | `/code-review` | `git diff` + manual review |
+> | Simplify/refactor code | `/simplify` | Read file → rewrite for clarity |
+> | Security audit | `/security-review` | Check for hardcoded secrets, injection, insecure storage |
+> | Blueprint new feature | Agent: `feature-dev:code-architect` | Plan files + data flow before writing code |
+> | Trace existing feature | Agent: `feature-dev:code-explorer` | `grep` + read the call chain |
+>
+> **For Gemini CLI:** No special commands needed. Workflow = read this file → read relevant screen → implement following the CRITICAL RULES above → `flutter analyze` to verify 0 errors.
+
+---
+
 ## 1. Project Overview
 UJob is a dual-portal mobile application (Flutter) for **Employers** and **Job Seekers**. It features a modern, high-animation UI designed for seamless job posting, browsing, and recruitment management.
 

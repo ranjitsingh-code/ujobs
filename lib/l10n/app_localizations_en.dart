@@ -1123,4 +1123,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roleEmployerSub => 'Post jobs & hire';
+
+  @override
+  String get errorRequiredField => 'This field is required';
+
+  @override
+  String get errorInvalidEmail => 'Please enter a valid email address';
+
+  @override
+  String get errorInvalidPhone => 'Please enter a valid phone number';
+
+  @override
+  String get errorInvalidPhoneOrEmail =>
+      'Please enter a valid email or phone number';
+
+  @override
+  String get errorInvalidPassword =>
+      'Password must be at least 6 characters with upper, lower, number, and special character';
+
+  @override
+  String get errorPasswordMismatch => 'Passwords do not match';
 }

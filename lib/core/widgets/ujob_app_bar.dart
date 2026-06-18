@@ -6,55 +6,66 @@ import 'ujob_button.dart';
 
 class UJobAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final Widget? customTitle;
   final VoidCallback? onBack;
   final Widget? rightWidget;
   final Color? backgroundColor;
   final Color? titleColor;
   final bool showBack;
+  final PreferredSizeWidget? bottom;
 
   const UJobAppBar({
     required this.title,
+    this.customTitle,
     this.onBack,
     this.rightWidget,
     this.backgroundColor,
     this.titleColor,
     this.showBack = true,
+    this.bottom,
     super.key,
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(56.h);
+  Size get preferredSize => Size.fromHeight(56.h + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       bottom: false,
-      child: Container(
-        height: preferredSize.height,
-        color: backgroundColor ?? AppColors.surface,
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        child: Row(
-          children: [
-            if (showBack)
-              UJobBackButton(onTap: onBack)
-            else
-              SizedBox(width: 40.r),
-            Expanded(
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                style: AppText.bodyBold.copyWith(
-                  color: titleColor ?? AppColors.text,
-                  fontSize: 18.sp,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 56.h,
+            color: backgroundColor ?? AppColors.surface,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: Row(
+              children: [
+                if (showBack)
+                  UJobBackButton(onTap: onBack)
+                else
+                  SizedBox(width: 40.r),
+                Expanded(
+                  child: customTitle ??
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: AppText.bodyBold.copyWith(
+                          color: titleColor ?? AppColors.text,
+                          fontSize: 18.sp,
+                        ),
+                      ),
                 ),
-              ),
+                if (rightWidget != null)
+                  rightWidget!
+                else
+                  SizedBox(width: 40.r),
+              ],
             ),
-            if (rightWidget != null)
-              rightWidget!
-            else
-              SizedBox(width: 40.r),
-          ],
-        ),
+          ),
+          if (bottom != null) bottom!,
+        ],
       ),
     );
   }

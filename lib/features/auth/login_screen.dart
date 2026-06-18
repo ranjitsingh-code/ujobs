@@ -48,6 +48,14 @@ class _LoginScreenState extends State<LoginScreen>
     _passwordFade = Tween(begin: 0.0, end: 1.0).animate(_iv(300, 600));
     _actionsFade  = Tween(begin: 0.0, end: 1.0).animate(_iv(400, 700));
     _bottomFade   = Tween(begin: 0.0, end: 1.0).animate(_iv(500, 800));
+    
+    _emailCtrl.addListener(() {
+      if (_emailError != null) setState(() => _emailError = null);
+    });
+    _passwordCtrl.addListener(() {
+      if (_passError != null) setState(() => _passError = null);
+    });
+    
     _seqCtrl.forward();
   }
 
@@ -59,7 +67,29 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
+  String? _emailError;
+  String? _passError;
+
   void _login() {
+    final emailEmpty = _emailCtrl.text.trim().isEmpty;
+    final passEmpty = _passwordCtrl.text.isEmpty;
+    
+    if (emailEmpty || passEmpty) {
+      setState(() {
+        _emailError = emailEmpty ? context.l10n.errorEnterEmail : null;
+        _passError = passEmpty ? context.l10n.errorRequiredField : null;
+      });
+      return;
+    }
+
+    // Clear errors if any
+    if (_emailError != null || _passError != null) {
+      setState(() {
+        _emailError = null;
+        _passError = null;
+      });
+    }
+
     // TODO: wire API when UI sign-off complete
     if (_role == 'employer') {
       context.go('/employer');
@@ -156,6 +186,9 @@ class _LoginScreenState extends State<LoginScreen>
                             controller: _emailCtrl,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
+                            errorText: _emailError,
+                            isRequired: true,
+                            isEmail: true,
                           ),
                         ),
 
@@ -167,6 +200,8 @@ class _LoginScreenState extends State<LoginScreen>
                             controller: _passwordCtrl,
                             isPassword: true,
                             textInputAction: TextInputAction.done,
+                            errorText: _passError,
+                            isRequired: true,
                           ),
                         ),
 

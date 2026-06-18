@@ -9,6 +9,7 @@ import '../../../core/widgets/ujob_avatar.dart';
 import '../../../core/widgets/ujob_empty.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 import '../../shared/chat/conversation_provider.dart';
 
 // Employers CAN start conversations — POST /conversations
@@ -34,7 +35,7 @@ class _EmpMessagesState extends ConsumerState<EmployerMessagesScreen> {
     final async = ref.watch(conversationsProvider);
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(title: const Text('Messages')),
+      appBar: const UJobAppBar(title: 'Messages', showBack: false),
       body: Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),

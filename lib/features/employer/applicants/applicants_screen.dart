@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/ujob_empty.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 
 // TODO: implement GET /employer/jobs/{id}/applicants
 // ⚠️ NO global /employer/applications endpoint — returns 404
@@ -11,7 +12,7 @@ class ApplicantsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Applicants')),
+    appBar: const UJobAppBar(title: 'Applicants'),
     body: const UJobEmpty(
       title: 'Select a job first',
       subtitle: 'Go to My Jobs → tap a job → View Applicants',

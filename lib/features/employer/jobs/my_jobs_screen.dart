@@ -10,6 +10,7 @@ import '../../../core/widgets/ujob_empty.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_job_card.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 import 'employer_job_provider.dart';
 
 class MyJobsScreen extends ConsumerWidget {
@@ -19,13 +20,16 @@ class MyJobsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => DefaultTabController(
     length: 5,
     child: Scaffold(
-      appBar: AppBar(
-        title: const Text('My Jobs'),
+      appBar: UJobAppBar(
+        title: 'My Jobs',
+        showBack: false,
         bottom: TabBar(
           isScrollable: true,
           indicatorColor: AppColors.empPrimary,
           labelColor: AppColors.empPrimary,
           unselectedLabelColor: AppColors.muted2,
+          labelStyle: AppText.bodyBold.copyWith(fontSize: 14.sp),
+          unselectedLabelStyle: AppText.body.copyWith(fontSize: 14.sp),
           tabs: const [
             Tab(text: 'All'),
             Tab(text: 'Active'),

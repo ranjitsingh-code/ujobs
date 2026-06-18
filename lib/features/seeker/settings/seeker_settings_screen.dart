@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_text_field.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/utils/l10n_extensions.dart';
@@ -33,7 +34,7 @@ class _SeekerSettingsState extends ConsumerState<SeekerSettingsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(title: Text(l10n.settings)),
+      appBar: UJobAppBar(title: l10n.settings),
       body: ListView(children: [
         _SectionHeader(l10n.profileSection),
         _NavTile(label: l10n.editProfile, onTap: () => context.push('/seeker/profile')),

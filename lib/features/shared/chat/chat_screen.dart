@@ -11,6 +11,7 @@ import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_avatar.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 import 'conversation_provider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -74,9 +75,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final async = ref.watch(chatMessagesProvider(widget.conversationId));
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        titleSpacing: 0,
-        title: Row(children: [
+      appBar: UJobAppBar(
+        title: widget.otherName,
+        customTitle: Row(children: [
           Stack(
             children: [
               UJobAvatar(
@@ -101,16 +102,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           SizedBox(width: 10.w),
           Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text(widget.otherName, style: AppText.titleSm.copyWith(color: AppColors.white)),
-            Text(l10n.activeNow, style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.7))),
+            Text(widget.otherName, style: AppText.titleSm),
+            Text(l10n.activeNow, style: AppText.caption.copyWith(color: AppColors.muted)),
           ]),
         ]),
-        actions: [
-          IconButton(
-            icon: HugeIcon(icon: HugeIcons.strokeRoundedMoreVertical, color: AppColors.white, size: 24.r),
-            onPressed: () {},
-          ),
-        ],
+        rightWidget: IconButton(
+          icon: HugeIcon(icon: HugeIcons.strokeRoundedMoreVertical, color: AppColors.text, size: 24.r),
+          onPressed: () {},
+        ),
       ),
       body: Column(children: [
         Expanded(

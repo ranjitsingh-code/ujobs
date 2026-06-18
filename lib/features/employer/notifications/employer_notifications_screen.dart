@@ -9,6 +9,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_empty.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 
 class _Notif {
   final int id;
@@ -77,17 +78,15 @@ class _EmpNotifsState extends ConsumerState<EmployerNotificationsScreen> {
     final async = ref.watch(_empNotifsProvider);
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              final notifs = async.valueOrNull;
-              if (notifs != null) _markAllRead(notifs);
-            },
-            child: Text('Mark all read', style: AppText.label.copyWith(color: AppColors.empPrimary)),
-          ),
-        ],
+      appBar: UJobAppBar(
+        title: 'Notifications',
+        rightWidget: TextButton(
+          onPressed: () {
+            final notifs = async.valueOrNull;
+            if (notifs != null) _markAllRead(notifs);
+          },
+          child: Text('Mark all read', style: AppText.label.copyWith(color: AppColors.empPrimary)),
+        ),
       ),
       body: Column(children: [
         _FilterBar(

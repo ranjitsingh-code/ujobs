@@ -2287,6 +2287,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Post jobs & hire'**
   String get roleEmployerSub;
+
+  /// No description provided for @errorRequiredField.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get errorRequiredField;
+
+  /// No description provided for @errorInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get errorInvalidEmail;
+
+  /// No description provided for @errorInvalidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid phone number'**
+  String get errorInvalidPhone;
+
+  /// No description provided for @errorInvalidPhoneOrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email or phone number'**
+  String get errorInvalidPhoneOrEmail;
+
+  /// No description provided for @errorInvalidPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters with upper, lower, number, and special character'**
+  String get errorInvalidPassword;
+
+  /// No description provided for @errorPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get errorPasswordMismatch;
 }
 
 class _AppLocalizationsDelegate

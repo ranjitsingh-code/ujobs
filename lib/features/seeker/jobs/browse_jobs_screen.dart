@@ -9,6 +9,7 @@ import '../../../core/widgets/ujob_empty.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_job_card.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
 import 'seeker_job_provider.dart';
 
 class BrowseJobsScreen extends ConsumerStatefulWidget {
@@ -34,8 +35,9 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
     final jobsAsync = ref.watch(seekerJobsProvider(filter));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Browse Jobs'),
+      appBar: UJobAppBar(
+        title: 'Browse Jobs',
+        showBack: false,
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(60.h),
           child: Padding(

@@ -395,5 +395,12 @@
   "appTagline": "نربط المواهب بالفرص",
   "rolePickerSubtitle": "اختر كيف تريد البدء",
   "roleJobSeekerSub": "ابحث عن وظائف وتقدّم",
-  "roleEmployerSub": "انشر وظائف وابحث عن موظفين"
+  "roleEmployerSub": "انشر وظائف وابحث عن موظفين",
+  
+  "errorRequiredField": "هذا الحقل مطلوب",
+  "errorInvalidEmail": "يرجى إدخال عنوان بريد إلكتروني صالح",
+  "errorInvalidPhone": "يرجى إدخال رقم هاتف صالح",
+  "errorInvalidPhoneOrEmail": "يرجى إدخال بريد إلكتروني أو رقم هاتف صالح",
+  "errorInvalidPassword": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل تحتوي على حرف كبير وصغير ورقم ورمز خاص",
+  "errorPasswordMismatch": "كلمات المرور غير متطابقة"
 }

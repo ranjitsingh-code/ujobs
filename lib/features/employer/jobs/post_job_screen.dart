@@ -7,6 +7,8 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_text_field.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
+import '../../../core/widgets/ujob_snack_bar.dart';
 import 'employer_job_provider.dart';
 
 class PostJobScreen extends ConsumerStatefulWidget {
@@ -31,7 +33,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   Future<void> _submit() async {
     final l10n = context.l10n;
     if (_titleCtrl.text.isEmpty || _descCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorFillTitleDesc)));
+      UJobSnackBar.error(context, l10n.errorFillTitleDesc);
       return;
     }
 
@@ -55,13 +57,13 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
       await ref.read(employerJobServiceProvider).postJob(data);
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.jobPostedSuccess)));
+        UJobSnackBar.success(context, l10n.jobPostedSuccess);
         ref.invalidate(employerJobsProvider(null));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.error}: $e')));
+        UJobSnackBar.error(context, l10n.error, message: e.toString());
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -83,7 +85,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.postJob)),
+      appBar: UJobAppBar(title: l10n.postJob),
       body: SingleChildScrollView(
         padding: AppSpacing.pagePad,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

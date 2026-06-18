@@ -6,6 +6,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_text_field.dart';
+import '../../../core/widgets/ujob_app_bar.dart';
+import '../../../core/widgets/ujob_result_screen.dart';
+import '../../../core/widgets/ujob_snack_bar.dart';
 
 class ApplyScreen extends ConsumerStatefulWidget {
   final int jobId;
@@ -50,9 +53,7 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
       setState(() => _submitted = true);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to submit. Please try again.')),
-        );
+        UJobSnackBar.error(context, 'Submission Failed', message: 'Please try again.');
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -61,22 +62,31 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_submitted) return _SuccessView(onDone: () => Navigator.pop(context));
+    if (_submitted) {
+      return UJobResultScreen(
+        type: ResultType.success,
+        title: 'Application Submitted!',
+        subtitle: 'Your application has been sent. We\'ll notify you when the employer responds.',
+        buttonLabel: 'Back to Job',
+        onTap: () => Navigator.pop(context),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        title: Text('Review Application'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                '${_step + 1} / 3',
-                style: AppText.bodyMd.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
-              ),
-            ),
+      appBar: UJobAppBar(
+        title: _step == 0
+            ? 'Review Application'
+            : _step == 1
+                ? 'Cover Letter'
+                : 'Confirm Submission',
+        rightWidget: Padding(
+          padding: EdgeInsets.only(right: 8),
+          child: Text(
+            '${_step + 1} / 3',
+            style: AppText.bodyBold.copyWith(color: AppColors.muted),
           ),
-        ],
+        ),
       ),
       body: Column(children: [
         _StepIndicator(current: _step),
@@ -346,34 +356,3 @@ class _BottomBar extends StatelessWidget {
       );
 }
 
-class _SuccessView extends StatelessWidget {
-  final VoidCallback onDone;
-  const _SuccessView({required this.onDone});
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: const BoxDecoration(color: AppColors.successBg, shape: BoxShape.circle),
-                child: const Icon(Icons.check_circle_outline, color: AppColors.success, size: 44),
-              ),
-              const SizedBox(height: 24),
-              Text('Application Submitted!', style: AppText.heading2, textAlign: TextAlign.center),
-              const SizedBox(height: 8),
-              Text(
-                'Your application has been sent. We\'ll notify you when the employer responds.',
-                style: AppText.body.copyWith(color: AppColors.muted),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              UJobButton(label: 'Back to Job', onTap: onDone),
-            ]),
-          ),
-        ),
-      );
-}

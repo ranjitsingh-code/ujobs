@@ -1,42 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../utils/ujob_validator.dart';
 
 class UJobTextField extends StatefulWidget {
   final String label;
   final String? hint;
-  final String? errorText;
+  final String? errorText; // Manual error override
   final TextEditingController? controller;
-  final bool obscure;
   final bool isPassword;
-  final bool readOnly;
+  final TextInputType keyboardType;
+  final TextInputAction textInputAction;
+  final Widget? prefix;
+  final Widget? suffix;
   final int maxLines;
-  final TextInputType? keyboardType;
+  final int minLines;
+  final bool readOnly;
   final ValueChanged<String>? onChanged;
-  final Widget? suffixIcon;
-  final Widget? prefixIcon;
-  final TextInputAction? textInputAction;
-  final FocusNode? focusNode;
-  final String? Function(String?)? validator;
+  final VoidCallback? onTap;
+  final List<TextInputFormatter>? inputFormatters;
+  
+  // Auto-validation parameters
+  final bool isRequired;
+  final bool isEmail;
+  final bool isPhone;
+  final bool isPhoneOrEmail;
+  final bool isSecurePassword;
+  final bool isConfirmPassword;
+  final String? matchValue;
+  final int? minLength;
+  final int? exactLength;
 
   const UJobTextField({
     required this.label,
     this.hint,
-    this.controller,
     this.errorText,
-    this.obscure = false,
+    this.controller,
     this.isPassword = false,
-    this.readOnly = false,
+    this.keyboardType = TextInputType.text,
+    this.textInputAction = TextInputAction.next,
+    this.prefix,
+    this.suffix,
     this.maxLines = 1,
-    this.keyboardType,
+    this.minLines = 1,
+    this.readOnly = false,
     this.onChanged,
-    this.suffixIcon,
-    this.prefixIcon,
-    this.textInputAction,
-    this.focusNode,
-    this.validator,
+    this.onTap,
+    this.inputFormatters,
+    this.isRequired = false,
+    this.isEmail = false,
+    this.isPhone = false,
+    this.isPhoneOrEmail = false,
+    this.isSecurePassword = false,
+    this.isConfirmPassword = false,
+    this.matchValue,
+    this.minLength,
+    this.exactLength,
     super.key,
   });
 
@@ -45,98 +67,128 @@ class UJobTextField extends StatefulWidget {
 }
 
 class _UJobTextFieldState extends State<UJobTextField> {
-  late final FocusNode _internalFocusNode;
-  bool _isFocused = false;
-  bool _obscured = true;
+  bool _obscureText = true;
+  String? _autoError;
+  
+  String? get _currentError => widget.errorText ?? _autoError;
+
+  void _validate(String value) {
+    if (!widget.isRequired && !widget.isEmail && !widget.isPhone && !widget.isPhoneOrEmail && !widget.isSecurePassword && !widget.isConfirmPassword && widget.minLength == null && widget.exactLength == null) {
+      return;
+    }
+
+    // Do not show errors immediately on empty fields while typing.
+    // Let the parent form handle "required" checks on submit.
+    if (value.isEmpty) {
+      if (_autoError != null) setState(() => _autoError = null);
+      return;
+    }
+
+    final err = UJobValidator.validate(
+      context: context,
+      value: value,
+      isRequired: false, // Override to false here so empty doesn't trigger error mid-type
+      isEmail: widget.isEmail,
+      isPhone: widget.isPhone,
+      isPhoneOrEmail: widget.isPhoneOrEmail,
+      isPassword: widget.isSecurePassword,
+      isConfirmPassword: widget.isConfirmPassword,
+      matchValue: widget.matchValue,
+      minLength: widget.minLength,
+      exactLength: widget.exactLength,
+    );
+
+    if (_autoError != err) {
+      setState(() => _autoError = err);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _obscured = widget.obscure || widget.isPassword;
-    _internalFocusNode = widget.focusNode ?? FocusNode();
-    _internalFocusNode.addListener(() {
-      setState(() => _isFocused = _internalFocusNode.hasFocus);
-    });
+    if (widget.controller != null) {
+      widget.controller!.addListener(() {
+        _validate(widget.controller!.text);
+      });
+    }
   }
 
   @override
-  void dispose() {
-    if (widget.focusNode == null) _internalFocusNode.dispose();
-    super.dispose();
+  void didUpdateWidget(covariant UJobTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.errorText != oldWidget.errorText) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
-
-    Widget? suffix = widget.suffixIcon;
-    if (widget.isPassword && suffix == null) {
-      suffix = GestureDetector(
-        onTap: () => setState(() => _obscured = !_obscured),
-        child: Padding(
-          padding: EdgeInsets.all(12.r),
-          child: HugeIcon(
-            icon: _obscured ? HugeIcons.strokeRoundedViewOffSlash : HugeIcons.strokeRoundedView,
-            size: 20.r,
-            color: AppColors.muted,
-          ),
-        ),
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.only(bottom: 6.h),
-          child: Text(
-            widget.label,
-            style: AppText.label.copyWith(
-              color: _isFocused ? primaryColor : AppColors.text,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        TextFormField(
+        if (widget.label.isNotEmpty) ...[
+          Text(widget.label, style: AppText.label.copyWith(color: AppColors.muted)),
+          SizedBox(height: 6.h),
+        ],
+        TextField(
           controller: widget.controller,
-          obscureText: _obscured,
-          readOnly: widget.readOnly,
-          maxLines: widget.isPassword ? 1 : widget.maxLines,
+          obscureText: widget.isPassword && _obscureText,
           keyboardType: widget.keyboardType,
-          onChanged: widget.onChanged,
-          focusNode: _internalFocusNode,
           textInputAction: widget.textInputAction,
-          validator: widget.validator,
-          style: AppText.bodyMd,
+          maxLines: widget.isPassword ? 1 : widget.maxLines,
+          minLines: widget.minLines,
+          readOnly: widget.readOnly,
+          onChanged: (v) {
+            _validate(v);
+            widget.onChanged?.call(v);
+          },
+          onTap: widget.onTap,
+          inputFormatters: widget.inputFormatters,
+          style: AppText.body.copyWith(
+            color: widget.readOnly ? AppColors.muted : AppColors.text,
+          ),
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: AppText.bodyMd.copyWith(color: AppColors.muted2),
-            errorText: widget.errorText,
-            suffixIcon: suffix,
-            prefixIcon: widget.prefixIcon,
+            hintStyle: AppText.body.copyWith(color: AppColors.muted2),
             filled: true,
-            fillColor: AppColors.surface,
+            fillColor: widget.readOnly ? AppColors.bg : AppColors.surface,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            prefixIcon: widget.prefix,
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility : Icons.visibility_off,
+                      color: AppColors.muted,
+                      size: 20.r,
+                    ),
+                    onPressed: () => setState(() => _obscureText = !_obscureText),
+                  )
+                : widget.suffix,
+            border: OutlineInputBorder(
+              borderRadius: AppRadius.md,
+              borderSide: BorderSide(
+                color: _currentError != null ? AppColors.error : AppColors.borderLight,
+              ),
+            ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: const BorderSide(color: AppColors.border, width: 1),
+              borderRadius: AppRadius.md,
+              borderSide: BorderSide(
+                color: _currentError != null ? AppColors.error : AppColors.borderLight,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: primaryColor, width: 1.5),
+              borderRadius: AppRadius.md,
+              borderSide: BorderSide(
+                color: _currentError != null ? AppColors.error : AppColors.primary, 
+                width: 1.5,
+              ),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: const BorderSide(color: AppColors.error),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           ),
         ),
-        SizedBox(height: 16.h),
+        if (_currentError != null) ...[
+          SizedBox(height: 4.h),
+          Text(_currentError!, style: AppText.small.copyWith(color: AppColors.error)),
+        ]
       ],
     );
   }

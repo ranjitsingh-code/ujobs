@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../models/job.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'ujob_image.dart';
 
 class UJobJobCard extends StatelessWidget {
   final Job job;
@@ -36,21 +37,12 @@ class UJobJobCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (showCompany && job.company?.logo != null)
-                    Container(
+                    UJobImage(
+                      path: job.company!.logo!,
                       width: 48.r,
                       height: 48.r,
-                      decoration: BoxDecoration(
-                        color: AppColors.borderLight,
-                        borderRadius: AppRadius.md,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: AppRadius.md,
-                        child: Image.network(
-                          job.company!.logo!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => HugeIcon(icon: HugeIcons.strokeRoundedBuilding04, color: AppColors.muted, size: 20.r),
-                        ),
-                      ),
+                      fit: BoxFit.cover,
+                      borderRadius: AppRadius.md,
                     )
                   else if (showCompany)
                     Container(

@@ -769,5 +769,18 @@
   "roleJobSeekerSub": "Find jobs & apply",
   "@roleJobSeekerSub": {},
   "roleEmployerSub": "Post jobs & hire",
-  "@roleEmployerSub": {}
+  "@roleEmployerSub": {},
+
+  "errorRequiredField": "This field is required",
+  "@errorRequiredField": {},
+  "errorInvalidEmail": "Please enter a valid email address",
+  "@errorInvalidEmail": {},
+  "errorInvalidPhone": "Please enter a valid phone number",
+  "@errorInvalidPhone": {},
+  "errorInvalidPhoneOrEmail": "Please enter a valid email or phone number",
+  "@errorInvalidPhoneOrEmail": {},
+  "errorInvalidPassword": "Password must be at least 6 characters with upper, lower, number, and special character",
+  "@errorInvalidPassword": {},
+  "errorPasswordMismatch": "Passwords do not match",
+  "@errorPasswordMismatch": {}
 }
