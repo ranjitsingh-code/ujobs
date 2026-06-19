@@ -11,40 +11,107 @@ class EmployerShell extends ConsumerWidget {
   const EmployerShell({required this.child, super.key});
 
   int _indexFromPath(String path) {
-    if (path.startsWith('/employer/jobs'))      return 1;
+    if (path.startsWith('/employer/jobs')) return 1;
     if (path.startsWith('/employer/applicants')) return 2;
-    if (path.startsWith('/employer/messages'))  return 3;
-    if (path.startsWith('/employer/profile'))   return 4;
+    if (path.startsWith('/employer/messages')) return 3;
+    if (path.startsWith('/employer/profile')) return 4;
     return 0;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location     = GoRouterState.of(context).matchedLocation;
+    final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _indexFromPath(location);
 
     return Scaffold(
-      body: AnimatedPageWrapper(
-        key: ValueKey(location),
-        child: child,
-      ),
+      body: AnimatedPageWrapper(key: ValueKey(location), child: child),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (i) {
           switch (i) {
-            case 0: context.go('/employer');             break;
-            case 1: context.go('/employer/jobs');        break;
-            case 2: context.go('/employer/applicants');  break;
-            case 3: context.go('/employer/messages');    break;
-            case 4: context.go('/employer/profile');     break;
+            case 0:
+              context.go('/employer');
+              break;
+            case 1:
+              context.go('/employer/jobs');
+              break;
+            case 2:
+              context.go('/employer/applicants');
+              break;
+            case 3:
+              context.go('/employer/messages');
+              break;
+            case 4:
+              context.go('/employer/profile');
+              break;
           }
         },
         items: [
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedHome01,     color: AppColors.muted2,  size: 24), activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedHome01,     color: AppColors.primary, size: 24), label: 'Home'),
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedBriefcase01, color: AppColors.muted2,  size: 24), activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedBriefcase01, color: AppColors.primary, size: 24), label: 'Jobs'),
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedUserGroup,   color: AppColors.muted2,  size: 24), activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedUserGroup,   color: AppColors.primary, size: 24), label: 'Applicants'),
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedBubbleChat,  color: AppColors.muted2,  size: 24), activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedBubbleChat,  color: AppColors.primary, size: 24), label: 'Messages'),
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedBuilding04,  color: AppColors.muted2,  size: 24), activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedBuilding04,  color: AppColors.primary, size: 24), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedHome01,
+              color: AppColors.muted2,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedHome01,
+              color: AppColors.primary,
+              size: 24,
+            ),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedBriefcase01,
+              color: AppColors.muted2,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedBriefcase01,
+              color: AppColors.primary,
+              size: 24,
+            ),
+            label: 'Jobs',
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedUserGroup,
+              color: AppColors.muted2,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedUserGroup,
+              color: AppColors.primary,
+              size: 24,
+            ),
+            label: 'Applicants',
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedBubbleChat,
+              color: AppColors.muted2,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedBubbleChat,
+              color: AppColors.primary,
+              size: 24,
+            ),
+            label: 'Messages',
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedBuilding04,
+              color: AppColors.muted2,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedBuilding04,
+              color: AppColors.primary,
+              size: 24,
+            ),
+            label: 'Account',
+          ),
         ],
       ),
     );
@@ -61,7 +128,14 @@ class RoleSwitcherButton extends ConsumerWidget {
       ref.read(activeRoleProvider.notifier).switchRole();
       context.go('/seeker');
     },
-    icon: HugeIcon(icon: HugeIcons.strokeRoundedExchange01, color: AppColors.seekPrimary, size: 18),
-    label: const Text('Switch to Seeker', style: TextStyle(color: AppColors.seekPrimary, fontSize: 12)),
+    icon: HugeIcon(
+      icon: HugeIcons.strokeRoundedExchange01,
+      color: AppColors.seekPrimary,
+      size: 18,
+    ),
+    label: const Text(
+      'Switch to Seeker',
+      style: TextStyle(color: AppColors.seekPrimary, fontSize: 12),
+    ),
   );
 }

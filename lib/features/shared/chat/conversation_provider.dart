@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_endpoints.dart';
-import '../../../core/providers/auth_provider.dart';
 
 class Conversation {
   final String id;
@@ -11,6 +9,7 @@ class Conversation {
   final DateTime? lastAt;
   final int unreadCount;
   final bool otherOnline;
+  final bool requiresEmployerReply;
 
   const Conversation({
     required this.id,
@@ -21,28 +20,8 @@ class Conversation {
     this.lastAt,
     this.unreadCount = 0,
     this.otherOnline = false,
+    this.requiresEmployerReply = false,
   });
-
-  factory Conversation.fromJson(Map<String, dynamic> j) {
-    final other = j['other_user'] as Map<String, dynamic>? ??
-        j['employer'] as Map<String, dynamic>? ??
-        j['seeker'] as Map<String, dynamic>? ??
-        {};
-    final name = '${other['first_name'] ?? ''} ${other['last_name'] ?? ''}'.trim();
-    final initials = name.isNotEmpty
-        ? name.split(' ').take(2).map((w) => w.isNotEmpty ? w[0] : '').join().toUpperCase()
-        : '?';
-    return Conversation(
-      id: j['id']?.toString() ?? '',
-      otherName: name.isNotEmpty ? name : (other['company_name'] as String? ?? 'Unknown'),
-      otherInitials: initials,
-      otherAvatar: other['avatar'] as String? ?? other['logo'] as String?,
-      lastMessage: j['last_message'] as String?,
-      lastAt: DateTime.tryParse(j['last_message_at'] as String? ?? j['updated_at'] as String? ?? ''),
-      unreadCount: j['unread_count'] as int? ?? 0,
-      otherOnline: j['is_online'] as bool? ?? false,
-    );
-  }
 }
 
 class ChatMessage {
@@ -59,29 +38,111 @@ class ChatMessage {
     required this.sentAt,
     this.isRead = false,
   });
+}
 
-  factory ChatMessage.fromJson(Map<String, dynamic> j, String myId) {
-    final senderId = j['sender_id']?.toString() ?? '';
-    return ChatMessage(
-      id: j['id']?.toString() ?? '',
-      body: j['body'] as String? ?? j['message'] as String? ?? '',
-      isMine: senderId == myId,
-      sentAt: DateTime.tryParse(j['created_at'] as String? ?? '') ?? DateTime.now(),
-      isRead: j['is_read'] as bool? ?? false,
-    );
+final demoConversations = <Conversation>[
+  Conversation(
+    id: 'conversation-sarah',
+    otherName: 'Sarah Chen',
+    otherInitials: 'SC',
+    lastMessage: 'I am available for the interview tomorrow.',
+    lastAt: DateTime.now().subtract(const Duration(minutes: 8)),
+    unreadCount: 2,
+    otherOnline: true,
+    requiresEmployerReply: true,
+  ),
+  Conversation(
+    id: 'conversation-ahmed',
+    otherName: 'Ahmed Hasan',
+    otherInitials: 'AH',
+    lastMessage: 'Thank you for reviewing my application.',
+    lastAt: DateTime.now().subtract(const Duration(hours: 1)),
+    unreadCount: 1,
+    requiresEmployerReply: true,
+  ),
+  Conversation(
+    id: 'conversation-maria',
+    otherName: 'Maria Garcia',
+    otherInitials: 'MG',
+    lastMessage: 'Could you share the next steps?',
+    lastAt: DateTime.now().subtract(const Duration(hours: 3)),
+    unreadCount: 4,
+    requiresEmployerReply: true,
+  ),
+  Conversation(
+    id: 'conversation-james',
+    otherName: 'James Kim',
+    otherInitials: 'JK',
+    lastMessage: 'Following up on our conversation.',
+    lastAt: DateTime.now().subtract(const Duration(days: 1)),
+    requiresEmployerReply: true,
+  ),
+];
+
+final conversationsProvider = FutureProvider.autoDispose<List<Conversation>>((
+  ref,
+) async {
+  return demoConversations;
+});
+
+final chatMessagesProvider =
+    StateNotifierProvider.family<
+      DemoChatNotifier,
+      AsyncValue<List<ChatMessage>>,
+      String
+    >((ref, conversationId) {
+      return DemoChatNotifier(conversationId);
+    });
+
+class DemoChatNotifier extends StateNotifier<AsyncValue<List<ChatMessage>>> {
+  DemoChatNotifier(this.conversationId)
+    : super(AsyncData(_demoMessages(conversationId)));
+
+  final String conversationId;
+
+  void send(String body) {
+    final messages = state.valueOrNull ?? const <ChatMessage>[];
+    state = AsyncData([
+      ...messages,
+      ChatMessage(
+        id: 'local-${DateTime.now().microsecondsSinceEpoch}',
+        body: body,
+        isMine: true,
+        sentAt: DateTime.now(),
+        isRead: true,
+      ),
+    ]);
   }
 }
 
-final conversationsProvider = FutureProvider.autoDispose<List<Conversation>>((ref) async {
-  final res = await ref.watch(dioClientProvider).dio.get(Ep.conversations);
-  final data = res.data['data'] as List? ?? [];
-  return data.map((j) => Conversation.fromJson(j as Map<String, dynamic>)).toList();
-});
-
-final chatMessagesProvider = FutureProvider.autoDispose.family<List<ChatMessage>, String>((ref, conversationId) async {
-  final client = ref.watch(dioClientProvider);
-  final res = await client.dio.get(Ep.messages(conversationId));
-  final data = res.data['data'] as List? ?? [];
-  // Sender ID resolution: use 'me' as placeholder — real apps compare with auth user id
-  return data.map((j) => ChatMessage.fromJson(j as Map<String, dynamic>, 'me')).toList();
-});
+List<ChatMessage> _demoMessages(String conversationId) {
+  final now = DateTime.now();
+  final name = switch (conversationId) {
+    'conversation-ahmed' => 'Ahmed',
+    'conversation-maria' => 'Maria',
+    'conversation-james' => 'James',
+    _ => 'Sarah',
+  };
+  return [
+    ChatMessage(
+      id: '$conversationId-1',
+      body: 'Hello, I applied for the position and wanted to follow up.',
+      isMine: false,
+      sentAt: now.subtract(const Duration(hours: 2)),
+      isRead: true,
+    ),
+    ChatMessage(
+      id: '$conversationId-2',
+      body: 'Hi $name, thanks for reaching out. We are reviewing applications.',
+      isMine: true,
+      sentAt: now.subtract(const Duration(hours: 1, minutes: 45)),
+      isRead: true,
+    ),
+    ChatMessage(
+      id: '$conversationId-3',
+      body: 'Thank you. I am available if you need any additional information.',
+      isMine: false,
+      sentAt: now.subtract(const Duration(minutes: 20)),
+    ),
+  ];
+}

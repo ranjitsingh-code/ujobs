@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import '../../../core/api/api_endpoints.dart';
-import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/l10n_extensions.dart';
@@ -49,12 +47,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (text.isEmpty || _sending) return;
     setState(() => _sending = true);
     try {
-      await ref.read(dioClientProvider).dio.post(
-        Ep.messages(widget.conversationId),
-        data: {'body': text},
-      );
+      ref.read(chatMessagesProvider(widget.conversationId).notifier).send(text);
       _msgCtrl.clear();
-      ref.invalidate(chatMessagesProvider(widget.conversationId));
       await Future.delayed(const Duration(milliseconds: 300));
       if (_scrollCtrl.hasClients) {
         _scrollCtrl.animateTo(
@@ -77,81 +71,98 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       backgroundColor: AppColors.bg,
       appBar: UJobAppBar(
         title: widget.otherName,
-        customTitle: Row(children: [
-          Stack(
-            children: [
-              UJobAvatar(
-                imageUrl: widget.otherAvatar,
-                initials: widget.otherInitials ?? widget.otherName[0],
-                size: 36.r,
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 10.r,
-                  height: 10.r,
-                  decoration: BoxDecoration(
-                    color: AppColors.success,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.surface, width: 1.5.r),
+        customTitle: Row(
+          children: [
+            Stack(
+              children: [
+                UJobAvatar(
+                  imageUrl: widget.otherAvatar,
+                  initials: widget.otherInitials ?? widget.otherName[0],
+                  size: 36.r,
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 10.r,
+                    height: 10.r,
+                    decoration: BoxDecoration(
+                      color: AppColors.success,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.surface,
+                        width: 1.5.r,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(width: 10.w),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text(widget.otherName, style: AppText.titleSm),
-            Text(l10n.activeNow, style: AppText.caption.copyWith(color: AppColors.muted)),
-          ]),
-        ]),
+              ],
+            ),
+            SizedBox(width: 10.w),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(widget.otherName, style: AppText.titleSm),
+                Text(
+                  l10n.activeNow,
+                  style: AppText.caption.copyWith(color: AppColors.muted),
+                ),
+              ],
+            ),
+          ],
+        ),
         rightWidget: IconButton(
-          icon: HugeIcon(icon: HugeIcons.strokeRoundedMoreVertical, color: AppColors.text, size: 24.r),
+          icon: HugeIcon(
+            icon: HugeIcons.strokeRoundedMoreVertical,
+            color: AppColors.text,
+            size: 24.r,
+          ),
           onPressed: () {},
         ),
       ),
-      body: Column(children: [
-        Expanded(
-          child: async.when(
-            loading: () => const UJobLoading(count: 5),
-            error: (e, _) => UJobError(
-              message: l10n.failedLoadMessages,
-              onRetry: () => ref.refresh(chatMessagesProvider(widget.conversationId)),
-            ),
-            data: (messages) {
-              if (messages.isEmpty) {
-                return Center(
-                  child: Text(l10n.sayHello),
+      body: Column(
+        children: [
+          Expanded(
+            child: async.when(
+              loading: () => const UJobLoading(count: 5),
+              error: (e, _) => UJobError(
+                message: l10n.failedLoadMessages,
+                onRetry: () =>
+                    ref.refresh(chatMessagesProvider(widget.conversationId)),
+              ),
+              data: (messages) {
+                if (messages.isEmpty) {
+                  return Center(child: Text(l10n.sayHello));
+                }
+                return ListView.builder(
+                  controller: _scrollCtrl,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 16.h,
+                  ),
+                  itemCount: messages.length,
+                  itemBuilder: (_, i) {
+                    final msg = messages[i];
+                    final prevMsg = i > 0 ? messages[i - 1] : null;
+                    final showDate =
+                        prevMsg == null ||
+                        !_sameDay(prevMsg.sentAt, msg.sentAt);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (showDate) _DateDivider(date: msg.sentAt),
+                        _MessageBubble(message: msg),
+                      ],
+                    );
+                  },
                 );
-              }
-              return ListView.builder(
-                controller: _scrollCtrl,
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-                itemCount: messages.length,
-                itemBuilder: (_, i) {
-                  final msg = messages[i];
-                  final prevMsg = i > 0 ? messages[i - 1] : null;
-                  final showDate = prevMsg == null ||
-                      !_sameDay(prevMsg.sentAt, msg.sentAt);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (showDate) _DateDivider(date: msg.sentAt),
-                      _MessageBubble(message: msg),
-                    ],
-                  );
-                },
-              );
-            },
+              },
+            ),
           ),
-        ),
-        _InputBar(
-          controller: _msgCtrl,
-          sending: _sending,
-          onSend: _send,
-        ),
-      ]),
+          _InputBar(controller: _msgCtrl, sending: _sending, onSend: _send),
+        ],
+      ),
     );
   }
 
@@ -176,14 +187,19 @@ class _DateDivider extends StatelessWidget {
     }
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16.h),
-      child: Row(children: [
-        const Expanded(child: Divider()),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12.w),
-          child: Text(label, style: AppText.caption.copyWith(color: AppColors.muted)),
-        ),
-        const Expanded(child: Divider()),
-      ]),
+      child: Row(
+        children: [
+          const Expanded(child: Divider()),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12.w),
+            child: Text(
+              label,
+              style: AppText.caption.copyWith(color: AppColors.muted),
+            ),
+          ),
+          const Expanded(child: Divider()),
+        ],
+      ),
     );
   }
 
@@ -203,16 +219,23 @@ class _MessageBubble extends StatelessWidget {
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: EdgeInsets.only(bottom: 8.h),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.72,
+        ),
         child: Column(
-          crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMine
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             Container(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
               decoration: BoxDecoration(
                 gradient: isMine
                     ? const LinearGradient(
-                        colors: [AppColors.primaryDark, AppColors.primaryAccent],
+                        colors: [
+                          AppColors.primaryDark,
+                          AppColors.primaryAccent,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       )
@@ -238,13 +261,18 @@ class _MessageBubble extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(time, style: AppText.caption.copyWith(color: AppColors.muted2)),
+                Text(
+                  time,
+                  style: AppText.caption.copyWith(color: AppColors.muted2),
+                ),
                 if (isMine) ...[
                   SizedBox(width: 4.w),
                   HugeIcon(
                     icon: HugeIcons.strokeRoundedTickDouble02,
                     size: 14.r,
-                    color: message.isRead ? AppColors.primary : AppColors.muted2,
+                    color: message.isRead
+                        ? AppColors.primary
+                        : AppColors.muted2,
                   ),
                 ],
               ],
@@ -261,22 +289,31 @@ class _InputBar extends StatelessWidget {
   final bool sending;
   final VoidCallback onSend;
 
-  const _InputBar({required this.controller, required this.sending, required this.onSend});
+  const _InputBar({
+    required this.controller,
+    required this.sending,
+    required this.onSend,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Container(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.borderLight)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Row(children: [
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.borderLight)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
             IconButton(
-              icon: HugeIcon(icon: HugeIcons.strokeRoundedAttachment01, color: AppColors.muted, size: 24.r),
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedAttachment01,
+                color: AppColors.muted,
+                size: 24.r,
+              ),
               onPressed: () {},
             ),
             Expanded(
@@ -295,7 +332,10 @@ class _InputBar extends StatelessWidget {
                     borderRadius: AppRadius.xl2,
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 10.h,
+                  ),
                 ),
               ),
             ),
@@ -316,13 +356,21 @@ class _InputBar extends StatelessWidget {
                 child: sending
                     ? Padding(
                         padding: EdgeInsets.all(12.r),
-                        child: CircularProgressIndicator(strokeWidth: 2.r, color: AppColors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.r,
+                          color: AppColors.white,
+                        ),
                       )
-                    : HugeIcon(icon: HugeIcons.strokeRoundedSent, color: AppColors.white, size: 18.r),
+                    : HugeIcon(
+                        icon: HugeIcons.strokeRoundedSent,
+                        color: AppColors.white,
+                        size: 18.r,
+                      ),
               ),
             ),
-          ]),
+          ],
         ),
-      );
+      ),
+    );
   }
 }
