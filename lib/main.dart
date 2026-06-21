@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,6 +12,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 // import 'core/firebase_options.dart';               // TODO: uncomment after flutterfire configure
 // import 'core/services/notification_service.dart';  // TODO: uncomment after flutterfire configure
+import 'package:flutter_quill/flutter_quill.dart';
 import 'l10n/app_localizations.dart';
 
 void main() async {
@@ -19,6 +21,12 @@ void main() async {
   // ── Firebase setup (uncomment after running `flutterfire configure`) ──────
   // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // await NotificationService.init();
+
+  // Lock orientation to portrait only
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   runApp(const ProviderScope(child: UJobApp()));
 }
@@ -37,8 +45,18 @@ class UJobApp extends ConsumerWidget {
 
     // Design base: 390×844 (iPhone 14). ScreenUtil scales all .sp/.w/.h values
     // proportionally on every device. splitScreenMode handles tablets/foldables.
-    return ScreenUtilInit(
-      designSize: const Size(390, 844),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // If the device is a tablet/iPad (width > 600), set designSize to the actual
+        // screen dimensions. This forces a 1.0x scaling factor so that elements
+        // don't blow up and become comically huge.
+        final isTablet = constraints.maxWidth > 600;
+        final designSize = isTablet
+            ? Size(constraints.maxWidth, constraints.maxHeight)
+            : const Size(390, 844);
+
+        return ScreenUtilInit(
+          designSize: designSize,
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) => UpgradeAlert(
@@ -60,6 +78,7 @@ class UJobApp extends ConsumerWidget {
           supportedLocales: supportedLocales,
           localizationsDelegates: const [
             AppLocalizations.delegate,
+            FlutterQuillLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
@@ -68,6 +87,8 @@ class UJobApp extends ConsumerWidget {
           routerConfig: router,
         ),
       ),
+    );
+    },
     );
   }
 }

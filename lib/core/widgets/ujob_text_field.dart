@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/ujob_validator.dart';
@@ -19,10 +20,11 @@ class UJobTextField extends StatefulWidget {
   final int maxLines;
   final int minLines;
   final bool readOnly;
+  final Widget? labelTrailing;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
   final List<TextInputFormatter>? inputFormatters;
-  
+
   // Auto-validation parameters
   final bool isRequired;
   final bool isEmail;
@@ -47,6 +49,7 @@ class UJobTextField extends StatefulWidget {
     this.maxLines = 1,
     this.minLines = 1,
     this.readOnly = false,
+    this.labelTrailing,
     this.onChanged,
     this.onTap,
     this.inputFormatters,
@@ -69,11 +72,18 @@ class UJobTextField extends StatefulWidget {
 class _UJobTextFieldState extends State<UJobTextField> {
   bool _obscureText = true;
   String? _autoError;
-  
+
   String? get _currentError => widget.errorText ?? _autoError;
 
   void _validate(String value) {
-    if (!widget.isRequired && !widget.isEmail && !widget.isPhone && !widget.isPhoneOrEmail && !widget.isSecurePassword && !widget.isConfirmPassword && widget.minLength == null && widget.exactLength == null) {
+    if (!widget.isRequired &&
+        !widget.isEmail &&
+        !widget.isPhone &&
+        !widget.isPhoneOrEmail &&
+        !widget.isSecurePassword &&
+        !widget.isConfirmPassword &&
+        widget.minLength == null &&
+        widget.exactLength == null) {
       return;
     }
 
@@ -87,7 +97,8 @@ class _UJobTextFieldState extends State<UJobTextField> {
     final err = UJobValidator.validate(
       context: context,
       value: value,
-      isRequired: false, // Override to false here so empty doesn't trigger error mid-type
+      isRequired:
+          false, // Override to false here so empty doesn't trigger error mid-type
       isEmail: widget.isEmail,
       isPhone: widget.isPhone,
       isPhoneOrEmail: widget.isPhoneOrEmail,
@@ -116,8 +127,9 @@ class _UJobTextFieldState extends State<UJobTextField> {
   @override
   void didUpdateWidget(covariant UJobTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.errorText != oldWidget.errorText) {
-      setState(() {});
+    if (widget.errorText != oldWidget.errorText ||
+        widget.matchValue != oldWidget.matchValue) {
+      _validate(widget.controller?.text ?? '');
     }
   }
 
@@ -127,7 +139,16 @@ class _UJobTextFieldState extends State<UJobTextField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label.isNotEmpty) ...[
-          Text(widget.label, style: AppText.label.copyWith(color: AppColors.muted)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.label,
+                style: AppText.label.copyWith(color: AppColors.muted),
+              ),
+              if (widget.labelTrailing != null) widget.labelTrailing!,
+            ],
+          ),
           SizedBox(height: 6.h),
         ],
         TextField(
@@ -151,35 +172,45 @@ class _UJobTextFieldState extends State<UJobTextField> {
             hintText: widget.hint,
             hintStyle: AppText.body.copyWith(color: AppColors.muted2),
             filled: true,
-            fillColor: widget.readOnly ? AppColors.bg : AppColors.surface,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            fillColor: AppColors.surface,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 14.h,
+            ),
             prefixIcon: widget.prefix,
             suffixIcon: widget.isPassword
                 ? IconButton(
-                    icon: Icon(
-                      _obscureText ? Icons.visibility : Icons.visibility_off,
+                    icon: HugeIcon(
+                      icon: _obscureText ? HugeIcons.strokeRoundedView : HugeIcons.strokeRoundedViewOffSlash,
                       color: AppColors.muted,
                       size: 20.r,
                     ),
-                    onPressed: () => setState(() => _obscureText = !_obscureText),
+                    onPressed: () =>
+                        setState(() => _obscureText = !_obscureText),
                   )
                 : widget.suffix,
             border: OutlineInputBorder(
               borderRadius: AppRadius.md,
               borderSide: BorderSide(
-                color: _currentError != null ? AppColors.error : AppColors.borderLight,
+                color: _currentError != null
+                    ? AppColors.error
+                    : AppColors.borderLight,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: AppRadius.md,
               borderSide: BorderSide(
-                color: _currentError != null ? AppColors.error : AppColors.borderLight,
+                color: _currentError != null
+                    ? AppColors.error
+                    : AppColors.borderLight,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: AppRadius.md,
               borderSide: BorderSide(
-                color: _currentError != null ? AppColors.error : AppColors.primary, 
+                color: _currentError != null
+                    ? AppColors.error
+                    : AppColors.primary,
                 width: 1.5,
               ),
             ),
@@ -187,8 +218,11 @@ class _UJobTextFieldState extends State<UJobTextField> {
         ),
         if (_currentError != null) ...[
           SizedBox(height: 4.h),
-          Text(_currentError!, style: AppText.small.copyWith(color: AppColors.error)),
-        ]
+          Text(
+            _currentError!,
+            style: AppText.small.copyWith(color: AppColors.error),
+          ),
+        ],
       ],
     );
   }

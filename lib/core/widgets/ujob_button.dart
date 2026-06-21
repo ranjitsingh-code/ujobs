@@ -13,6 +13,7 @@ class UJobButton extends StatefulWidget {
   final Widget? icon;
   final Color? color;
   final LinearGradient? gradient;
+  final TextStyle? textStyle;
 
   const UJobButton({
     required this.label,
@@ -23,6 +24,7 @@ class UJobButton extends StatefulWidget {
     this.icon,
     this.color,
     this.gradient,
+    this.textStyle,
     super.key,
   });
 
@@ -75,6 +77,7 @@ class _UJobButtonState extends State<UJobButton>
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: bg),
             foregroundColor: bg,
+            padding: EdgeInsets.symmetric(horizontal: 4.w),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
           ),
           child: _child(color: bg),
@@ -89,7 +92,7 @@ class _UJobButtonState extends State<UJobButton>
           decoration: BoxDecoration(
             gradient: enabled
                 ? (widget.gradient ?? LinearGradient(
-                    colors: [AppColors.primaryDark, bg],
+                    colors: [bg, AppColors.primaryDark],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ))
@@ -104,6 +107,7 @@ class _UJobButtonState extends State<UJobButton>
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
               foregroundColor: AppColors.surface,
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
               minimumSize: Size(double.infinity, h),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
               elevation: 0,
@@ -137,13 +141,23 @@ class _UJobButtonState extends State<UJobButton>
         ),
       );
     }
-    final style = AppText.button.copyWith(color: color ?? AppColors.surface);
+    final style = (widget.textStyle ?? AppText.button).copyWith(color: color ?? AppColors.surface);
     if (widget.icon != null) {
-      return Row(mainAxisSize: MainAxisSize.min, children: [
-        widget.icon!,
-        SizedBox(width: 8.w),
-        Text(widget.label, style: style),
-      ]);
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center, 
+        children: [
+          widget.icon!,
+          SizedBox(width: 8.w),
+          Flexible(
+            child: Text(
+              widget.label, 
+              style: style,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      );
     }
     return Text(widget.label, style: style);
   }

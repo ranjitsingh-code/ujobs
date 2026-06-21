@@ -103,7 +103,7 @@ class _SeekerSettingsState extends ConsumerState<SeekerSettingsScreen> {
         Text(context.l10n.language, style: AppText.heading3),
         SizedBox(height: 12.h),
         ListTile(
-          title: const Text('English'),
+          title: Text(context.l10n.english),
           trailing: ref.read(localeProvider).languageCode == 'en' ? const HugeIcon(icon: HugeIcons.strokeRoundedTick01, color: AppColors.primary) : null,
           onTap: () {
             ref.read(localeProvider.notifier).setLocale(const Locale('en'));
@@ -111,7 +111,7 @@ class _SeekerSettingsState extends ConsumerState<SeekerSettingsScreen> {
           },
         ),
         ListTile(
-          title: const Text('العربية'),
+          title: Text(context.l10n.dynamicKey),
           trailing: ref.read(localeProvider).languageCode == 'ar' ? const HugeIcon(icon: HugeIcons.strokeRoundedTick01, color: AppColors.primary) : null,
           onTap: () {
             ref.read(localeProvider.notifier).setLocale(const Locale('ar'));
@@ -137,11 +137,11 @@ class _SeekerSettingsState extends ConsumerState<SeekerSettingsScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('Change Password', style: AppText.heading3),
           const SizedBox(height: 20),
-          UJobTextField(label: 'Current Password', controller: oldCtrl, isPassword: true),
-          UJobTextField(label: 'New Password', controller: newCtrl, isPassword: true),
-          UJobTextField(label: 'Confirm New Password', controller: confirmCtrl, isPassword: true),
+          UJobTextField(label: context.l10n.currentPassword, controller: oldCtrl, isPassword: true),
+          UJobTextField(label: context.l10n.newPassword, controller: newCtrl, isPassword: true),
+          UJobTextField(label: context.l10n.confirmNewPassword, controller: confirmCtrl, isPassword: true),
           UJobButton(
-            label: 'Update Password',
+            label: context.l10n.updatePassword,
             onTap: () async {
               try {
                 await ref.read(dioClientProvider).dio.put(Ep.seekPassword, data: {
@@ -181,16 +181,16 @@ class _SeekerSettingsState extends ConsumerState<SeekerSettingsScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Account'),
+        title: Text(context.l10n.deleteAccountTitle),
         content: const Text(
           'This will permanently delete your account and all data. This cannot be undone.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(context),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Delete'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),

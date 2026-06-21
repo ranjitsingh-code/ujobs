@@ -7,31 +7,41 @@ class UJobStatCard extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
+  final String? trend;
 
   const UJobStatCard({
     required this.label,
     required this.value,
     required this.color,
+    this.trend,
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: Container(
-      padding: EdgeInsets.all(16.w),
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: AppRadius.md,
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, 
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: AppText.heading2.copyWith(color: color)),
-          SizedBox(height: 4.h),
-          Text(label, style: AppText.caption.copyWith(color: AppColors.muted)),
+          Text(label, style: AppText.small.copyWith(color: AppColors.muted)),
+          SizedBox(height: 8.h),
+          Row(
+            children: [
+              Text(value, style: AppText.heading2.copyWith(color: color)),
+              if (trend != null) ...[
+                SizedBox(width: 8.w),
+                Text(trend!, style: AppText.labelSm.copyWith(color: AppColors.success)),
+              ],
+            ],
+          ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }

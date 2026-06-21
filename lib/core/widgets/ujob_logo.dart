@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../constants/app_assets.dart';
 import 'ujob_image.dart';
 
@@ -19,9 +18,12 @@ class UJobLogo extends StatelessWidget {
 
   String get _path {
     switch (variant) {
-      case LogoVariant.color:  return AppAssets.logo;
-      case LogoVariant.white:  return AppAssets.logoWhite;
-      case LogoVariant.mark:   return AppAssets.logoMark;
+      case LogoVariant.color:
+        return AppAssets.logo;
+      case LogoVariant.white:
+        return AppAssets.logoWhite;
+      case LogoVariant.mark:
+        return AppAssets.logoMark;
     }
   }
 

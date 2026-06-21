@@ -89,9 +89,9 @@ class SeekerDashboardScreen extends ConsumerWidget {
             Text(l10n.recommendedJobs, style: AppText.heading3),
             SizedBox(height: 12.h),
             if (data.recommendedJobs.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Center(child: Text('No matching jobs found')),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Center(child: Text(context.l10n.noMatchingJobsFound)),
               )
             else
               ...data.recommendedJobs.map((j) => UJobJobCard(

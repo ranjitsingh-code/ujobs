@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -45,7 +46,7 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
             child: TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: 'Search jobs, companies...',
+                hintText: context.l10n.searchJobsCompanies,
                 prefixIcon: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted2, size: 20.r),
                 contentPadding: EdgeInsets.symmetric(vertical: 12.h),
               ),

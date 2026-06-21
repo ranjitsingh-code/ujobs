@@ -37,6 +37,12 @@ class AuthNotifier extends AsyncNotifier<User?> {
     }
   }
 
+  Future<void> mockLogin() async {
+    state = const AsyncLoading();
+    final user = User(id: '1', email: 'test@example.com', firstName: 'Test', lastName: 'User', role: 'seeker');
+    state = AsyncData(user);
+  }
+
   Future<bool> login(String email, String password) async {
     state = const AsyncLoading();
     final storage = ref.read(secureStorageProvider);

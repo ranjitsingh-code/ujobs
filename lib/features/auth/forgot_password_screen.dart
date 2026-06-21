@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/widgets/ujob_auth_header.dart';
 import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_text_field.dart';
 
@@ -102,21 +103,9 @@ class _FormView extends StatelessWidget {
     final l10n = context.l10n;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       SizedBox(height: 8.h),
-      GestureDetector(
-        onTap: onBack,
-        child: Container(
-          width: 36.r, height: 36.r,
-          decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(10.r)),
-          child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 20.r, color: AppColors.text),
-        ),
-      ),
-      SizedBox(height: 28.h),
-      // Icon
-      Container(
-        width: 64.r, height: 64.r,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(16.r)),
-        child: HugeIcon(icon: HugeIcons.strokeRoundedLockKey, color: AppColors.primary, size: 30.r),
+      UJobAuthHeader(
+        icon: HugeIcons.strokeRoundedLockKey,
+        onBack: onBack,
       ),
       SizedBox(height: 20.h),
       Text(l10n.resetPasswordTitle, style: AppText.heading2),

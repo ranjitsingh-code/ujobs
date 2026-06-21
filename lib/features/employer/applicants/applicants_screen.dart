@@ -1,138 +1,214 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/l10n_extensions.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
-import '../../../core/widgets/ujob_avatar.dart';
+import '../../../core/widgets/ujob_applicant_card.dart';
+import '../../../core/widgets/ujob_pill_tab_bar.dart';
+import '../../../core/widgets/ujob_text_field.dart';
+import '../../../core/widgets/ujob_dropdown_field.dart';
+import 'employer_applicant_provider.dart';
+import 'applicant_detail_screen.dart';
 
-class ApplicantsScreen extends StatelessWidget {
-  const ApplicantsScreen({super.key});
+class ApplicantsScreen extends ConsumerStatefulWidget {
+  final int initialIndex;
+  const ApplicantsScreen({super.key, this.initialIndex = 0});
 
-  static const applicants = [
-    _DemoApplicant(
-      name: 'Sarah Chen',
-      initials: 'SC',
-      role: 'Senior Flutter Developer',
-      status: 'Shortlisted',
-      appliedAgo: '2h ago',
-      color: AppColors.stageShortlisted,
-    ),
-    _DemoApplicant(
-      name: 'Ahmed Hasan',
-      initials: 'AH',
-      role: 'Senior Flutter Developer',
-      status: 'Reviewing',
-      appliedAgo: '5h ago',
-      color: AppColors.stageReviewed,
-    ),
-    _DemoApplicant(
-      name: 'Maria Garcia',
-      initials: 'MG',
-      role: 'Product Designer',
-      status: 'Interview',
-      appliedAgo: '1d ago',
-      color: AppColors.stageInterviewed,
-    ),
-    _DemoApplicant(
-      name: 'James Kim',
-      initials: 'JK',
-      role: 'Backend Engineer',
-      status: 'Applied',
-      appliedAgo: '2d ago',
-      color: AppColors.stageApplied,
-    ),
+  @override
+  ConsumerState<ApplicantsScreen> createState() => _ApplicantsScreenState();
+}
+
+class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  late int _selectedIndex;
+  String _searchQuery = '';
+  String? _selectedJobFilter;
+
+  final List<String> _tabs = [
+    'All',
+    'Applied',
+    'Shortlisted',
+    'Interview',
+    'Offered',
+    'Hired',
+    'Rejected',
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: const UJobAppBar(title: 'Applicants', showBack: false),
-      body: ListView.separated(
-        padding: AppSpacing.pagePad,
-        itemCount: applicants.length,
-        separatorBuilder: (_, _) => SizedBox(height: 10.h),
-        itemBuilder: (context, index) =>
-            _ApplicantCard(applicant: applicants[index]),
-      ),
-    );
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+    _tabController = TabController(length: _tabs.length, vsync: this, initialIndex: widget.initialIndex);
+    _tabController.addListener(() {
+      if (_tabController.index != _selectedIndex) {
+        setState(() {
+          _selectedIndex = _tabController.index;
+        });
+      }
+    });
   }
-}
 
-class _DemoApplicant {
-  final String name;
-  final String initials;
-  final String role;
-  final String status;
-  final String appliedAgo;
-  final Color color;
-
-  const _DemoApplicant({
-    required this.name,
-    required this.initials,
-    required this.role,
-    required this.status,
-    required this.appliedAgo,
-    required this.color,
-  });
-}
-
-class _ApplicantCard extends StatelessWidget {
-  final _DemoApplicant applicant;
-
-  const _ApplicantCard({required this.applicant});
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(14.r),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
-        borderRadius: AppRadius.md,
-        boxShadow: AppShadow.card(),
-      ),
-      child: Row(
-        children: [
-          UJobAvatar(initials: applicant.initials, size: 46.r),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(applicant.name, style: AppText.titleSm),
-                SizedBox(height: 3.h),
-                Text(
-                  applicant.role,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.small.copyWith(color: AppColors.muted),
-                ),
-                SizedBox(height: 6.h),
-                Text(
-                  'Applied ${applicant.appliedAgo}',
-                  style: AppText.caption.copyWith(color: AppColors.muted2),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 8.w),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
-            decoration: BoxDecoration(
-              color: applicant.color.withValues(alpha: 0.1),
-              borderRadius: AppRadius.pill,
-            ),
-            child: Text(
-              applicant.status,
-              style: AppText.labelSm.copyWith(
-                color: applicant.color,
-                fontSize: 10.sp,
+    final allApplicants = ref.watch(employerApplicantsProvider);
+    
+    // Extract unique job titles from applicants for the filter
+    final availableJobs = allApplicants
+        .where((a) => a.targetJobTitle != null && a.targetJobTitle!.isNotEmpty)
+        .map((a) => a.targetJobTitle!)
+        .toSet()
+        .toList();
+
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: const UJobAppBar(title: 'Applicants', showBack: false),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Search and Filter Section
+                  Container(
+                    color: AppColors.surface,
+                    padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 16.h),
+                    child: Column(
+                      children: [
+                        UJobTextField(
+                          label: '',
+                          hint: context.l10n.searchApplicantsByName,
+                          prefix: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value.toLowerCase();
+                            });
+                          },
+                        ),
+                        if (availableJobs.isNotEmpty) ...[
+                          SizedBox(height: 12.h),
+                          UJobDropdownField<String?>(
+                            label: context.l10n.filterByJob,
+                            hint: context.l10n.allJobs,
+                            value: _selectedJobFilter,
+                            options: [
+                              ('All Jobs', null),
+                              ...availableJobs.map((job) => (job, job)),
+                            ],
+                            onChanged: (val) {
+                              setState(() {
+                                _selectedJobFilter = val;
+                              });
+                            },
+                          ),
+                        ]
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            SliverAppBar(
+              pinned: true,
+              automaticallyImplyLeading: false,
+              backgroundColor: AppColors.surface,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              toolbarHeight: 0,
+              bottom: PreferredSize(
+                preferredSize: Size.fromHeight(60.h),
+                child: Container(
+                  color: AppColors.surface,
+                  width: double.infinity,
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: ExcludeSemantics(
+                    child: UJobPillTabBar(
+                      tabs: _tabs,
+                      selectedIndex: _selectedIndex,
+                      onTabSelected: (index) {
+                        _tabController.animateTo(index);
+                      },
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: _tabs.map((tab) {
+            // Filter applicants by tab, search query, and job title
+            final filtered = allApplicants.where((a) {
+              final matchesTab = tab == 'All' || a.status.toLowerCase() == tab.toLowerCase();
+              final matchesSearch = _searchQuery.isEmpty || a.name.toLowerCase().contains(_searchQuery);
+              final matchesJob = _selectedJobFilter == null || a.targetJobTitle == _selectedJobFilter;
+              return matchesTab && matchesSearch && matchesJob;
+            }).toList();
+
+            if (filtered.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(16.r),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.borderLight),
+                      ),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedUserGroup,
+                        color: AppColors.muted2,
+                        size: 32.r,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'No applicants found',
+                      style: AppText.titleSm,
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return ListView.separated(
+              padding: AppSpacing.pagePad,
+              itemCount: filtered.length,
+              separatorBuilder: (_, _) => SizedBox(height: 10.h),
+              itemBuilder: (context, index) {
+                final applicant = filtered[index];
+                return UJobApplicantCard(
+                  applicant: applicant,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ApplicantDetailScreen(applicantId: applicant.id),
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          }).toList(),
+        ),
       ),
     );
   }

@@ -87,9 +87,9 @@ class AppColors {
 
   // ── Gradient helpers ───────────────────────────────────────────────────────
   static const authGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [primaryDark, primary, primaryAccent],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [primaryAccent, primary, primaryDark],
   );
 
   static const splashGradient = LinearGradient(

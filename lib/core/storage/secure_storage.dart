@@ -11,6 +11,8 @@ class SecureStorage {
   static const _keyTheme    = 'theme_mode';  // 'light' | 'dark' | 'system'
   static const _keyLocale   = 'locale';      // 'en' | 'ar'
   static const _keyOnboarding = 'onboarding_seen';
+  static const _keyEmail = 'remember_email';
+  static const _keyPassword = 'remember_password';
 
   Future<void> saveTokens(String access, String refresh) async {
     await _s.write(key: _keyAccess, value: access);
@@ -19,6 +21,19 @@ class SecureStorage {
 
   Future<String?> getAccessToken()  => _s.read(key: _keyAccess);
   Future<String?> getRefreshToken() => _s.read(key: _keyRefresh);
+
+  Future<void> saveRememberMe(String email, String password) async {
+    await _s.write(key: _keyEmail, value: email);
+    await _s.write(key: _keyPassword, value: password);
+  }
+
+  Future<String?> getRememberedEmail() => _s.read(key: _keyEmail);
+  Future<String?> getRememberedPassword() => _s.read(key: _keyPassword);
+
+  Future<void> clearRememberMe() async {
+    await _s.delete(key: _keyEmail);
+    await _s.delete(key: _keyPassword);
+  }
 
   Future<void>    saveRole(String role) => _s.write(key: _keyRole, value: role);
   Future<String?> getRole()             => _s.read(key: _keyRole);

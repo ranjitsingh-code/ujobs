@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../../core/providers/onboarding_provider.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -71,6 +72,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   Future<void> _markSeenAndGo() async {
     await ref.read(secureStorageProvider).saveOnboardingSeen();
+    ref.invalidate(onboardingSeenProvider);
     if (mounted) context.go('/role-picker');
   }
 
@@ -139,9 +141,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
-                  icon: _page < slides.length - 1
-                      ? HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 18.r, color: AppColors.surface)
-                      : null,
+                  icon: null,
                 ),
               ),
             ]),
@@ -390,11 +390,11 @@ class _HireIllustration extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Row(children: [
-            _StatMini(value: '47',  label: 'Active Jobs',  color: accent),
+            _StatMini(value: '47',  label: context.l10n.activeJobs,  color: accent),
             SizedBox(width: 10.w),
-            _StatMini(value: '124', label: 'Applicants',   color: accent),
+            _StatMini(value: '124', label: context.l10n.applicants,   color: accent),
             SizedBox(width: 10.w),
-            _StatMini(value: '18',  label: 'This Week',    color: accent),
+            _StatMini(value: '18',  label: context.l10n.thisWeek,    color: accent),
           ]),
         ],
       );
@@ -475,9 +475,9 @@ class _AIIllustration extends StatelessWidget {
               SizedBox(height: 10.h),
               // Pill tags
               Wrap(spacing: 6.w, runSpacing: 6.h, children: [
-                _Tag(label: 'Personalised',  accent: accent),
-                _Tag(label: 'Real-time',     accent: accent),
-                _Tag(label: 'Updated Daily', accent: accent),
+                _Tag(label: context.l10n.personalised,  accent: accent),
+                _Tag(label: context.l10n.realtime,     accent: accent),
+                _Tag(label: context.l10n.updatedDaily, accent: accent),
               ]),
             ]),
           ),

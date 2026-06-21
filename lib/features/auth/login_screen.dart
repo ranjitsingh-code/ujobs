@@ -1,26 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/providers/auth_provider.dart';
+import '../../core/providers/role_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/l10n_extensions.dart';
+import '../../core/widgets/ujob_auth_links.dart';
 import '../../core/widgets/ujob_button.dart';
+import '../../core/widgets/ujob_checkbox.dart';
 import '../../core/widgets/ujob_logo.dart';
 import '../../core/widgets/ujob_text_field.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   final String initialRole;
   const LoginScreen({this.initialRole = 'seeker', super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
+class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _emailCtrl    = TextEditingController();
   final _passwordCtrl = TextEditingController();
   late String _role;
+  bool _rememberMe = false;
 
   late final AnimationController _seqCtrl;
   late final Animation<double> _cardFade;
@@ -56,7 +62,30 @@ class _LoginScreenState extends State<LoginScreen>
       if (_passError != null) setState(() => _passError = null);
     });
     
+    _loadRememberedData();
     _seqCtrl.forward();
+  }
+
+  Future<void> _loadRememberedData() async {
+    final storage = ref.read(secureStorageProvider);
+    final email = await storage.getRememberedEmail();
+    final password = await storage.getRememberedPassword();
+    if (email != null && password != null) {
+      if (mounted) {
+        setState(() {
+          _emailCtrl.text = email;
+          _passwordCtrl.text = password;
+          _rememberMe = true;
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _emailCtrl.text = _role == 'employer' ? 'employer@example.com' : 'seeker@example.com';
+          _passwordCtrl.text = 'password123';
+        });
+      }
+    }
   }
 
   @override
@@ -70,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen>
   String? _emailError;
   String? _passError;
 
-  void _login() {
+  void _login() async {
     final emailEmpty = _emailCtrl.text.trim().isEmpty;
     final passEmpty = _passwordCtrl.text.isEmpty;
     
@@ -90,11 +119,25 @@ class _LoginScreenState extends State<LoginScreen>
       });
     }
 
-    // TODO: wire API when UI sign-off complete
-    if (_role == 'employer') {
-      context.go('/employer');
+    // Mock authentication: update auth and role providers
+    await ref.read(authProvider.notifier).mockLogin();
+    await ref.read(secureStorageProvider).saveRole(_role);
+    ref.read(activeRoleProvider.notifier).setRole(_role);
+
+    // Save remember-me
+    final storage = ref.read(secureStorageProvider);
+    if (_rememberMe) {
+      await storage.saveRememberMe(_emailCtrl.text, _passwordCtrl.text);
     } else {
-      context.go('/seeker');
+      await storage.clearRememberMe();
+    }
+
+    if (mounted) {
+      if (_role == 'employer') {
+        context.go('/employer');
+      } else {
+        context.go('/seeker');
+      }
     }
   }
 
@@ -103,171 +146,188 @@ class _LoginScreenState extends State<LoginScreen>
     final l10n = context.l10n;
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: Column(children: [
-        // Header gradient shifts darker for employer
-        TweenAnimationBuilder<double>(
-          tween: Tween(end: _role == 'employer' ? 1.0 : 0.0),
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOut,
-          builder: (context, t, _) => Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.lerp(AppColors.primaryDark,   AppColors.primaryDeep, t)!,
-                  Color.lerp(AppColors.primary,       AppColors.primaryDark, t)!,
-                  Color.lerp(AppColors.primaryAccent, AppColors.primary,     t)!,
-                ],
-              ),
-            ),
-            padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 56.h),
-            child: SafeArea(
-              bottom: false,
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                SizedBox(height: 20.h),
-                UJobLogo(variant: LogoVariant.color, height: 60.h),
-                SizedBox(height: 24.h),
-                Text(l10n.welcomeBack,
-                    style: AppText.heading1.copyWith(color: AppColors.surface)),
-                SizedBox(height: 4.h),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  transitionBuilder: (child, anim) =>
-                      FadeTransition(opacity: anim, child: child),
-                  child: Text(
-                    _role == 'employer'
-                        ? 'Sign in as an Employer'
-                        : l10n.loginSubtitle,
-                    key: ValueKey(_role),
-                    style: AppText.body.copyWith(
-                        color: AppColors.surface.withValues(alpha: 0.75)),
-                  ),
+      body: SingleChildScrollView(
+        child: Column(children: [
+          // Header gradient shifts darker for employer
+          TweenAnimationBuilder<double>(
+            tween: Tween(end: _role == 'employer' ? 1.0 : 0.0),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOut,
+            builder: (context, t, _) => Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.lerp(AppColors.primaryDark,   AppColors.primaryDeep, t)!,
+                    Color.lerp(AppColors.primary,       AppColors.primaryDark, t)!,
+                    Color.lerp(AppColors.primaryAccent, AppColors.primary,     t)!,
+                  ],
                 ),
-              ]),
-            ),
-          ),
-        ),
-
-        // White card overlapping header
-        Expanded(
-          child: SingleChildScrollView(
-            child: Transform.translate(
-              offset: Offset(0, -20.h),
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 24.h),
-                child: FadeTransition(
-                  opacity: _cardFade,
-                  child: SlideTransition(
-                    position: _cardSlide,
-                    child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 16.w),
-                      padding: EdgeInsets.all(20.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(20.r),
-                        boxShadow: AppShadow.modal(),
-                      ),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        _SlidingTabs(
-                          selected: _role,
-                          onChanged: (r) => setState(() => _role = r),
-                          labels: [l10n.jobSeekerTab, l10n.employerTab],
-                          values: const ['seeker', 'employer'],
-                        ),
-                        SizedBox(height: 20.h),
-
-                        FadeTransition(
-                          opacity: _emailFade,
-                          child: UJobTextField(
-                            label: l10n.emailLabel,
-                            hint: l10n.emailHint,
-                            controller: _emailCtrl,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            errorText: _emailError,
-                            isRequired: true,
-                            isEmail: true,
-                          ),
-                        ),
-
-                        FadeTransition(
-                          opacity: _passwordFade,
-                          child: UJobTextField(
-                            label: l10n.passwordLabel,
-                            hint: l10n.passwordHint,
-                            controller: _passwordCtrl,
-                            isPassword: true,
-                            textInputAction: TextInputAction.done,
-                            errorText: _passError,
-                            isRequired: true,
-                          ),
-                        ),
-
-                        FadeTransition(
-                          opacity: _actionsFade,
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () => context.push('/forgot-password'),
-                                style: TextButton.styleFrom(
-                                  minimumSize: Size.zero,
-                                  padding: EdgeInsets.symmetric(vertical: 4.h),
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(l10n.forgotPassword,
-                                    style: AppText.label.copyWith(color: AppColors.primary)),
-                              ),
-                            ),
-                            SizedBox(height: 16.h),
-                            UJobButton(label: l10n.signIn, onTap: _login),
-                          ]),
-                        ),
-                        SizedBox(height: 20.h),
-
-                        FadeTransition(
-                          opacity: _bottomFade,
-                          child: Center(
-                            child: TextButton(
-                              onPressed: () => context.push(
-                                _role == 'employer'
-                                    ? '/register/employer'
-                                    : '/register/seeker',
-                              ),
-                              style: TextButton.styleFrom(
-                                minimumSize: Size.zero,
-                                padding: EdgeInsets.symmetric(vertical: 4.h),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: RichText(
-                                text: TextSpan(
-                                  style: AppText.small.copyWith(color: AppColors.muted),
-                                  children: [
-                                    TextSpan(text: l10n.dontHaveAccount),
-                                    TextSpan(
-                                      text: l10n.createAccountLink,
-                                      style: AppText.small.copyWith(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w700),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                      ]),
+              ),
+              padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 56.h),
+              child: SafeArea(
+                bottom: false,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  SizedBox(height: 20.h),
+                  UJobLogo(variant: LogoVariant.color, height: 60.h),
+                  SizedBox(height: 24.h),
+                  Text(l10n.welcomeBack,
+                      style: AppText.heading1.copyWith(color: AppColors.surface)),
+                  SizedBox(height: 4.h),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, anim) =>
+                        FadeTransition(opacity: anim, child: child),
+                    child: Text(
+                      _role == 'employer'
+                          ? l10n.signInAsEmployer
+                          : l10n.loginSubtitle,
+                      key: ValueKey(_role),
+                      style: AppText.body.copyWith(
+                          color: AppColors.surface.withValues(alpha: 0.75)),
                     ),
                   ),
+                ]),
+              ),
+            ),
+          ),
+
+          // White card overlapping header
+          Transform.translate(
+            offset: Offset(0, -20.h),
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 24.h),
+              child: FadeTransition(
+                opacity: _cardFade,
+                child: SlideTransition(
+                  position: _cardSlide,
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 16.w),
+                    padding: EdgeInsets.all(20.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(20.r),
+                      boxShadow: AppShadow.modal(),
+                    ),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                       _SlidingTabs(
+                        selected: _role,
+                        onChanged: (r) {
+                          setState(() {
+                            _role = r;
+                            final currentEmail = _emailCtrl.text.trim();
+                            if (currentEmail.isEmpty ||
+                                currentEmail == 'seeker@example.com' ||
+                                currentEmail == 'employer@example.com') {
+                              _emailCtrl.text = r == 'employer' ? 'employer@example.com' : 'seeker@example.com';
+                              _passwordCtrl.text = 'password123';
+                            }
+                          });
+                        },
+                        labels: [l10n.jobSeekerTab, l10n.employerTab],
+                        values: const ['seeker', 'employer'],
+                      ),
+                      SizedBox(height: 20.h),
+
+                      FadeTransition(
+                        opacity: _emailFade,
+                        child: UJobTextField(
+                          label: l10n.emailLabel,
+                          hint: l10n.emailHint,
+                          controller: _emailCtrl,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          errorText: _emailError,
+                          isRequired: true,
+                          isEmail: true,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      FadeTransition(
+                        opacity: _passwordFade,
+                        child: UJobTextField(
+                          label: l10n.passwordLabel,
+                          hint: l10n.passwordHint,
+                          controller: _passwordCtrl,
+                          isPassword: true,
+                          textInputAction: TextInputAction.done,
+                          errorText: _passError,
+                          isRequired: true,
+                        ),
+                      ),
+
+                      FadeTransition(
+                        opacity: _actionsFade,
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          SizedBox(height: 12.h),
+                          Row(
+                            children: [
+                              UJobCheckbox(
+                                value: _rememberMe,
+                                onChanged: (value) =>
+                                    setState(() => _rememberMe = value),
+                                label: l10n.rememberMe,
+                              ),
+                              const Spacer(),
+                              GestureDetector(
+                                onTap: () =>
+                                    context.push('/forgot-password'),
+                                child: Text(
+                                  l10n.forgotPassword,
+                                  style: AppText.label.copyWith(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16.h),
+                          UJobButton(label: l10n.logIn, onTap: _login),
+                        ]),
+                      ),
+                      SizedBox(height: 16.h),
+
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w),
+                            child: Text(
+                              l10n.orContinueWith,
+                              style: AppText.small.copyWith(
+                                color: AppColors.muted,
+                              ),
+                            ),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      SizedBox(height: 16.h),
+
+                      FadeTransition(
+                        opacity: _bottomFade,
+                        child: UJobAuthLinks(
+                          primaryText: l10n.dontHaveAccount,
+                          primaryLinkText: l10n.signUpFree,
+                          onPrimaryTap: () => context.push(
+                              _role == 'employer'
+                                  ? '/register/employer'
+                                  : '/register/seeker',
+                            ),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                    ]),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ]),
+        ]),
+      ),
     );
   }
 }

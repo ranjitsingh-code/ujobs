@@ -63,11 +63,11 @@ class _ProfileBody extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(children: [
-              _StatBox(value: '—', label: 'Profile Views'),
+              _StatBox(value: '—', label: context.l10n.profileViews),
               const SizedBox(width: 12),
-              _StatBox(value: '—', label: 'Saved Jobs'),
+              _StatBox(value: '—', label: context.l10n.savedJobs),
               const SizedBox(width: 12),
-              _StatBox(value: '—', label: 'Applications'),
+              _StatBox(value: '—', label: context.l10n.applicationsTab),
             ]),
           ),
           const SizedBox(height: 20),
@@ -121,11 +121,11 @@ class _ProfileBody extends ConsumerWidget {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('Edit Personal Info', style: AppText.heading3),
           const SizedBox(height: 20),
-          UJobTextField(label: 'First Name', controller: firstCtrl),
-          UJobTextField(label: 'Last Name', controller: lastCtrl),
-          UJobTextField(label: 'Phone', controller: phoneCtrl, keyboardType: TextInputType.phone),
+          UJobTextField(label: context.l10n.firstNameLabel, controller: firstCtrl),
+          UJobTextField(label: context.l10n.lastNameLabel, controller: lastCtrl),
+          UJobTextField(label: context.l10n.phoneLabel, controller: phoneCtrl, keyboardType: TextInputType.phone),
           UJobButton(
-            label: 'Save Changes',
+            label: context.l10n.saveChanges,
             onTap: () async {
               try {
                 await ref.read(dioClientProvider).dio.put(Ep.seekerMe, data: {
@@ -156,13 +156,13 @@ class _ProfileBody extends ConsumerWidget {
           Text('Professional Summary', style: AppText.heading3),
           const SizedBox(height: 20),
           UJobTextField(
-            label: 'About / Bio',
+            label: context.l10n.aboutBio,
             hint: 'Describe your experience, skills, and what you\'re looking for...',
             controller: bioCtrl,
             maxLines: 5,
           ),
           UJobButton(
-            label: 'Save',
+            label: context.l10n.save,
             onTap: () async {
               try {
                 await ref.read(dioClientProvider).dio.put(Ep.seekerMe, data: {'bio': bioCtrl.text});

@@ -64,6 +64,9 @@ dependencies:
   # i18n
   flutter_localizations:
     sdk: flutter
+  flutter_quill: ^11.5.1
+  syncfusion_flutter_pdfviewer: ^33.2.13
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:

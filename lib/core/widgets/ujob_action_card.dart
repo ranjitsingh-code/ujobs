@@ -11,7 +11,7 @@ class UJobActionCard extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
-  UJobActionCard({
+  const UJobActionCard({
     required this.icon,
     required this.color,
     required this.title,
@@ -27,7 +27,7 @@ class UJobActionCard extends StatelessWidget {
     child: Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppColors.surface, 
+        color: AppColors.surface,
         borderRadius: AppRadius.md,
         border: Border.all(color: AppColors.border),
       ),
@@ -37,7 +37,7 @@ class UJobActionCard extends StatelessWidget {
             width: 44.r,
             height: 44.r,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1), 
+              color: color.withValues(alpha: 0.1),
               borderRadius: AppRadius.sm,
             ),
             child: HugeIcon(icon: icon, color: color, size: 22.r),
@@ -45,14 +45,21 @@ class UJobActionCard extends StatelessWidget {
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, 
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: AppText.bodyBold),
-                Text(subtitle, style: AppText.small.copyWith(color: AppColors.muted)),
+                Text(
+                  subtitle,
+                  style: AppText.small.copyWith(color: AppColors.muted),
+                ),
               ],
             ),
           ),
-          HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: AppColors.muted2, size: 20),
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowRight01,
+            color: AppColors.muted2,
+            size: 20,
+          ),
         ],
       ),
     ),

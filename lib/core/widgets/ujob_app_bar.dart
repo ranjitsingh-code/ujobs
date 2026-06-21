@@ -27,7 +27,8 @@ class UJobAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(56.h + (bottom?.preferredSize.height ?? 0));
+  Size get preferredSize =>
+      Size.fromHeight(56.h + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +48,8 @@ class UJobAppBar extends StatelessWidget implements PreferredSizeWidget {
                 else
                   SizedBox(width: 40.r),
                 Expanded(
-                  child: customTitle ??
+                  child:
+                      customTitle ??
                       Text(
                         title,
                         textAlign: TextAlign.center,
@@ -64,7 +66,7 @@ class UJobAppBar extends StatelessWidget implements PreferredSizeWidget {
               ],
             ),
           ),
-          if (bottom != null) bottom!,
+          ?bottom,
         ],
       ),
     );

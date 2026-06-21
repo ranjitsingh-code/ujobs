@@ -8,6 +8,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/widgets/ujob_auth_header.dart';
 import '../../core/widgets/ujob_button.dart';
 
 import '../../core/utils/l10n_extensions.dart';
@@ -81,6 +82,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
     }
     if (value.isNotEmpty && index < 5) {
       _foci[index + 1].requestFocus();
+    } else if (index == 5 && value.isNotEmpty) {
+      // Last digit entered, trigger verification but keep keyboard
+      _verify();
     }
     setState(() => _error = null);
   }
@@ -95,6 +99,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
   }
 
   String get _otp => _ctrs.map((c) => c.text).join();
+
+  String _maskEmail(String email) {
+    if (!email.contains('@')) return email;
+    final parts = email.split('@');
+    final name = parts[0];
+    final domain = parts[1];
+    if (name.length <= 3) return '***@$domain';
+    return '${name.substring(0, 2)}***${name.substring(name.length - 1)}@$domain';
+  }
 
   void _skipToApp() {
     final role = ref.read(activeRoleProvider);
@@ -123,22 +136,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             SizedBox(height: 8.h),
-            // Back button
-            GestureDetector(
-              onTap: () => context.pop(),
-              child: Container(
-                width: 36.r, height: 36.r,
-                decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(10.r)),
-                child: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, size: 20.r, color: AppColors.text),
-              ),
-            ),
-            SizedBox(height: 28.h),
-
-            // Icon
-            Container(
-              width: 64.r, height: 64.r,
-              decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(16.r)),
-              child: HugeIcon(icon: HugeIcons.strokeRoundedMail01, color: AppColors.primary, size: 30.r),
+            UJobAuthHeader(
+              icon: HugeIcons.strokeRoundedMail01,
+              onBack: () => context.canPop() ? context.pop() : context.go('/login'),
             ),
             SizedBox(height: 20.h),
 
@@ -150,7 +150,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
             ),
             if (widget.email != null) ...[
               SizedBox(height: 2.h),
-              Text(widget.email!, style: AppText.bodyMd.copyWith(color: AppColors.text, fontWeight: FontWeight.w700)),
+              Text(_maskEmail(widget.email!), style: AppText.bodyMd.copyWith(color: AppColors.text, fontWeight: FontWeight.w700)),
             ],
             SizedBox(height: 32.h),
 
@@ -164,12 +164,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(6, (i) => _OtpBox(
-                  controller: _ctrs[i],
-                  focusNode: _foci[i],
-                  hasValue: _ctrs[i].text.isNotEmpty,
-                  hasError: _error != null,
-                  onChanged: (v) => _onDigitChanged(i, v),
-                  onKeyEvent: (e) => _onKeyEvent(i, e),
+                controller: _ctrs[i],
+                focusNode: _foci[i],
+                autofocus: i == 0,
+                hasValue: _ctrs[i].text.isNotEmpty,
+                hasError: _error != null,
+                onChanged: (v) => _onDigitChanged(i, v),
+                onKeyEvent: (e) => _onKeyEvent(i, e),
                 )),
               ),
             ),
@@ -201,17 +202,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
             SizedBox(height: 24.h),
 
             UJobButton(label: l10n.verifyEmail, onTap: _verify, isLoading: _loading),
-            SizedBox(height: 14.h),
-
-            Center(
-              child: GestureDetector(
-                onTap: _skipToApp,
-                child: Text(
-                  l10n.skipForNow,
-                  style: AppText.small.copyWith(color: AppColors.muted),
-                ),
-              ),
-            ),
             SizedBox(height: 24.h),
           ]),
         ),
@@ -223,7 +213,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
 class _OtpBox extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
-  final bool hasValue, hasError;
+  final bool hasValue, hasError, autofocus;
   final ValueChanged<String> onChanged;
   final ValueChanged<KeyEvent> onKeyEvent;
 
@@ -232,24 +222,26 @@ class _OtpBox extends StatelessWidget {
     required this.focusNode,
     required this.hasValue,
     required this.hasError,
+    this.autofocus = false,
     required this.onChanged,
     required this.onKeyEvent,
   });
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: 46.r,
-        height: 56.h,
+        width: 50.r,
+        height: 60.r,
         child: KeyboardListener(
           focusNode: FocusNode(),
           onKeyEvent: onKeyEvent,
           child: TextField(
             controller: controller,
             focusNode: focusNode,
+            autofocus: autofocus,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
-            inputFormatters: [LengthLimitingTextInputFormatter(6)],
-            style: AppText.heading2.copyWith(color: AppColors.text),
+            inputFormatters: [LengthLimitingTextInputFormatter(1)],
+            style: AppText.heading2.copyWith(color: AppColors.text, fontWeight: FontWeight.w700),
             onChanged: onChanged,
             decoration: InputDecoration(
               counterText: '',
@@ -257,20 +249,20 @@ class _OtpBox extends StatelessWidget {
               fillColor: hasError
                   ? AppColors.errorBg
                   : hasValue
-                      ? AppColors.primaryLight
+                      ? AppColors.primary.withValues(alpha: 0.1)
                       : AppColors.bg,
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(16.r),
                 borderSide: BorderSide(
-                  color: hasError ? AppColors.error : hasValue ? AppColors.primary.withValues(alpha: 0.4) : AppColors.border,
+                  color: hasError ? AppColors.error : AppColors.border,
                   width: 1.5,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(16.r),
                 borderSide: BorderSide(color: hasError ? AppColors.error : AppColors.primary, width: 2),
               ),
-              contentPadding: EdgeInsets.zero,
+              contentPadding: EdgeInsets.symmetric(vertical: 12.h),
             ),
           ),
         ),

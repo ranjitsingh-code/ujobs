@@ -30,6 +30,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
+  String get closeJob => 'Close';
+
+  @override
   String get edit => 'Edit';
 
   @override
@@ -214,7 +217,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeBack => 'Welcome back';
 
   @override
-  String get loginSubtitle => 'Sign in to your account';
+  String get loginSubtitle => 'Continue your job search journey.';
 
   @override
   String get emailLabel => 'Email address';
@@ -227,6 +230,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordHint => 'Enter your password';
+
+  @override
+  String get rememberMe => 'Remember me';
+
+  @override
+  String get logIn => 'Log In';
+
+  @override
+  String get signUpFree => 'Sign up free';
 
   @override
   String get orContinueWith => 'or';
@@ -250,25 +262,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorLoginFailed => 'Login failed. Please try again.';
 
   @override
-  String get createAccountTitle => 'Create account';
+  String get signInAsEmployer => 'Manage your job listings and applicants.';
 
   @override
-  String get createAccountSub => 'Find your next opportunity';
+  String get createAccountTitle => 'Create your free account';
 
   @override
-  String get firstNameHint => 'Alex';
+  String get createAccountSub => 'Start finding jobs matched to your skills.';
 
   @override
-  String get lastNameHint => 'Johnson';
+  String get firstNameHint => 'e.g. Alex';
 
   @override
-  String get phoneHint => '+1 (555) 000-0000';
+  String get lastNameHint => 'e.g. Johnson';
 
   @override
-  String get passwordCreateHint => 'Create a strong password';
+  String get phoneHint => 'e.g. +8801XXXXXXXXX';
 
   @override
-  String get confirmPasswordHint => 'Repeat password';
+  String get passwordCreateHint => 'At least 8 characters';
+
+  @override
+  String get confirmPasswordHint => 'Repeat your password';
 
   @override
   String get profileBackgroundTitle => 'Your background';
@@ -286,7 +301,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get locationLabel => 'Location';
 
   @override
-  String get locationHint => 'City, Country';
+  String get locationHint => 'e.g. London, UK';
 
   @override
   String get experienceLabel => 'Years of experience';
@@ -325,25 +340,74 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorCompanyName => 'Enter company name';
 
   @override
+  String get errorCityCountry => 'Enter city and country';
+
+  @override
+  String get errorAcceptTerms => 'Accept the Terms and Conditions to continue';
+
+  @override
   String get errorRegistrationFailed => 'Registration failed. Try again.';
 
   @override
-  String get employerAccountTitle => 'Employer account';
+  String get employerAccountTitle => 'Create employer account';
 
   @override
-  String get employerAccountSub => 'Start hiring great talent today';
+  String get employerAccountSub => 'Start hiring top talent in minutes';
 
   @override
-  String get firstNameEmpHint => 'John';
+  String get firstNameEmpHint => 'e.g. John';
 
   @override
-  String get lastNameEmpHint => 'Smith';
+  String get lastNameEmpHint => 'e.g. Smith';
 
   @override
   String get workEmailLabel => 'Work email';
 
   @override
-  String get workEmailHint => 'john@company.com';
+  String get workEmailHint => 'e.g. john@company.com';
+
+  @override
+  String get agreeTermsAndConditions =>
+      'I agree to the Terms and Conditions and Privacy Policy';
+
+  @override
+  String get agreeTo => 'I agree to the';
+
+  @override
+  String get byRegisteringAgree => 'By registering you agree to our';
+
+  @override
+  String get terms => 'Terms';
+
+  @override
+  String get termsAndConditions => 'Terms and Conditions';
+
+  @override
+  String get and => 'and';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get privacyPolicyWithPeriod => 'Privacy Policy.';
+
+  @override
+  String get areYouEmployer => 'Are you an employer?';
+
+  @override
+  String get registerHere => 'Register here';
+
+  @override
+  String get lookingForJob => 'Looking for a job?';
+
+  @override
+  String get registerAsJobSeeker => 'Register as a job seeker';
+
+  @override
+  String get errorLegalPageLoad => 'Failed to load this page';
+
+  @override
+  String get legalContentUnavailable => 'Content is not available yet.';
 
   @override
   String get companyDetailsTitle => 'Company details';
@@ -355,13 +419,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get companyNameLabel => 'Company name';
 
   @override
-  String get companyNameHint => 'Acme Inc.';
+  String get companyNameHint => 'e.g. Acme Inc.';
 
   @override
   String get websiteLabel => 'Website (optional)';
 
   @override
-  String get websiteHint => 'https://company.com';
+  String get websiteHint => 'e.g. https://company.com';
+
+  @override
+  String get country => 'Country';
+
+  @override
+  String get countryHint => 'Select country';
+
+  @override
+  String get countryUnitedKingdom => 'United Kingdom';
+
+  @override
+  String get countryIreland => 'Ireland';
 
   @override
   String get industryLabel => 'Industry';
@@ -392,6 +468,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get industryRealEstate => 'Real Estate';
+
+  @override
+  String get industryOther => 'Other';
+
+  @override
+  String get customIndustryLabel => 'Custom Industry';
+
+  @override
+  String get customIndustryHint => 'e.g. Space Tourism';
 
   @override
   String get companySizeLabel => 'Company size';
@@ -532,6 +617,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get postJob => 'Post a Job';
 
   @override
+  String get editJob => 'Edit Job';
+
+  @override
+  String get jobUpdatedSuccess => 'Job updated successfully!';
+
+  @override
   String get postJobSub => 'Create a new job listing';
 
   @override
@@ -577,7 +668,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get city => 'City';
 
   @override
-  String get cityHint => 'London';
+  String get cityHint => 'e.g. London';
 
   @override
   String get salaryMin => 'Salary Min (£)';
@@ -1143,4 +1234,470 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPasswordMismatch => 'Passwords do not match';
+
+  @override
+  String get failedLoadJobs => 'Failed to load jobs';
+
+  @override
+  String get jobActions => 'Job actions';
+
+  @override
+  String get pauseJob => 'Pause';
+
+  @override
+  String get resumeJob => 'Republish';
+
+  @override
+  String get reactivateJob => 'Republish';
+
+  @override
+  String get publishJob => 'Publish';
+
+  @override
+  String get reopenJob => 'Reopen';
+
+  @override
+  String get deleteJobTitle => 'Delete job?';
+
+  @override
+  String deleteJobMessage(String jobTitle) {
+    return 'Delete \"$jobTitle\"? This cannot be undone.';
+  }
+
+  @override
+  String get viewJobDetails => 'View job details';
+
+  @override
+  String get recentlyPosted => 'Recently posted';
+
+  @override
+  String get postedToday => 'Posted today';
+
+  @override
+  String postedDaysAgo(int days) {
+    return 'Posted ${days}d ago';
+  }
+
+  @override
+  String applicantCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count applicants',
+      one: '1 applicant',
+      zero: 'No applicants',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get onsite => 'On-site';
+
+  @override
+  String get pausedTab => 'Paused';
+
+  @override
+  String get manageJob => 'Manage';
+
+  @override
+  String jobTiming(String posted, String closing) {
+    return '$posted · $closing';
+  }
+
+  @override
+  String closesInDays(int days) {
+    return 'Closes in $days days';
+  }
+
+  @override
+  String get closesToday => 'Closes today';
+
+  @override
+  String get applicationsClosed => 'Applications closed';
+
+  @override
+  String get closingDateNotSet => 'Closing date not set';
+
+  @override
+  String get signOutAllDevices => 'Sign Out from All Devices';
+
+  @override
+  String get signOutAllDevicesMsg =>
+      'Please enter your password to confirm signing out from all active devices.';
+
+  @override
+  String get signOutConfirmation => 'Are you sure you want to sign out?';
+
+  @override
+  String get currentPasswordVerification =>
+      'Current Password (for verification)';
+
+  @override
+  String get unreadTab => 'Unread';
+
+  @override
+  String get statusTab => 'Status';
+
+  @override
+  String get searchNotifications => 'Search notifications...';
+
+  @override
+  String totalCountLabel(int count) {
+    return '$count total';
+  }
+
+  @override
+  String get nothingHereYet => 'Nothing here yet';
+
+  @override
+  String get notifiedWhenApply =>
+      'You\'ll be notified when candidates apply to your jobs';
+
+  @override
+  String get accountSuspendedTitle => 'Account Suspended';
+
+  @override
+  String get accountSuspendedDesc =>
+      'Your account has been suspended due to a policy violation. Please contact our support team to appeal this decision.';
+
+  @override
+  String get contactSupportBtn => 'Contact Support';
+
+  @override
+  String get backToLoginBtn => 'Back to Login';
+
+  @override
+  String get accountSuspendedBanner => 'Account Suspended — Action Required';
+
+  @override
+  String suspendedOnDate(String date) {
+    return 'Suspended on $date';
+  }
+
+  @override
+  String get signOutBtn => 'Sign Out';
+
+  @override
+  String get supportFeaturesAreNotAvailableInTheDemo =>
+      'Support features are not available in the demo.';
+
+  @override
+  String get thisWeek => 'This Week';
+
+  @override
+  String get personalised => 'Personalised';
+
+  @override
+  String get realtime => 'Real-time';
+
+  @override
+  String get updatedDaily => 'Updated Daily';
+
+  @override
+  String get dynamicKey => 'العربية';
+
+  @override
+  String get newJobApplication => 'New Job Application';
+
+  @override
+  String get candidateMessages => 'Candidate Messages';
+
+  @override
+  String get interviewResponses => 'Interview Responses';
+
+  @override
+  String get marketingEmails => 'Marketing Emails';
+
+  @override
+  String get messageSound => 'Message Sound';
+
+  @override
+  String get popupNotification => 'Pop-up Notification';
+
+  @override
+  String get publicProfile => 'Public Profile';
+
+  @override
+  String get privateProfile => 'Private Profile';
+
+  @override
+  String get showEmailToCandidates => 'Show Email to Candidates';
+
+  @override
+  String get showPhoneToCandidates => 'Show Phone to Candidates';
+
+  @override
+  String get timezone => 'Timezone';
+
+  @override
+  String get dateFormat => 'Date Format';
+
+  @override
+  String get exportJobsCsv => 'Export Jobs (CSV)';
+
+  @override
+  String get exportApplicantsCsv => 'Export Applicants (CSV)';
+
+  @override
+  String get deleteMyAccount => 'Delete My Account';
+
+  @override
+  String get selectAll => 'Select All';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get filterByJob => 'Filter by Job';
+
+  @override
+  String get searchApplicantsByName => 'Search applicants by name...';
+
+  @override
+  String get allJobs => 'All Jobs';
+
+  @override
+  String get searchApplicants => 'Search applicants...';
+
+  @override
+  String get totalJobs => 'Total Jobs';
+
+  @override
+  String get totalApplicants => 'Total Applicants';
+
+  @override
+  String get saveToDraft => 'Save to Draft';
+
+  @override
+  String get publishJob1 => 'Publish Job';
+
+  @override
+  String get republishJob => 'Republish Job';
+
+  @override
+  String get reopenJob1 => 'Re-open Job';
+
+  @override
+  String get pauseJob1 => 'Pause Job';
+
+  @override
+  String get closeJob1 => 'Close Job';
+
+  @override
+  String get deleteJob => 'Delete Job';
+
+  @override
+  String get applicationDeadline => 'Application Deadline';
+
+  @override
+  String get selectADate => 'Select a date';
+
+  @override
+  String get minimumEducation => 'Minimum Education';
+
+  @override
+  String get experienceRequiredYears => 'Experience Required (years)';
+
+  @override
+  String get requiredSkills => 'Required Skills';
+
+  @override
+  String get preferredSkills => 'Preferred Skills';
+
+  @override
+  String get languagesRequired => 'Languages Required';
+
+  @override
+  String get ageMinOptional => 'Age Min (Optional)';
+
+  @override
+  String get ageMaxOptional => 'Age Max (Optional)';
+
+  @override
+  String get eg2 => 'e.g. 2';
+
+  @override
+  String get tapToOpenEditor => 'Tap to open editor...';
+
+  @override
+  String get typeToSearchOrAddASkill => 'Type to search or add a skill...';
+
+  @override
+  String get egEnglishHindi => 'e.g. English, Hindi';
+
+  @override
+  String get egAwsPmpCfa => 'e.g. AWS, PMP, CFA';
+
+  @override
+  String get eg22 => 'e.g. 22';
+
+  @override
+  String get eg45 => 'e.g. 45';
+
+  @override
+  String get jobCategory => 'Job Category';
+
+  @override
+  String get specifyCategory => 'Specify Category*';
+
+  @override
+  String get numberOfOpenings => 'Number of Openings';
+
+  @override
+  String get currency => 'Currency';
+
+  @override
+  String get period => 'Period';
+
+  @override
+  String get minimum => 'Minimum';
+
+  @override
+  String get maximum => 'Maximum';
+
+  @override
+  String get jobDescription1 => 'Job Description';
+
+  @override
+  String get responsibilities => 'Responsibilities';
+
+  @override
+  String get egSeniorUxDesigner => 'e.g. Senior UX Designer';
+
+  @override
+  String get egSpaceExploration => 'e.g. Space Exploration';
+
+  @override
+  String get eg1 => 'e.g. 1';
+
+  @override
+  String get eg50000 => 'e.g. 50000';
+
+  @override
+  String get eg70000 => 'e.g. 70000';
+
+  @override
+  String get addAnotherQuestion => 'Add Another Question';
+
+  @override
+  String get egDoYouKnowSwift => 'e.g. Do you know Swift?';
+
+  @override
+  String get website => 'Website';
+
+  @override
+  String get workType => 'Work Type';
+
+  @override
+  String get address => 'Address';
+
+  @override
+  String get postcode => 'Postcode';
+
+  @override
+  String get contactPerson => 'Contact Person';
+
+  @override
+  String get visibility => 'Visibility';
+
+  @override
+  String get linkedin => 'LinkedIn';
+
+  @override
+  String get facebook => 'Facebook';
+
+  @override
+  String get companyName => 'Company Name*';
+
+  @override
+  String get address1 => 'Address*';
+
+  @override
+  String get city1 => 'City*';
+
+  @override
+  String get postcodePin => 'Postcode / PIN';
+
+  @override
+  String get country1 => 'Country*';
+
+  @override
+  String get contactPersonName => 'Contact Person Name*';
+
+  @override
+  String get egAcmeLtd => 'e.g. Acme Ltd';
+
+  @override
+  String get selectIndustry => 'Select industry...';
+
+  @override
+  String get egHttpsacmecom => 'e.g. https://acme.com';
+
+  @override
+  String get selectSize => 'Select size...';
+
+  @override
+  String get selectWorkType => 'Select work type...';
+
+  @override
+  String get eg123BusinessStreet => 'e.g. 123 Business Street';
+
+  @override
+  String get egSw1a1aa => 'e.g. SW1A 1AA';
+
+  @override
+  String get selectCountry => 'Select country...';
+
+  @override
+  String get egJaneSmith => 'e.g. Jane Smith';
+
+  @override
+  String get egHracmecom => 'e.g. hr@acme.com';
+
+  @override
+  String get eg7911123456 => 'e.g. 7911 123456';
+
+  @override
+  String get egHttpslinkedincomcompanyacme =>
+      'e.g. https://linkedin.com/company/acme';
+
+  @override
+  String get egHttpsfacebookcomacme => 'e.g. https://facebook.com/acme';
+
+  @override
+  String get image => 'Image';
+
+  @override
+  String get document => 'Document';
+
+  @override
+  String get home => 'Home';
+
+  @override
+  String get hiI => 'Hi, I\\';
+
+  @override
+  String get yourAnswer => 'Your answer';
+
+  @override
+  String get noMatchingJobsFound => 'No matching jobs found';
+
+  @override
+  String get describeYourExperienceSkillsAndWhatYou =>
+      'Describe your experience, skills, and what you\\';
+
+  @override
+  String get experience => 'Experience';
+
+  @override
+  String get openings => 'Openings';
+
+  @override
+  String get age => 'Age';
+
+  @override
+  String get saveJob => 'Save Job';
+
+  @override
+  String get searchJobsCompanies => 'Search jobs, companies...';
 }

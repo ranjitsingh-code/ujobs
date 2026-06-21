@@ -36,9 +36,10 @@ class _UJobRoleCardState extends State<UJobRoleCard>
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _tapCtrl, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _tapCtrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -66,7 +67,7 @@ class _UJobRoleCardState extends State<UJobRoleCard>
       onTapCancel: _onTapCancel,
       child: AnimatedBuilder(
         animation: _tapCtrl,
-        builder: (_, __) => Transform.scale(
+        builder: (_, _) => Transform.scale(
           scale: _scale.value,
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
@@ -76,8 +77,10 @@ class _UJobRoleCardState extends State<UJobRoleCard>
               border: Border.all(color: AppColors.border),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.text.withValues(alpha:
-                    _tapCtrl.isAnimating || _tapCtrl.isCompleted ? 0.02 : 0.08,
+                  color: AppColors.text.withValues(
+                    alpha: _tapCtrl.isAnimating || _tapCtrl.isCompleted
+                        ? 0.02
+                        : 0.08,
                   ),
                   blurRadius: _tapCtrl.isAnimating ? 4 : 20,
                   offset: Offset(0, _tapCtrl.isAnimating ? 2 : 8),

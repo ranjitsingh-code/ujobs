@@ -122,105 +122,101 @@ class _RolePickerScreenState extends State<RolePickerScreen>
               ),
 
               // ── 2. The Main Content Layer ──
-              Column(
-                children: [
-                  // --- Header Section ---
-                  SizedBox(height: topPadding + 20.h),
-                  Opacity(
-                    opacity: _headerFade.value,
-                    child: Transform.translate(
-                      offset: Offset(0, _headerSlide.value),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+              Padding(
+                padding: EdgeInsets.only(top: topPadding + 20.h),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Logo Row
-                            Row(
-                              children: [
-                                UJobLogo(variant: LogoVariant.color, height: 88.r),
-                              
-                              ],
+                            // --- Header Section ---
+                            Opacity(
+                              opacity: _headerFade.value,
+                              child: Transform.translate(
+                                offset: Offset(0, _headerSlide.value),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          UJobLogo(variant: LogoVariant.color, height: 88.r),
+                                        ],
+                                      ),
+                                      SizedBox(height: 24.h),
+                                      Text(
+                                        l10n.rolePickerTagline,
+                                        style: AppText.heroTitle.copyWith(color: AppColors.surface),
+                                      ),
+                                      SizedBox(height: 12.h),
+                                      Text(
+                                        l10n.rolePickerSubtitle,
+                                        style: AppText.body.copyWith(
+                                          color: AppColors.surface.withValues(alpha: 0.9),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 24.h),
-
-                            // Main Headline
-                            Text(
-                              l10n.rolePickerTagline,
-                              style: AppText.heroTitle.copyWith(color: AppColors.surface),
-                            ),
-                            SizedBox(height: 12.h),
-
-                            // Subtitle
-                            Text(
-                              l10n.rolePickerSubtitle,
-                              style: AppText.body.copyWith(
-                                color: AppColors.surface.withValues(alpha: 0.9),
+                            SizedBox(height: 40.h),
+                            // --- Cards Section ---
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Opacity(
+                                      opacity: _seekerFade.value,
+                                      child: Transform.translate(
+                                        offset: Offset(-_seekerSlide.value, 0),
+                                        child: _InteractiveRoleCard(
+                                          icon: HugeIcons.strokeRoundedJobSearch,
+                                          iconBgColor: AppColors.primaryAccent,
+                                          title: l10n.jobSeekerTab,
+                                          subtitle: l10n.roleJobSeekerSub,
+                                          onTap: widget.onJobSeeker,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 16.w),
+                                  Expanded(
+                                    child: Opacity(
+                                      opacity: _employerFade.value,
+                                      child: Transform.translate(
+                                        offset: Offset(_employerSlide.value, 0),
+                                        child: _InteractiveRoleCard(
+                                          icon: HugeIcons.strokeRoundedBuilding04,
+                                          iconBgColor: AppColors.primaryDark,
+                                          title: l10n.employerTab,
+                                          subtitle: l10n.roleEmployerSub,
+                                          onTap: widget.onEmployer,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-
-                  // Spacer to push cards down so they overlap the blue/white line
-                  SizedBox(height: 40.h),
-
-                  // --- Cards Section ---
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: Row(
-                      children: [
-                        // Left Card
-                        Expanded(
-                          child: Opacity(
-                            opacity: _seekerFade.value,
-                            child: Transform.translate(
-                              offset: Offset(-_seekerSlide.value, 0),
-                              child: _InteractiveRoleCard(
-                                icon: HugeIcons.strokeRoundedJobSearch,
-                                iconBgColor: AppColors.primaryAccent,
-                                title: l10n.jobSeekerTab,
-                                subtitle: l10n.roleJobSeekerSub,
-                                onTap: widget.onJobSeeker,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 16.w),
-                        // Right Card
-                        Expanded(
-                          child: Opacity(
-                            opacity: _employerFade.value,
-                            child: Transform.translate(
-                              offset: Offset(_employerSlide.value, 0),
-                              child: _InteractiveRoleCard(
-                                icon: HugeIcons.strokeRoundedBuilding04,
-                                iconBgColor: AppColors.primaryDark,
-                                title: l10n.employerTab,
-                                subtitle: l10n.roleEmployerSub,
-                                onTap: widget.onEmployer,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    // --- Bottom Section (Fixed) ---
+                    Opacity(
+                      opacity: _bottomFade.value,
+                      child: Transform.translate(
+                        offset: Offset(0, _bottomSlide.value),
+                        child: _BottomSection(onSignIn: widget.onSignIn),
+                      ),
                     ),
-                  ),
-
-                  // --- Flexible space to push bottom section down ---
-                  const Spacer(),
-
-                  // --- Bottom Section ---
-                  Opacity(
-                    opacity: _bottomFade.value,
-                    child: Transform.translate(
-                      offset: Offset(0, _bottomSlide.value),
-                      child: _BottomSection(onSignIn: widget.onSignIn),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           );
@@ -464,7 +460,6 @@ class _BottomSection extends StatelessWidget {
             label: l10n.signIn,
             onTap: onSignIn,
             outlined: true,
-            height: 56.h,
           ),
         ],
       ),

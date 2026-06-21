@@ -17,17 +17,20 @@ class SeekerJobService {
     int page = 1,
   }) async {
     final queryParams = {
-      if (search != null) 'search': search,
-      if (category != null) 'category': category,
-      if (employmentType != null) 'employment_type': employmentType,
-      if (workplaceType != null) 'workplace_type': workplaceType,
-      if (experienceLevel != null) 'experience_level': experienceLevel,
-      if (salaryMin != null) 'salary_min': salaryMin,
+      'search': ?search,
+      'category': ?category,
+      'employment_type': ?employmentType,
+      'workplace_type': ?workplaceType,
+      'experience_level': ?experienceLevel,
+      'salary_min': ?salaryMin,
       'limit': limit,
       'page': page,
     };
 
-    final res = await _client.dio.get(Ep.publicJobs, queryParameters: queryParams);
+    final res = await _client.dio.get(
+      Ep.publicJobs,
+      queryParameters: queryParams,
+    );
     final data = res.data['data'] as List;
     return data.map((json) => Job.fromJson(json)).toList();
   }

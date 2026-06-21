@@ -41,18 +41,24 @@ class _SplashScreenState extends State<SplashScreen>
       duration: Duration(milliseconds: _seqMs.toInt()),
     );
 
-    CurvedAnimation _interval(double startMs, double endMs, [Curve curve = Curves.easeOut]) =>
-        CurvedAnimation(
-          parent: _seqCtrl,
-          curve: Interval(startMs / _seqMs, endMs / _seqMs, curve: curve),
-        );
+    CurvedAnimation interval(
+      double startMs,
+      double endMs, [
+      Curve curve = Curves.easeOut,
+    ]) => CurvedAnimation(
+      parent: _seqCtrl,
+      curve: Interval(startMs / _seqMs, endMs / _seqMs, curve: curve),
+    );
 
-    _iconFade    = Tween(begin: 0.0, end: 1.0).animate(_interval(0,    900));
-    _iconSlide   = Tween(begin: 24.h, end: 0.0).animate(_interval(0,   900));
-    _textFade    = Tween(begin: 0.0, end: 1.0).animate(_interval(450, 1350));
-    _textSlide   = Tween(begin: 12.h, end: 0.0).animate(_interval(450, 1350));
-    _dotsFade    = Tween(begin: 0.0, end: 1.0).animate(_interval(450, 1350));
-    _clusterExit = Tween(begin: 1.0, end: 0.0).animate(_interval(3200, 4100, Curves.easeIn));
+    _iconFade = Tween(begin: 0.0, end: 1.0).animate(interval(0, 900));
+    _iconSlide = Tween(begin: 24.h, end: 0.0).animate(interval(0, 900));
+    _textFade = Tween(begin: 0.0, end: 1.0).animate(interval(450, 1350));
+    _textSlide = Tween(begin: 12.h, end: 0.0).animate(interval(450, 1350));
+    _dotsFade = Tween(begin: 0.0, end: 1.0).animate(interval(450, 1350));
+    _clusterExit = Tween(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(interval(3200, 4100, Curves.easeIn));
 
     _seqCtrl.forward();
   }
@@ -75,21 +81,27 @@ class _SplashScreenState extends State<SplashScreen>
           RepaintBoundary(
             child: AnimatedBuilder(
               animation: _loopCtrl,
-              builder: (_, __) => CustomPaint(
+              builder: (_, _) => CustomPaint(
                 size: size,
                 painter: _SplashBgPainter(
                   loopT: _loopCtrl.value,
-                  loopMs: _loopCtrl.lastElapsedDuration?.inMilliseconds.toDouble() ?? 0,
+                  loopMs:
+                      _loopCtrl.lastElapsedDuration?.inMilliseconds
+                          .toDouble() ??
+                      0,
                 ),
               ),
             ),
           ),
           AnimatedBuilder(
             animation: Listenable.merge([_seqCtrl, _loopCtrl]),
-            builder: (_, __) {
-              final opacity = math.min(_iconFade.value, _clusterExit.value).clamp(0.0, 1.0);
+            builder: (_, _) {
+              final opacity = math
+                  .min(_iconFade.value, _clusterExit.value)
+                  .clamp(0.0, 1.0);
               // Logo bobs ±6px on sine wave after entry slide settles
-              final floatY = math.sin(_loopCtrl.value * 2 * math.pi * 2.0) * 6.h;
+              final floatY =
+                  math.sin(_loopCtrl.value * 2 * math.pi * 2.0) * 6.h;
 
               return Opacity(
                 opacity: opacity,
@@ -114,7 +126,9 @@ class _SplashScreenState extends State<SplashScreen>
                                     color: AppColors.surface,
                                     shadows: [
                                       Shadow(
-                                        color: AppColors.text.withValues(alpha: 0.15),
+                                        color: AppColors.text.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         blurRadius: 12,
                                       ),
                                     ],
@@ -124,7 +138,9 @@ class _SplashScreenState extends State<SplashScreen>
                                 Text(
                                   context.l10n.splashTagline,
                                   style: AppText.label.copyWith(
-                                    color: AppColors.surface.withValues(alpha: 0.78),
+                                    color: AppColors.surface.withValues(
+                                      alpha: 0.78,
+                                    ),
                                     letterSpacing: 0.2,
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -143,8 +159,11 @@ class _SplashScreenState extends State<SplashScreen>
           ),
           AnimatedBuilder(
             animation: Listenable.merge([_seqCtrl, _loopCtrl]),
-            builder: (_, __) {
-              final fade = (_dotsFade.value * _clusterExit.value).clamp(0.0, 1.0);
+            builder: (_, _) {
+              final fade = (_dotsFade.value * _clusterExit.value).clamp(
+                0.0,
+                1.0,
+              );
               return _BottomDots(fade: fade, loopT: _loopCtrl.value);
             },
           ),
@@ -161,11 +180,11 @@ class _SplashBgPainter extends CustomPainter {
   const _SplashBgPainter({required this.loopT, required this.loopMs});
 
   // Palette A — teal-to-sky
-  static const _a0 = AppColors.primaryDark;   // deep teal (bottom-right)
-  static const _a1 = AppColors.primary;        // cyan mid
-  static const _a2 = AppColors.primaryAccent;  // bright cyan
-  static const _a3 = AppColors.primaryMid;     // light sky
-  static const _a4 = AppColors.primaryLight;   // near-white sky (top-left)
+  static const _a0 = AppColors.primaryDark; // deep teal (bottom-right)
+  static const _a1 = AppColors.primary; // cyan mid
+  static const _a2 = AppColors.primaryAccent; // bright cyan
+  static const _a3 = AppColors.primaryMid; // light sky
+  static const _a4 = AppColors.primaryLight; // near-white sky (top-left)
 
   // Palette B — slightly shifted (blue tint breathe)
   static const _b0 = AppColors.primaryDark;
@@ -177,10 +196,10 @@ class _SplashBgPainter extends CustomPainter {
   static final List<_Particle> _particles = List.generate(14, (i) {
     final rng = math.Random(i * 7 + 13);
     return _Particle(
-      x:     rng.nextDouble(),
-      r:     1.0 + rng.nextDouble() * 2.0,
+      x: rng.nextDouble(),
+      r: 1.0 + rng.nextDouble() * 2.0,
       speed: 0.00012 + rng.nextDouble() * 0.00018,
-      op:    0.15 + rng.nextDouble() * 0.30,
+      op: 0.15 + rng.nextDouble() * 0.30,
       phase: rng.nextDouble(),
     );
   });
@@ -196,7 +215,7 @@ class _SplashBgPainter extends CustomPainter {
 
     Color mixColor(Color a, Color b) => Color.lerp(a, b, pulse)!;
 
-    final gt     = ms / 8000;
+    final gt = ms / 8000;
     final gAngle = gt * math.pi * 2;
     final x0 = w * (0.95 + math.cos(gAngle) * 0.05);
     final y0 = h * (0.95 + math.sin(gAngle * 0.6) * 0.04);
@@ -204,19 +223,26 @@ class _SplashBgPainter extends CustomPainter {
     final y1 = h * (0.02 + math.sin(gAngle * 0.6 + math.pi) * 0.04);
 
     final gradShader = LinearGradient(
-      colors: [mixColor(_a0,_b0), mixColor(_a1,_b1), mixColor(_a2,_b2), mixColor(_a3,_b3), mixColor(_a4,_b4)],
+      colors: [
+        mixColor(_a0, _b0),
+        mixColor(_a1, _b1),
+        mixColor(_a2, _b2),
+        mixColor(_a3, _b3),
+        mixColor(_a4, _b4),
+      ],
       stops: const [0.0, 0.28, 0.55, 0.78, 1.0],
       begin: Alignment(_normX(x0, w), _normY(y0, h)),
-      end:   Alignment(_normX(x1, w), _normY(y1, h)),
+      end: Alignment(_normX(x1, w), _normY(y1, h)),
     ).createShader(Rect.fromLTWH(0, 0, w, h));
 
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..shader = gradShader);
 
     // Shimmer sweep — true 45° diagonal via canvas rotation
     final shimmerT = (ms % 2200.0) / 2200.0;
-    final sPos     = _smoothstep(0, 1, shimmerT);
+    final sPos = _smoothstep(0, 1, shimmerT);
     final diagonal = math.sqrt(w * w + h * h);
-    final bandCx   = diagonal * (1.0 - sPos * 2.0); // +diagonal→off BR, -diagonal→off TL
+    final bandCx =
+        diagonal * (1.0 - sPos * 2.0); // +diagonal→off BR, -diagonal→off TL
     final bandHalf = w * 0.28;
     final shimmerShader = LinearGradient(
       colors: [
@@ -237,35 +263,38 @@ class _SplashBgPainter extends CustomPainter {
     canvas.restore();
 
     // Radial flare behind logo
-    final cx         = w / 2;
-    final cy         = h * 0.42;
+    final cx = w / 2;
+    final cy = h * 0.42;
     final flarePhase = 0.5 + 0.5 * math.sin(ms / 3000 + 0.8);
-    final flareR     = w * (0.50 + flarePhase * 0.10);
+    final flareR = w * (0.50 + flarePhase * 0.10);
 
     canvas.drawRect(
       Rect.fromLTWH(0, 0, w, h),
-      Paint()..shader = RadialGradient(
-        center: Alignment.center,
-        radius: 1.0,
-        colors: [
-          AppColors.surface.withValues(alpha: 0.28 + flarePhase * 0.10),
-          AppColors.primaryLight.withValues(alpha: 0.12 + flarePhase * 0.05),
-          AppColors.primaryMid.withValues(alpha: 0.04),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.20, 0.50, 1.0],
-      ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: flareR)),
+      Paint()
+        ..shader = RadialGradient(
+          center: Alignment.center,
+          radius: 1.0,
+          colors: [
+            AppColors.surface.withValues(alpha: 0.28 + flarePhase * 0.10),
+            AppColors.primaryLight.withValues(alpha: 0.12 + flarePhase * 0.05),
+            AppColors.primaryMid.withValues(alpha: 0.04),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.20, 0.50, 1.0],
+        ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: flareR)),
     );
 
     // Glow rings
-    final ringPaint = Paint()..style = PaintingStyle.stroke..strokeWidth = 1.5;
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
     final minR = 38.0;
     final maxR = math.min(w, h) * 0.44;
     for (int i = 0; i < 3; i++) {
       final phase = ((ms / 3000.0) + i / 3) % 1.0;
-      final ep    = Curves.easeOut.transform(phase);
-      final r     = minR + ep * (maxR - minR);
-      final op    = math.sin(phase * math.pi) * 0.22;
+      final ep = Curves.easeOut.transform(phase);
+      final r = minR + ep * (maxR - minR);
+      final op = math.sin(phase * math.pi) * 0.22;
       if (op < 0.005) continue;
       ringPaint.color = AppColors.surface.withValues(alpha: op);
       canvas.drawCircle(Offset(cx, cy), r, ringPaint);
@@ -274,7 +303,8 @@ class _SplashBgPainter extends CustomPainter {
     // Particles
     final pPaint = Paint();
     for (final p in _particles) {
-      final yFrac  = (1.0 - (loopT * (p.speed * 8000) + p.phase) % 1.0 + 1.0) % 1.0;
+      final yFrac =
+          (1.0 - (loopT * (p.speed * 8000) + p.phase) % 1.0 + 1.0) % 1.0;
       final sinVal = math.sin(yFrac * math.pi).clamp(0.0, 1.0);
       final opacity = (p.op * sinVal).clamp(0.0, 0.85);
       if (opacity < 0.01) continue;
@@ -320,7 +350,11 @@ class _IconBox extends StatelessWidget {
     // Gradient pulses between brand cyan palette and brand accent-blue
     final pulse = 0.5 + 0.5 * math.sin(loopT * 2 * math.pi * 1.5);
 
-    final glowColor = Color.lerp(AppColors.primaryAccent, AppColors.purple, pulse)!;
+    final glowColor = Color.lerp(
+      AppColors.primaryAccent,
+      AppColors.purple,
+      pulse,
+    )!;
 
     return Stack(
       alignment: Alignment.center,
@@ -347,7 +381,9 @@ class _IconBox extends StatelessWidget {
             borderRadius: BorderRadius.circular(26.r),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryAccent.withValues(alpha: 0.35 + pulse * 0.15),
+                color: AppColors.primaryAccent.withValues(
+                  alpha: 0.35 + pulse * 0.15,
+                ),
                 blurRadius: 28,
                 spreadRadius: 4,
                 offset: const Offset(0, 4),
@@ -362,7 +398,9 @@ class _IconBox extends StatelessWidget {
           child: Stack(
             children: [
               Positioned(
-                top: 0, left: 0, right: 0,
+                top: 0,
+                left: 0,
+                right: 0,
                 child: Container(
                   height: 44.r,
                   decoration: BoxDecoration(
@@ -384,7 +422,11 @@ class _IconBox extends StatelessWidget {
               Center(
                 child: Padding(
                   padding: EdgeInsets.all(16.r),
-                  child: UJobLogo(variant: LogoVariant.color, width: 78.r, height: 78.r),
+                  child: UJobLogo(
+                    variant: LogoVariant.color,
+                    width: 78.r,
+                    height: 78.r,
+                  ),
                 ),
               ),
             ],
@@ -394,7 +436,6 @@ class _IconBox extends StatelessWidget {
     );
   }
 }
-
 
 class _BottomDots extends StatelessWidget {
   final double fade;
@@ -412,7 +453,7 @@ class _BottomDots extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(3, (i) {
-            final phase  = (loopT * 6600 / 700 + i * 0.33) % 1.0;
+            final phase = (loopT * 6600 / 700 + i * 0.33) % 1.0;
             final sinVal = math.sin(phase * 2 * math.pi);
             final opacity = (0.30 + sinVal * 0.55).clamp(0.10, 0.90);
             return Transform.translate(

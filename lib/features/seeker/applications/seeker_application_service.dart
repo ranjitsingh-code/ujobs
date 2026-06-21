@@ -6,14 +6,17 @@ class SeekerApplicationService {
   final DioClient _client;
   SeekerApplicationService(this._client);
 
-  Future<List<Application>> getMyApplications({String? status, int limit = 20, int page = 1}) async {
-    final queryParams = {
-      if (status != null) 'status': status,
-      'limit': limit,
-      'page': page,
-    };
+  Future<List<Application>> getMyApplications({
+    String? status,
+    int limit = 20,
+    int page = 1,
+  }) async {
+    final queryParams = {'status': ?status, 'limit': limit, 'page': page};
 
-    final res = await _client.dio.get(Ep.seekerApplications, queryParameters: queryParams);
+    final res = await _client.dio.get(
+      Ep.seekerApplications,
+      queryParameters: queryParams,
+    );
     final data = res.data['data'] as List;
     return data.map((json) => Application.fromJson(json)).toList();
   }
@@ -25,7 +28,7 @@ class SeekerApplicationService {
   }) async {
     final data = {
       'job_id': jobId,
-      if (coverLetter != null) 'cover_letter': coverLetter,
+      'cover_letter': ?coverLetter,
       // Resume upload logic usually requires FormData, skipping for now
     };
 

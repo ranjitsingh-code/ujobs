@@ -42,10 +42,7 @@ class UJobImage extends StatelessWidget {
     }
 
     if (borderRadius != null) {
-      return ClipRRect(
-        borderRadius: borderRadius!,
-        child: child,
-      );
+      return ClipRRect(borderRadius: borderRadius!, child: child);
     }
     return child;
   }
@@ -57,7 +54,9 @@ class UJobImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        colorFilter: color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
+        colorFilter: color != null
+            ? ColorFilter.mode(color!, BlendMode.srcIn)
+            : null,
         placeholderBuilder: (_) => placeholder ?? _defaultPlaceholder(),
       );
     }
@@ -66,7 +65,9 @@ class UJobImage extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
-      colorFilter: color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
+      colorFilter: color != null
+          ? ColorFilter.mode(color!, BlendMode.srcIn)
+          : null,
     );
   }
 
@@ -76,8 +77,8 @@ class UJobImage extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
-      placeholder: (_, __) => placeholder ?? _defaultPlaceholder(),
-      errorWidget: (_, __, ___) => errorWidget ?? _defaultError(),
+      placeholder: (_, _) => placeholder ?? _defaultPlaceholder(),
+      errorWidget: (_, _, _) => errorWidget ?? _defaultError(),
     );
   }
 
@@ -88,7 +89,7 @@ class UJobImage extends StatelessWidget {
       height: height,
       fit: fit,
       color: color,
-      errorBuilder: (_, __, ___) => errorWidget ?? _defaultError(),
+      errorBuilder: (_, _, _) => errorWidget ?? _defaultError(),
     );
   }
 
@@ -121,7 +122,11 @@ class UJobImage extends StatelessWidget {
         color: AppColors.borderLight,
         borderRadius: BorderRadius.circular(8.r),
       ),
-      child: HugeIcon(icon: HugeIcons.strokeRoundedImageNotFound01, color: AppColors.muted2, size: 24.r),
+      child: HugeIcon(
+        icon: HugeIcons.strokeRoundedImageNotFound01,
+        color: AppColors.muted2,
+        size: 24.r,
+      ),
     );
   }
 }

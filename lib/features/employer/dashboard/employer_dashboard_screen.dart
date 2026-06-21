@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -11,12 +12,19 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_avatar.dart';
 import '../../shared/chat/conversation_provider.dart';
 import 'employer_dashboard_provider.dart';
+import '../../../core/widgets/ujob_alert_dialog.dart';
+import '../../../core/widgets/ujob_employer_job_card.dart';
+import '../../../core/widgets/ujob_employer_job_actions_sheet.dart';
+import '../../../core/utils/job_action_helpers.dart';
+import '../jobs/employer_job_provider.dart';
 
 class EmployerDashboardScreen extends ConsumerWidget {
   const EmployerDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isProfileComplete = ref.watch(isCompanyProfileCompleteProvider);
+
     final auth = ref.watch(authProvider);
     final dashboard = ref.watch(employerDashboardProvider);
     final conversations =
@@ -56,8 +64,38 @@ class EmployerDashboardScreen extends ConsumerWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _QuickActions(
-                  onPostJob: () => context.push('/employer/post-job'),
+                  isProfileComplete: isProfileComplete,
+                  onPostJob: () {
+                    if (!isProfileComplete) {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => UJobAlertDialog(
+                          icon: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, color: AppColors.warning, size: 32.r),
+                          iconBgColor: AppColors.warning,
+                          title: 'Action Required',
+                          description: 'You must complete your company profile before you can post a new job.',
+                          confirmText: 'Setup Profile',
+                          confirmColor: AppColors.primary,
+                          cancelText: 'Cancel',
+                          onConfirm: () {
+                            Navigator.pop(ctx);
+                            context.push('/employer/profile');
+                          },
+                        ),
+                      );
+                      return;
+                    }
+                    context.push('/employer/post-job');
+                  },
                 ),
+                if (!isProfileComplete) ...[
+                  SizedBox(height: 24.h),
+                  _CompanyProfileSetup(
+                    onSetup: () {
+                      context.push('/employer/profile');
+                    },
+                  ),
+                ],
                 if (messagesToReply.isNotEmpty) ...[
                   SizedBox(height: 24.h),
                   _MessagesToReply(
@@ -76,21 +114,74 @@ class EmployerDashboardScreen extends ConsumerWidget {
                 SizedBox(height: 14.h),
                 if (dashboard.recentJobs.isEmpty)
                   _EmptyJobs(
-                    onPostJob: () => context.push('/employer/post-job'),
+                    isProfileComplete: isProfileComplete,
+                    onPostJob: () {
+                      if (!isProfileComplete) {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => UJobAlertDialog(
+                            icon: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, color: AppColors.warning, size: 32.r),
+                            iconBgColor: AppColors.warning,
+                            title: 'Action Required',
+                            description: 'You must complete your company profile before you can post a new job.',
+                            confirmText: 'Setup Profile',
+                            confirmColor: AppColors.primary,
+                            cancelText: 'Cancel',
+                            onConfirm: () {
+                              Navigator.pop(ctx);
+                              context.push('/employer/profile');
+                            },
+                          ),
+                        );
+                        return;
+                      }
+                      context.push('/employer/post-job');
+                    },
                   )
                 else
-                  ...dashboard.recentJobs.indexed.map((entry) {
-                    final index = entry.$1;
-                    final job = entry.$2;
+                  ...dashboard.recentJobs.map((job) {
                     return Padding(
                       padding: EdgeInsets.only(bottom: 12.h),
-                      child: _JobCard(
+                      child: UJobEmployerJobCard(
                         job: job,
-                        applicantCount:
-                            _applicantCounts[index % _applicantCounts.length],
+                        isManaging: false,
                         onTap: () => context.push('/employer/jobs/${job.id}'),
-                        onApplicantsTap: () =>
-                            context.push('/employer/applicants'),
+                        onApplicantsTap: () => context.push('/employer/jobs/${job.id}/applicants', extra: job),
+                        onMoreTap: () => showUJobEmployerJobActionsSheet(
+                          context: context,
+                          job: job,
+                          onEdit: () => JobActionHelpers.confirmEdit(context, () => context.push('/employer/jobs/${job.id}/edit', extra: job)),
+                          onViewApplicants: () => context.push('/employer/jobs/${job.id}/applicants', extra: job),
+                          onPause: () => JobActionHelpers.confirmPause(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.paused)),
+                          onResume: () => JobActionHelpers.confirmResume(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.active)),
+                          onPublish: () => JobActionHelpers.confirmPublish(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.active)),
+                          onReopen: () => JobActionHelpers.confirmReopen(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.active)),
+                          onDelete: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => UJobAlertDialog(
+                                icon: HugeIcon(
+                                  icon: job.status == JobStatus.closed || job.status == JobStatus.rejected ? HugeIcons.strokeRoundedDelete01 : HugeIcons.strokeRoundedAlert02,
+                                  color: AppColors.error,
+                                  size: 32.r,
+                                ),
+                                iconBgColor: AppColors.error,
+                                title: job.status == JobStatus.closed || job.status == JobStatus.rejected ? 'Delete Job' : 'Close Job',
+                                description: job.status == JobStatus.closed || job.status == JobStatus.rejected 
+                                    ? 'Are you sure you want to permanently delete this job?' 
+                                    : 'Are you sure you want to close this job? You will no longer receive new applications.',
+                                cancelText: 'Cancel',
+                                confirmText: job.status == JobStatus.closed || job.status == JobStatus.rejected ? 'Delete' : 'Close Job',
+                                onConfirm: () {
+                                  if (!(job.status == JobStatus.closed || job.status == JobStatus.rejected)) {
+                                    ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.closed);
+                                  }
+                                  Navigator.pop(ctx);
+                                },
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     );
                   }),
@@ -103,7 +194,6 @@ class EmployerDashboardScreen extends ConsumerWidget {
   }
 }
 
-const _applicantCounts = [47, 89, 123];
 
 class _DashboardHeader extends StatelessWidget {
   final String greeting;
@@ -167,7 +257,7 @@ class _DashboardHeader extends StatelessWidget {
                   Expanded(
                     child: _StatTile(
                       value: '${dashboard.totalJobs}',
-                      label: 'Total Jobs',
+                      label: context.l10n.totalJobs,
                       icon: Icons.work_outline_rounded,
                       onTap: onJobsTap,
                     ),
@@ -176,7 +266,7 @@ class _DashboardHeader extends StatelessWidget {
                   Expanded(
                     child: _StatTile(
                       value: '${dashboard.activeJobs}',
-                      label: 'Active Jobs',
+                      label: context.l10n.activeJobs,
                       icon: Icons.work_history_outlined,
                       onTap: onJobsTap,
                     ),
@@ -189,7 +279,7 @@ class _DashboardHeader extends StatelessWidget {
                   Expanded(
                     child: _StatTile(
                       value: '${dashboard.totalApplicants}',
-                      label: 'Total Applicants',
+                      label: context.l10n.totalApplicants,
                       icon: Icons.groups_outlined,
                       onTap: onApplicantsTap,
                     ),
@@ -198,7 +288,7 @@ class _DashboardHeader extends StatelessWidget {
                   Expanded(
                     child: _StatTile(
                       value: '${dashboard.shortlisted}',
-                      label: 'Shortlisted',
+                      label: context.l10n.statusShortlisted,
                       icon: Icons.bookmark_added_outlined,
                       onTap: onApplicantsTap,
                     ),
@@ -341,14 +431,17 @@ class _StatTile extends StatelessWidget {
 }
 
 class _QuickActions extends StatelessWidget {
+  final bool isProfileComplete;
   final VoidCallback onPostJob;
 
-  const _QuickActions({required this.onPostJob});
+  const _QuickActions({required this.isProfileComplete, required this.onPostJob});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 58.h,
+    return Opacity(
+      opacity: isProfileComplete ? 1.0 : 0.5,
+      child: Container(
+        height: 58.h,
       decoration: BoxDecoration(
         borderRadius: AppRadius.md,
         boxShadow: AppShadow.button(AppColors.primary),
@@ -409,6 +502,7 @@ class _QuickActions extends StatelessWidget {
               ],
             ),
           ),
+        ),
         ),
       ),
     );
@@ -599,216 +693,11 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _JobCard extends StatelessWidget {
-  final Job job;
-  final int applicantCount;
-  final VoidCallback onTap;
-  final VoidCallback onApplicantsTap;
-
-  const _JobCard({
-    required this.job,
-    required this.applicantCount,
-    required this.onTap,
-    required this.onApplicantsTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      borderRadius: AppRadius.xl,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.xl,
-        child: Container(
-          constraints: BoxConstraints(minHeight: 108.h),
-          padding: EdgeInsets.all(14.r),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: AppRadius.xl,
-            boxShadow: AppShadow.card(),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 40.r,
-                    height: 40.r,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: AppRadius.sm,
-                    ),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedBriefcase01,
-                      color: AppColors.primary,
-                      size: 21.r,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          job.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.titleMd.copyWith(
-                            color: AppColors.text2,
-                            letterSpacing: 0,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _postedLabel(job.createdAt),
-                          style: AppText.caption.copyWith(
-                            color: AppColors.muted2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    width: 32.r,
-                    height: 32.r,
-                    child: PopupMenuButton<_JobMenuAction>(
-                      padding: EdgeInsets.zero,
-                      tooltip: 'Job actions',
-                      icon: Icon(
-                        Icons.more_horiz_rounded,
-                        color: AppColors.muted,
-                        size: 22.r,
-                      ),
-                      onSelected: (action) {
-                        switch (action) {
-                          case _JobMenuAction.details:
-                            onTap();
-                          case _JobMenuAction.applicants:
-                            onApplicantsTap();
-                        }
-                      },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(
-                          value: _JobMenuAction.details,
-                          child: Text('View job details'),
-                        ),
-                        PopupMenuItem(
-                          value: _JobMenuAction.applicants,
-                          child: Text('View applicants'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 11.h),
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _statusColor(job.status).withValues(alpha: 0.1),
-                      borderRadius: AppRadius.pill,
-                    ),
-                    child: Text(
-                      _statusLabel(job.status),
-                      style: AppText.caption.copyWith(
-                        color: _statusColor(job.status),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Icon(
-                    Icons.location_on_outlined,
-                    size: 15.r,
-                    color: AppColors.muted2,
-                  ),
-                  SizedBox(width: 3.w),
-                  Expanded(
-                    child: Text(
-                      _workplaceLabel(job.workplaceType),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.caption.copyWith(color: AppColors.muted),
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedUserGroup,
-                    color: AppColors.primary,
-                    size: 16.r,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '$applicantCount applicants',
-                    style: AppText.caption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.muted2,
-                    size: 18.r,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-enum _JobMenuAction { details, applicants }
-
-String _postedLabel(DateTime? createdAt) {
-  if (createdAt == null) return 'Recently posted';
-  final days = DateTime.now().difference(createdAt).inDays;
-  if (days <= 0) return 'Posted today';
-  if (days == 1) return 'Posted 1d ago';
-  return 'Posted ${days}d ago';
-}
-
-String _workplaceLabel(String workplaceType) {
-  return switch (workplaceType) {
-    'remote' => 'Remote',
-    'hybrid' => 'Hybrid',
-    'onsite' => 'On-site',
-    _ => workplaceType,
-  };
-}
-
-String _statusLabel(JobStatus status) {
-  return switch (status) {
-    JobStatus.active => 'Active',
-    JobStatus.pending => 'Pending',
-    JobStatus.draft => 'Draft',
-    JobStatus.closed => 'Closed',
-  };
-}
-
-Color _statusColor(JobStatus status) {
-  return switch (status) {
-    JobStatus.active => AppColors.success,
-    JobStatus.pending => AppColors.warning,
-    JobStatus.draft => AppColors.muted,
-    JobStatus.closed => AppColors.error,
-  };
-}
-
 class _EmptyJobs extends StatelessWidget {
+  final bool isProfileComplete;
   final VoidCallback onPostJob;
 
-  const _EmptyJobs({required this.onPostJob});
+  const _EmptyJobs({required this.isProfileComplete, required this.onPostJob});
 
   @override
   Widget build(BuildContext context) {
@@ -840,8 +729,10 @@ class _EmptyJobs extends StatelessWidget {
             style: AppText.small.copyWith(color: AppColors.muted),
           ),
           SizedBox(height: 18.h),
-          FilledButton.icon(
-            onPressed: onPostJob,
+          Opacity(
+            opacity: isProfileComplete ? 1.0 : 0.5,
+            child: FilledButton.icon(
+              onPressed: onPostJob,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.surface,
@@ -853,7 +744,78 @@ class _EmptyJobs extends StatelessWidget {
               color: AppColors.surface,
               size: 18.r,
             ),
-            label: Text('Post a Job', style: AppText.button),
+              label: Text('Post a Job', style: AppText.button),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompanyProfileSetup extends ConsumerWidget {
+  final VoidCallback onSetup;
+
+  const _CompanyProfileSetup({required this.onSetup});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.xl,
+        border: Border.all(color: AppColors.warning),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.warning.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedBuilding03,
+              color: AppColors.warning,
+              size: 28.r,
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Complete your company profile',
+                  style: AppText.titleSm.copyWith(color: AppColors.text),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  'A complete profile helps attract better candidates and builds trust.',
+                  style: AppText.small.copyWith(color: AppColors.muted),
+                ),
+                SizedBox(height: 16.h),
+                FilledButton(
+                  onPressed: onSetup,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.warning,
+                    foregroundColor: AppColors.surface,
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                    shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
+                  ),
+                  child: Text('Setup Now', style: AppText.button.copyWith(color: Colors.white)),
+                ),
+              ],
+            ),
           ),
         ],
       ),

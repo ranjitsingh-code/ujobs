@@ -6,14 +6,17 @@ class EmployerJobService {
   final DioClient _client;
   EmployerJobService(this._client);
 
-  Future<List<Job>> getMyJobs({String? status, int limit = 20, int page = 1}) async {
-    final queryParams = {
-      if (status != null) 'status': status,
-      'limit': limit,
-      'page': page,
-    };
+  Future<List<Job>> getMyJobs({
+    String? status,
+    int limit = 20,
+    int page = 1,
+  }) async {
+    final queryParams = {'status': ?status, 'limit': limit, 'page': page};
 
-    final res = await _client.dio.get(Ep.employerJobs, queryParameters: queryParams);
+    final res = await _client.dio.get(
+      Ep.employerJobs,
+      queryParameters: queryParams,
+    );
     final data = res.data['data'] as List;
     return data.map((json) => Job.fromJson(json)).toList();
   }

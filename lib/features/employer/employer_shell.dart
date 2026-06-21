@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -15,6 +16,7 @@ class EmployerShell extends ConsumerWidget {
     if (path.startsWith('/employer/applicants')) return 2;
     if (path.startsWith('/employer/messages')) return 3;
     if (path.startsWith('/employer/profile')) return 4;
+    if (path.startsWith('/employer/settings')) return 4;
     return 0;
   }
 
@@ -24,7 +26,7 @@ class EmployerShell extends ConsumerWidget {
     final currentIndex = _indexFromPath(location);
 
     return Scaffold(
-      body: AnimatedPageWrapper(key: ValueKey(location), child: child),
+      body: AnimatedPageWrapper(child: child),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (i) {
@@ -58,7 +60,7 @@ class EmployerShell extends ConsumerWidget {
               color: AppColors.primary,
               size: 24,
             ),
-            label: 'Dashboard',
+            label: context.l10n.dashboard,
           ),
           BottomNavigationBarItem(
             icon: HugeIcon(
@@ -71,7 +73,7 @@ class EmployerShell extends ConsumerWidget {
               color: AppColors.primary,
               size: 24,
             ),
-            label: 'Jobs',
+            label: context.l10n.jobsTab,
           ),
           BottomNavigationBarItem(
             icon: HugeIcon(
@@ -84,7 +86,7 @@ class EmployerShell extends ConsumerWidget {
               color: AppColors.primary,
               size: 24,
             ),
-            label: 'Applicants',
+            label: context.l10n.applicants,
           ),
           BottomNavigationBarItem(
             icon: HugeIcon(
@@ -97,20 +99,20 @@ class EmployerShell extends ConsumerWidget {
               color: AppColors.primary,
               size: 24,
             ),
-            label: 'Messages',
+            label: context.l10n.messages,
           ),
           BottomNavigationBarItem(
             icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedBuilding04,
+              icon: HugeIcons.strokeRoundedUser,
               color: AppColors.muted2,
               size: 24,
             ),
             activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedBuilding04,
+              icon: HugeIcons.strokeRoundedUser,
               color: AppColors.primary,
               size: 24,
             ),
-            label: 'Account',
+            label: context.l10n.accountSection,
           ),
         ],
       ),

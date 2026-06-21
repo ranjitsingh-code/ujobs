@@ -379,3 +379,13 @@ lib/
 15. **2FA Screen** — `UJobs-Screens/29-2fa.png`
 16. **Suspended Account Screen** — `UJobs-Screens/30-suspended.png`
 17. **Lottie Splash** — `assets/animations/` is empty, add Lottie JSON for richer splash animation
+
+---
+
+## 6. Skills
+The following specialized agent skills are active/available for this project:
+- **caveman**: Ultra-compressed communication mode to optimize context usage.
+- **caveman-commit**: Ultra-compressed conventional commit message generator.
+- **caveman-review**: Actionable, single-line PR code review comments.
+- **mobile-app-ui-design**: Expert mobile UI/UX design principles and Flutter-specific visual prototyping.
+
