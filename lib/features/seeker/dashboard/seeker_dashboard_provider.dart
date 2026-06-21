@@ -17,17 +17,10 @@ class SeekerDashboardData {
 
 final seekerDashboardProvider = FutureProvider.autoDispose<SeekerDashboardData>(
   (ref) async {
-    final dio = ref.watch(dioClientProvider).dio;
-
-    final results = await Future.wait([
-      dio.get(Ep.seekerMe),
-      dio.get(Ep.seekerApplications),
-      dio.get('${Ep.seekerMatching}?limit=5'),
-    ]);
-
-    final meData = results[0].data['data'] as Map<String, dynamic>;
-    final appsData = results[1].data['data'] as List? ?? [];
-    final jobsData = results[2].data['data'] as List? ?? [];
+    await Future.delayed(const Duration(milliseconds: 500));
+    final meData = {'profile_completed': 80};
+    final appsData = [1, 2, 3];
+    final jobsData = [];
 
     return SeekerDashboardData(
       profileCompletion: meData['profile_completed'] as int? ?? 0,

@@ -23,8 +23,7 @@ import '../../features/employer/applicants/applicants_screen.dart';
 import '../../features/employer/applicants/job_applicants_screen.dart';
 import '../../features/employer/company/company_profile_screen.dart';
 import '../../features/employer/messages/employer_messages_screen.dart';
-import '../../features/employer/notifications/employer_notifications_screen.dart';
-import '../../features/employer/settings/employer_settings_screen.dart';
+import '../../features/shared/notifications/notifications_screen.dart';
 import '../../features/seeker/seeker_shell.dart';
 import '../../features/seeker/dashboard/seeker_dashboard_screen.dart';
 import '../../features/seeker/jobs/browse_jobs_screen.dart';
@@ -32,8 +31,7 @@ import '../../features/seeker/jobs/seeker_job_detail_screen.dart';
 import '../../features/seeker/applications/my_applications_screen.dart';
 import '../../features/seeker/messages/seeker_messages_screen.dart';
 import '../../features/seeker/profile/seeker_profile_screen.dart';
-import '../../features/seeker/notifications/seeker_notifications_screen.dart';
-import '../../features/seeker/settings/seeker_settings_screen.dart';
+import '../../features/shared/settings/settings_screen.dart';
 import '../../features/seeker/apply/apply_screen.dart';
 import '../../features/shared/chat/chat_screen.dart';
 import '../../features/shared/legal/legal_page_screen.dart';
@@ -109,7 +107,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && loc.startsWith('/employer') && role != 'employer') {
         return '/seeker';
       }
-      if (isLoggedIn && loc.startsWith('/seeker') && role != 'job_seeker') {
+      if (isLoggedIn && loc.startsWith('/seeker') && role != 'job_seeker' && role != 'seeker') {
         return '/employer';
       }
 
@@ -219,11 +217,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/employer/notifications',
-            builder: (_, _) => const EmployerNotificationsScreen(),
+            builder: (_, _) => const NotificationsScreen(),
           ),
           GoRoute(
             path: '/employer/settings',
-            builder: (_, _) => const EmployerSettingsScreen(),
+            builder: (_, _) => const SettingsScreen(),
           ),
         ],
       ),
@@ -272,11 +270,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/seeker/notifications',
-            builder: (_, _) => const SeekerNotificationsScreen(),
+            builder: (_, _) => const NotificationsScreen(),
           ),
           GoRoute(
             path: '/seeker/settings',
-            builder: (_, _) => const SeekerSettingsScreen(),
+            builder: (_, _) => const SettingsScreen(),
           ),
         ],
       ),

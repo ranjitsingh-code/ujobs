@@ -1,299 +1,377 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import '../../../core/api/api_endpoints.dart';
-import '../../../core/models/user.dart';
+
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/utils/l10n_extensions.dart';
-import '../../../core/widgets/ujob_avatar.dart';
-import '../../../core/widgets/ujob_button.dart';
-import '../../../core/widgets/ujob_error.dart';
-import '../../../core/widgets/ujob_loading.dart';
-import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
-import '../seeker_shell.dart';
+import '../../../core/widgets/ujob_button.dart';
+import '../../../core/widgets/ujob_text_field.dart';
+import '../../../core/widgets/ujob_dropdown.dart';
+import '../../../core/widgets/ujob_rich_text_editor.dart';
 
-// GET /seeker/me → PUT /seeker/me
-// Endpoints: Ep.seekerMe
-class SeekerProfileScreen extends ConsumerWidget {
+class SeekerProfileScreen extends ConsumerStatefulWidget {
   const SeekerProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.watch(authProvider);
+  ConsumerState<SeekerProfileScreen> createState() => _SeekerProfileState();
+}
 
+class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
+  // Personal Information
+  final _firstNameCtrl = TextEditingController();
+  final _lastNameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  bool _showNumber = false;
+  
+  // Location
+  final _countryCtrl = TextEditingController();
+  final _cityCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
+  final _zipCtrl = TextEditingController();
+  bool _willingToRelocate = false;
+
+  // Professional Info
+  final _headlineCtrl = TextEditingController();
+  final _skillsCtrl = TextEditingController();
+  String? _expYears;
+  String? _expMonths;
+  String? _expectedSalary;
+  String? _currency;
+  String? _availability;
+  String? _profileVisibility;
+
+  // Rich Text
+  String _about = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill mock data
+    _firstNameCtrl.text = 'Azad';
+    _lastNameCtrl.text = 'Hossain';
+    _phoneCtrl.text = '+1 234 567 890';
+    _headlineCtrl.text = 'Senior Flutter Developer';
+    _countryCtrl.text = 'United States';
+    _cityCtrl.text = 'San Francisco';
+  }
+
+  @override
+  void dispose() {
+    _firstNameCtrl.dispose();
+    _lastNameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _countryCtrl.dispose();
+    _cityCtrl.dispose();
+    _addressCtrl.dispose();
+    _zipCtrl.dispose();
+    _headlineCtrl.dispose();
+    _skillsCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: UJobAppBar(
-        title: 'Profile',
-        rightWidget: Row(
-          children: [
-            IconButton(
-              onPressed: () => context.push('/seeker/settings'),
-              icon: const HugeIcon(icon: HugeIcons.strokeRoundedSettings01, color: AppColors.text, size: 24),
-            ),
-            const SizedBox(width: 8),
-            SeekerRoleSwitcherButton(),
-          ],
+        title: 'My Profile',
+        showBack: true,
+        backgroundColor: AppColors.background,
+        rightWidget: IconButton(
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedSettings01, color: AppColors.text, size: 24),
+          onPressed: () => context.push('/seeker/settings'),
         ),
       ),
-      body: auth.when(
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 100.h),
+        children: [
+          _buildHeader(),
+          SizedBox(height: 24.h),
+          
+          _FormSection(
+            title: 'Personal Information',
+            children: [
+              Row(
+                children: [
+                  Expanded(child: UJobTextField(label: 'First Name', hint: 'John', controller: _firstNameCtrl)),
+                  SizedBox(width: 12.w),
+                  Expanded(child: UJobTextField(label: 'Last Name', hint: 'Doe', controller: _lastNameCtrl)),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              UJobTextField(label: 'Phone Number', hint: '+1 234 567 890', controller: _phoneCtrl, keyboardType: TextInputType.phone),
+              _CheckboxTile(
+                label: 'Show my number to employers',
+                value: _showNumber,
+                onChanged: (v) { if (v != null) setState(() => _showNumber = v); },
+              ),
+            ],
+          ),
+          
+          SizedBox(height: 24.h),
+          _FormSection(
+            title: 'Location & Relocation',
+            children: [
+              Row(
+                children: [
+                  Expanded(child: UJobTextField(label: 'Country', hint: 'United States', controller: _countryCtrl)),
+                  SizedBox(width: 12.w),
+                  Expanded(child: UJobTextField(label: 'City', hint: 'San Francisco', controller: _cityCtrl)),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(child: UJobTextField(label: 'Address', hint: '123 Tech Lane', controller: _addressCtrl)),
+                  SizedBox(width: 12.w),
+                  Expanded(child: UJobTextField(label: 'Zip/Post Code', hint: '94105', controller: _zipCtrl)),
+                ],
+              ),
+              _CheckboxTile(
+                label: "Yes, I'm willing to relocate",
+                value: _willingToRelocate,
+                onChanged: (v) { if (v != null) setState(() => _willingToRelocate = v); },
+              ),
+            ],
+          ),
 
-        loading: () => const UJobLoading(),
-        error: (e, _) => UJobError(message: 'Error loading profile', onRetry: () => ref.refresh(authProvider)),
-        data: (user) => _ProfileBody(user: user),
-      ),
-    );
-  }
-}
+          SizedBox(height: 24.h),
+          _FormSection(
+            title: 'Professional Info',
+            children: [
+              UJobTextField(label: 'Professional Headline', hint: 'e.g. Senior Flutter Developer', controller: _headlineCtrl),
+              SizedBox(height: 16.h),
+              Text('About / Summary', style: AppText.bodyBold.copyWith(color: AppColors.text)),
+              SizedBox(height: 8.h),
+              UJobRichTextEditor(
+                title: 'About',
+                initialValue: _about,
+                onSave: (v) => _about = v,
+              ),
+              SizedBox(height: 16.h),
+              UJobTextField(label: 'Skills', hint: 'Type and press enter...', controller: _skillsCtrl),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: UJobDropdown(
+                      label: 'Experience (Years)',
+                      value: _expYears ?? '0',
+                      items: List.generate(10, (i) => i.toString()),
+                      onChanged: (v) { if (v != null) setState(() => _expYears = v); },
+                      ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: UJobDropdown(
+                      label: 'Months',
+                      value: _expMonths ?? '0',
+                      items: List.generate(11, (i) => i.toString()),
+                      onChanged: (v) { if (v != null) setState(() => _expMonths = v); },
+                      ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: UJobDropdown(
+                      label: 'Expected Salary',
+                      value: _expectedSalary ?? '\$30k-\$50k',
+                      items: const ['\$30k-\$50k', '\$50k-\$80k', '\$80k-\$120k', '\$120k+'],
+                      onChanged: (v) { if (v != null) setState(() => _expectedSalary = v); },
+                      ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: UJobDropdown(
+                      label: 'Currency',
+                      value: _currency ?? 'USD',
+                      items: const ['USD', 'EUR', 'GBP'],
+                      onChanged: (v) { if (v != null) setState(() => _currency = v); },
+                      ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              UJobDropdown(
+                label: 'Availability',
+                value: _availability ?? 'Immediately',
+                items: const ['Immediately', '1 Week', '2 Weeks', '1 Month', 'More than 1 Month'],
+                onChanged: (v) { if (v != null) setState(() => _availability = v); },
+                ),
+              SizedBox(height: 16.h),
+              UJobDropdown(
+                label: 'Profile Visibility',
+                value: _profileVisibility ?? 'Public',
+                items: const ['Public', 'Private', 'Only to Employers I Apply To'],
+                onChanged: (v) { if (v != null) setState(() => _profileVisibility = v); },
+                ),
+            ],
+          ),
 
-class _ProfileBody extends ConsumerWidget {
-  final User? user;
-  const _ProfileBody({this.user});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) => SingleChildScrollView(
-        child: Column(children: [
-          // Header — gradient with avatar, name, title, location
-          _ProfileHeader(user: user),
-          const SizedBox(height: 16),
-          // Stats row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(children: [
-              _StatBox(value: '—', label: context.l10n.profileViews),
-              const SizedBox(width: 12),
-              _StatBox(value: '—', label: context.l10n.savedJobs),
-              const SizedBox(width: 12),
-              _StatBox(value: '—', label: context.l10n.applicationsTab),
-            ]),
-          ),
-          const SizedBox(height: 20),
-          // Profile sections
-          _ProfileSection(
-            title: 'Personal Info',
-            subtitle: user?.fullName ?? '—',
-            onEdit: () => _showEditPersonalInfo(context, ref, user),
-          ),
-          _ProfileSection(
-            title: 'Professional Summary',
-            subtitle: 'About / Bio',
-            onEdit: () => _showEditBio(context, ref),
-          ),
-          _ProfileSection(
-            title: 'Skills',
-            subtitle: '0 skills added',
-            onEdit: () {},
-          ),
-          _ProfileSection(
-            title: 'Work Experience',
-            subtitle: '0 positions',
-            onEdit: () {},
-          ),
-          _ProfileSection(
-            title: 'Education',
-            subtitle: '0 qualifications',
-            onEdit: () {},
-          ),
-          _ProfileSection(
-            title: 'Certifications',
-            subtitle: 'Add certifications',
-            onEdit: () {},
-          ),
-          const SizedBox(height: 32),
-        ]),
-      );
-
-  void _showEditPersonalInfo(BuildContext context, WidgetRef ref, User? user) {
-    final firstCtrl = TextEditingController(text: user?.firstName);
-    final lastCtrl  = TextEditingController(text: user?.lastName);
-    final phoneCtrl = TextEditingController(text: user?.phone);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Edit Personal Info', style: AppText.heading3),
-          const SizedBox(height: 20),
-          UJobTextField(label: context.l10n.firstNameLabel, controller: firstCtrl),
-          UJobTextField(label: context.l10n.lastNameLabel, controller: lastCtrl),
-          UJobTextField(label: context.l10n.phoneLabel, controller: phoneCtrl, keyboardType: TextInputType.phone),
-          UJobButton(
-            label: context.l10n.saveChanges,
-            onTap: () async {
-              try {
-                await ref.read(dioClientProvider).dio.put(Ep.seekerMe, data: {
-                  'first_name': firstCtrl.text,
-                  'last_name': lastCtrl.text,
-                  'phone': phoneCtrl.text,
-                });
-                ref.invalidate(authProvider);
-                if (ctx.mounted) Navigator.pop(ctx);
-              } catch (_) {}
-            },
-          ),
-        ]),
-      ),
-    );
-  }
-
-  void _showEditBio(BuildContext context, WidgetRef ref) {
-    final bioCtrl = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Professional Summary', style: AppText.heading3),
-          const SizedBox(height: 20),
-          UJobTextField(
-            label: context.l10n.aboutBio,
-            hint: 'Describe your experience, skills, and what you\'re looking for...',
-            controller: bioCtrl,
-            maxLines: 5,
-          ),
-          UJobButton(
-            label: context.l10n.save,
-            onTap: () async {
-              try {
-                await ref.read(dioClientProvider).dio.put(Ep.seekerMe, data: {'bio': bioCtrl.text});
-                if (ctx.mounted) Navigator.pop(ctx);
-              } catch (_) {}
-            },
-          ),
-        ]),
-      ),
-    );
-  }
-}
-
-class _ProfileHeader extends StatelessWidget {
-  final User? user;
-  const _ProfileHeader({this.user});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primaryDark, AppColors.primary, AppColors.primaryAccent],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-        child: Column(children: [
-          Stack(alignment: Alignment.bottomRight, children: [
-            UJobAvatar(initials: user?.initials ?? '?', size: 72),
-          Container(
-            width: 26,
-            height: 26,
-            decoration: const BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
-            child: const HugeIcon(icon: HugeIcons.strokeRoundedCamera01, size: 14, color: AppColors.primary),
-          ),
-          ]),
-          const SizedBox(height: 12),
-          Text(user?.fullName ?? '—', style: AppText.heading3.copyWith(color: AppColors.white)),
-          const SizedBox(height: 4),
-          Text(user?.email ?? '', style: AppText.small.copyWith(color: AppColors.white.withValues(alpha: 0.8))),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.12),
-              borderRadius: AppRadius.md,
-            ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Text('Profile Completeness', style: AppText.label.copyWith(color: AppColors.white)),
-                Text('0%', style: AppText.label.copyWith(color: AppColors.white)),
-              ]),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: AppRadius.pill,
-                child: LinearProgressIndicator(
-                  value: 0.0,
-                  backgroundColor: AppColors.white.withValues(alpha: 0.2),
-                  color: AppColors.white,
-                  minHeight: 6,
+          SizedBox(height: 24.h),
+          _FormSection(
+            title: 'Resume',
+            children: [
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(24.r),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: AppColors.borderLight, style: BorderStyle.solid),
+                ),
+                child: Column(
+                  children: [
+                    HugeIcon(icon: HugeIcons.strokeRoundedCloudUpload, color: AppColors.primary, size: 40.r),
+                    SizedBox(height: 12.h),
+                    Text('Upload your latest resume', style: AppText.bodyBold),
+                    SizedBox(height: 4.h),
+                    Text('PDF, DOC, DOCX (Max 5MB)', style: AppText.small.copyWith(color: AppColors.muted)),
+                    SizedBox(height: 16.h),
+                    UJobButton(
+                      label: 'Browse File',
+                      onTap: () {},
+                      outlined: true,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Add skills & experience to improve matches',
-                style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.7)),
-              ),
-            ]),
+            ],
           ),
-        ]),
-      );
+
+          SizedBox(height: 32.h),
+          UJobButton(
+            label: 'Save Profile',
+            onTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 80.r,
+            height: 80.r,
+            decoration: BoxDecoration(
+              color: AppColors.seekPrimary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              'AH',
+              style: AppText.heading1.copyWith(color: AppColors.seekPrimary, fontSize: 32.sp),
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Azad Hossain', style: AppText.heading2),
+                SizedBox(height: 4.h),
+                Text('azad@example.com', style: AppText.body.copyWith(color: AppColors.muted)),
+                SizedBox(height: 8.h),
+                Text('Your profile is 80% complete', style: AppText.bodyBold.copyWith(color: AppColors.success)),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedCamera02, color: AppColors.seekPrimary),
+            onPressed: () {},
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _StatBox extends StatelessWidget {
-  final String value;
-  final String label;
-  const _StatBox({required this.value, required this.label});
+class _FormSection extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _FormSection({required this.title, required this.children});
 
   @override
-  Widget build(BuildContext context) => Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 4.w, bottom: 8.h),
+          child: Text(
+            title.toUpperCase(),
+            style: AppText.small.copyWith(color: AppColors.muted, letterSpacing: 1, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.all(20.r),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: AppRadius.md,
+            borderRadius: BorderRadius.circular(20.r),
             border: Border.all(color: AppColors.borderLight),
           ),
-          child: Column(children: [
-            Text(value, style: AppText.heading3.copyWith(color: AppColors.primary)),
-            const SizedBox(height: 2),
-            Text(label, style: AppText.caption.copyWith(color: AppColors.muted), textAlign: TextAlign.center),
-          ]),
-        ),
-      );
-}
-
-class _ProfileSection extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final VoidCallback onEdit;
-
-  const _ProfileSection({required this.title, required this.subtitle, required this.onEdit});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.md,
-          border: Border.all(color: AppColors.borderLight),
-        ),
-        child: InkWell(
-          onTap: onEdit,
-          borderRadius: AppRadius.md,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(children: [
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(title, style: AppText.bodyBold),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: AppText.small.copyWith(color: AppColors.muted)),
-                ]),
-              ),
-              Text(context.l10n.edit, style: AppText.label.copyWith(color: AppColors.primary)),
-              const SizedBox(width: 8),
-              const HugeIcon(icon: HugeIcons.strokeRoundedPlusSign, color: AppColors.primary, size: 18),
-            ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
           ),
         ),
-      );
+      ],
+    );
+  }
+}
+
+class _CheckboxTile extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _CheckboxTile({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: 12.h),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 24.r,
+            height: 24.r,
+            child: Checkbox(
+              value: value,
+              onChanged: (v) {
+                if (v != null) onChanged(v);
+              },
+              activeColor: AppColors.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(label, style: AppText.body.copyWith(color: AppColors.text)),
+          ),
+        ],
+      ),
+    );
+  }
 }

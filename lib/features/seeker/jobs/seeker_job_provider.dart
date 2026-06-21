@@ -1,12 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/providers/auth_provider.dart';
 import '../../../core/models/job.dart';
-import 'seeker_job_service.dart';
-
-final seekerJobServiceProvider = Provider<SeekerJobService>((ref) {
-  final client = ref.watch(dioClientProvider);
-  return SeekerJobService(client);
-});
+import '../../employer/jobs/employer_job_provider.dart';
 
 // For browsing jobs with filters
 class JobFilter {
@@ -32,16 +26,24 @@ class JobFilter {
 }
 
 final seekerJobsProvider = FutureProvider.family<List<Job>, JobFilter>((ref, filter) async {
-  final service = ref.watch(seekerJobServiceProvider);
-  return service.getJobs(
-    search: filter.search,
-    category: filter.category,
-    employmentType: filter.employmentType,
-    workplaceType: filter.workplaceType,
-  );
+  // Wait a bit to simulate network
+  await Future.delayed(const Duration(milliseconds: 500));
+  
+  final allJobs = ref.watch(demoEmployerJobsProvider);
+  
+  // Simple mock filtering
+  return allJobs.where((job) {
+    if (filter.search != null && filter.search!.isNotEmpty) {
+      if (!job.title.toLowerCase().contains(filter.search!.toLowerCase())) return false;
+    }
+    return true;
+  }).toList();
 });
 
 final seekerJobDetailProvider = FutureProvider.family<Job, int>((ref, id) async {
-  final service = ref.watch(seekerJobServiceProvider);
-  return service.getJobDetails(id);
+  // Wait a bit to simulate network
+  await Future.delayed(const Duration(milliseconds: 500));
+  
+  final allJobs = ref.watch(demoEmployerJobsProvider);
+  return allJobs.firstWhere((j) => j.id == id, orElse: () => allJobs.first);
 });
