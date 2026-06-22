@@ -17,14 +17,14 @@ import '../../../core/widgets/ujob_pill_tab_bar.dart';
 import '../../../core/widgets/ujob_dropdown.dart';
 import 'seeker_job_provider.dart';
 
-class BrowseJobsScreen extends ConsumerStatefulWidget {
-  const BrowseJobsScreen({super.key});
+class FindJobsScreen extends ConsumerStatefulWidget {
+  const FindJobsScreen({super.key});
 
   @override
-  ConsumerState<BrowseJobsScreen> createState() => _BrowseJobsScreenState();
+  ConsumerState<FindJobsScreen> createState() => _FindJobsScreenState();
 }
 
-class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
+class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
   final TextEditingController _searchController = TextEditingController();
   late final PageController _pageCtrl;
   int _tabIndex = 0;
@@ -57,7 +57,7 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: UJobAppBar(
-        title: l10n.browseJobs,
+        title: l10n.findJobs,
         showBack: false,
       ),
       body: Column(
@@ -108,7 +108,7 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Find Your Next Job', style: AppText.h2),
+                  Text('Find Your Next Job', style: AppText.heading2),
                   SizedBox(height: 4.h),
                   Text('${jobs.length} positions matched to your profile', style: AppText.bodyMedium.copyWith(color: AppColors.muted)),
                 ],
@@ -202,7 +202,7 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Find Your Next Job', style: AppText.h2),
+                              Text('Find Your Next Job', style: AppText.heading2),
                               SizedBox(height: 4.h),
                               Text('${jobs.length} positions available', style: AppText.bodyMedium.copyWith(color: AppColors.muted)),
                             ],

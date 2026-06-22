@@ -581,7 +581,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quickActions => 'إجراءات سريعة';
 
   @override
-  String get browseJobs => 'تصفح الوظائف';
+  String get findJobs => 'بحث عن وظيفة';
 
   @override
   String get myApplications => 'طلباتي';

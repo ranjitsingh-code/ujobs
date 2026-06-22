@@ -26,7 +26,7 @@ import '../../features/employer/messages/employer_messages_screen.dart';
 import '../../features/shared/notifications/notifications_screen.dart';
 import '../../features/seeker/seeker_shell.dart';
 import '../../features/seeker/dashboard/seeker_dashboard_screen.dart';
-import '../../features/seeker/jobs/browse_jobs_screen.dart';
+import '../../features/seeker/jobs/find_jobs_screen.dart';
 import '../../features/seeker/jobs/seeker_job_detail_screen.dart';
 import '../../features/seeker/applications/my_applications_screen.dart';
 import '../../features/seeker/messages/seeker_messages_screen.dart';
@@ -236,7 +236,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/seeker/jobs',
-            pageBuilder: (_, _) => const NoTransitionPage(child: BrowseJobsScreen()),
+            pageBuilder: (_, _) => const NoTransitionPage(child: FindJobsScreen()),
           ),
           GoRoute(
             path: '/seeker/jobs/:id',

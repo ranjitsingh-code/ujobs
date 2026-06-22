@@ -1214,11 +1214,11 @@ abstract class AppLocalizations {
   /// **'Quick Actions'**
   String get quickActions;
 
-  /// No description provided for @browseJobs.
+  /// No description provided for @findJobs.
   ///
   /// In en, this message translates to:
-  /// **'Browse Jobs'**
-  String get browseJobs;
+  /// **'Find Jobs'**
+  String get findJobs;
 
   /// No description provided for @myApplications.
   ///

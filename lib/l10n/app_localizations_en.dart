@@ -578,7 +578,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickActions => 'Quick Actions';
 
   @override
-  String get browseJobs => 'Browse Jobs';
+  String get findJobs => 'Find Jobs';
 
   @override
   String get myApplications => 'My Applications';
