@@ -28,6 +28,9 @@ class EmployerShell extends ConsumerWidget {
     return Scaffold(
       body: AnimatedPageWrapper(child: child),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
         currentIndex: currentIndex,
         onTap: (i) {
           switch (i) {
