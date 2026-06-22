@@ -59,7 +59,7 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
         cancelText: 'Cancel',
         confirmText: 'Delete',
         onConfirm: () {
-          ref.read(conversationsProvider.notifier).deleteConversations(_selectedIds.toList());
+          ref.read(seekerConversationsProvider.notifier).deleteConversations(_selectedIds.toList());
           setState(() {
             _selectedIds.clear();
             _isSelectionMode = false;
@@ -113,7 +113,7 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
               title: Text('Mark All as Read', style: AppText.bodyBold.copyWith(color: AppColors.primary)),
               onTap: () {
                 Navigator.pop(ctx);
-                ref.read(conversationsProvider.notifier).markAllAsRead();
+                ref.read(seekerConversationsProvider.notifier).markAllAsRead();
               },
             ),
           ],
@@ -124,7 +124,7 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(conversationsProvider);
+    final async = ref.watch(seekerConversationsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -197,7 +197,7 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
               loading: () => const UJobLoading(count: 5),
               error: (e, _) => UJobError(
                 message: 'Failed to load messages',
-                onRetry: () => ref.refresh(conversationsProvider),
+                onRetry: () => ref.refresh(seekerConversationsProvider),
               ),
               data: (convs) {
                 var list = convs;
@@ -255,7 +255,7 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                                   isSelected ? _selectedIds.remove(conv.id) : _selectedIds.add(conv.id);
                                 });
                               } else {
-                                ref.read(conversationsProvider.notifier).markAsRead(conv.id);
+                                ref.read(seekerConversationsProvider.notifier).markAsRead(conv.id);
                                 context.push(
                                   '/conversations/${conv.id}',
                                   extra: {
@@ -335,7 +335,7 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
         cancelText: 'Cancel',
         confirmText: 'Delete',
         onConfirm: () {
-          ref.read(conversationsProvider.notifier).deleteConversation(conv.id);
+          ref.read(seekerConversationsProvider.notifier).deleteConversation(conv.id);
           Navigator.pop(ctx);
         },
       ),

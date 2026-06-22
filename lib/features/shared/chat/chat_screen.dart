@@ -70,6 +70,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(conversationsProvider.notifier).markAsRead(widget.conversationId);
+        ref.read(seekerConversationsProvider.notifier).markAsRead(widget.conversationId);
       }
     });
   }

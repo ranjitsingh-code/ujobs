@@ -187,6 +187,104 @@ final conversationsProvider = StateNotifierProvider<ConversationsNotifier, Async
   return ConversationsNotifier();
 });
 
+
+final demoSeekerConversations = <Conversation>[
+  Conversation(
+    id: 'conv-e1',
+    otherId: 'e1',
+    otherName: 'Google',
+    otherInitials: 'G',
+    lastMessage: 'Congratulations! We would like to offer you the position.',
+    lastAt: DateTime.now().subtract(const Duration(minutes: 5)),
+    unreadCount: 0,
+    otherOnline: true,
+    jobTitle: 'Senior Flutter Developer',
+    applicationStatus: ApplicationStatus.offered,
+  ),
+  Conversation(
+    id: 'conv-e2',
+    otherId: 'e2',
+    otherName: 'Nexovia Solutions',
+    otherInitials: 'N',
+    lastMessage: 'Your technical interview is scheduled for tomorrow.',
+    lastAt: DateTime.now().subtract(const Duration(hours: 3)),
+    unreadCount: 2,
+    otherOnline: false,
+    jobTitle: 'Mobile App Developer',
+    applicationStatus: ApplicationStatus.shortlisted,
+  ),
+  Conversation(
+    id: 'conv-e3',
+    otherId: 'e3',
+    otherName: 'Amazon',
+    otherInitials: 'A',
+    lastMessage: 'Thank you for your application. We are reviewing it.',
+    lastAt: DateTime.now().subtract(const Duration(days: 1)),
+    unreadCount: 1,
+    otherOnline: true,
+    jobTitle: 'Software Engineer',
+    applicationStatus: ApplicationStatus.applied,
+  ),
+  Conversation(
+    id: 'conv-e4',
+    otherId: 'e4',
+    otherName: 'Microsoft',
+    otherInitials: 'M',
+    lastMessage: 'Unfortunately, we have moved forward with other candidates.',
+    lastAt: DateTime.now().subtract(const Duration(days: 3)),
+    unreadCount: 0,
+    otherOnline: false,
+    jobTitle: 'Backend Developer',
+    applicationStatus: ApplicationStatus.rejected,
+  ),
+];
+
+class SeekerConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>> {
+  SeekerConversationsNotifier() : super(const AsyncLoading()) {
+    _init();
+  }
+
+  void _init() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    state = AsyncData(List.from(demoSeekerConversations));
+  }
+
+  void markAllAsRead() {
+    state.whenData((convs) {
+      state = AsyncData(convs.map((c) => c.copyWith(unreadCount: 0)).toList());
+    });
+  }
+
+  void markAsRead(String id) {
+    state.whenData((convs) {
+      state = AsyncData(convs.map((c) => c.id == id ? c.copyWith(unreadCount: 0) : c).toList());
+    });
+  }
+
+  void deleteConversation(String id) {
+    state.whenData((convs) {
+      state = AsyncData(convs.where((c) => c.id != id).toList());
+    });
+  }
+  
+  void updateLastMessage(String id, String lastMessage, DateTime lastAt) {
+    state.whenData((convs) {
+      state = AsyncData(convs.map((c) => c.id == id ? c.copyWith(lastMessage: lastMessage, lastAt: lastAt) : c).toList());
+    });
+  }
+
+  void deleteConversations(List<String> ids) {
+    state.whenData((convs) {
+      state = AsyncData(convs.where((c) => !ids.contains(c.id)).toList());
+    });
+  }
+}
+
+final seekerConversationsProvider = StateNotifierProvider<SeekerConversationsNotifier, AsyncValue<List<Conversation>>>((ref) {
+  return SeekerConversationsNotifier();
+});
+
+
 final chatMessagesProvider =
     StateNotifierProvider.family<
       DemoChatNotifier,
@@ -216,6 +314,7 @@ class DemoChatNotifier extends StateNotifier<AsyncValue<List<ChatMessage>>> {
       ),
     ]);
     ref.read(conversationsProvider.notifier).updateLastMessage(conversationId, body, DateTime.now());
+    ref.read(seekerConversationsProvider.notifier).updateLastMessage(conversationId, body, DateTime.now());
 
   }
 
