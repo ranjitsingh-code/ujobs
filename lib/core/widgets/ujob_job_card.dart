@@ -93,13 +93,23 @@ class UJobJobCard extends StatelessWidget {
                               ),
                             ),
                           if (job.location != null && job.location!.isNotEmpty)
-                            Text(
-                              job.location!,
-                              style: AppText.bodyMedium.copyWith(
-                                color: AppColors.muted2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedLocation01,
+                                  color: AppColors.muted2,
+                                  size: 14.r,
+                                ),
+                                SizedBox(width: 4.w),
+                                Expanded(
+                                  child: Text(
+                                    job.location!,
+                                    style: AppText.bodyMedium.copyWith(color: AppColors.muted2),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                         ],
                       ),
