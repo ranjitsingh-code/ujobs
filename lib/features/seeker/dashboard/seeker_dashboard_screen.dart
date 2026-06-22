@@ -59,7 +59,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 32.h), // space for overlapping search bar
+                    SizedBox(height: 16.h),
                     
                     _SectionHeader(
                       title: l10n.recommendedJobs,
@@ -95,7 +95,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                     
                     _SectionHeader(
                       title: 'Latest Jobs',
-                      actionLabel: 'Browse all',
+                      actionLabel: 'See all',
                       onActionTap: () => context.go('/seeker/jobs'),
                     ),
                     SizedBox(height: 16.h),
@@ -190,55 +190,15 @@ class _DashboardHeader extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Stack(
-                        children: [
-                          IconButton(
-                            icon: const HugeIcon(icon: HugeIcons.strokeRoundedNotification01, color: AppColors.surface),
-                            onPressed: onNotificationsTap,
-                          ),
-                          Positioned(
-                            right: 8,
-                            top: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: AppColors.error,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '3',
-                                style: AppText.small.copyWith(
-                                  color: AppColors.surface,
-                                  fontSize: 8.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: 8.w),
-                      Container(
-                        width: 40.r,
-                        height: 40.r,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          initials,
-                          style: AppText.bodyBold.copyWith(color: AppColors.surface),
-                        ),
-                      ),
+                      _NotificationButton(onTap: onNotificationsTap),
                     ],
                   ),
                   SizedBox(height: 24.h),
                   Row(
                     children: [
-                      _StatCard(title: '47', subtitle: 'Matches', isSelected: false, onTap: () {}),
-                      SizedBox(width: 12.w),
                       _StatCard(title: '${dashboard.applicationsCount}', subtitle: 'Applied', isSelected: false, onTap: () {}),
+                      SizedBox(width: 12.w),
+                      _StatCard(title: '47', subtitle: 'Matches', isSelected: false, onTap: () {}),
                       SizedBox(width: 12.w),
                       _StatCard(title: '12', subtitle: 'Saved', isSelected: false, onTap: () {}),
                     ],
@@ -250,44 +210,7 @@ class _DashboardHeader extends StatelessWidget {
           ),
         ),
         
-        // Overlapping Search Bar
-        Positioned(
-          left: 20.w,
-          right: 20.w,
-          bottom: -24.h,
-          child: GestureDetector(
-            onTap: () => context.go('/seeker/jobs'),
-            child: Container(
-              height: 56.h,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: AppShadow.cardMd(),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                children: [
-                  HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 24.r),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Text(
-                      'Search jobs, companies...',
-                      style: AppText.body.copyWith(color: AppColors.muted),
-                    ),
-                  ),
-                  Container(
-                    width: 1.w,
-                    height: 24.h,
-                    color: AppColors.borderLight,
-                  ),
-                  SizedBox(width: 12.w),
-                  HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, color: AppColors.seekPrimary, size: 24.r),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
+              ],
     );
   }
 }
@@ -414,6 +337,56 @@ class _EmptyState extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(message, style: AppText.body.copyWith(color: AppColors.muted)),
+    );
+  }
+}
+
+class _NotificationButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _NotificationButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          onPressed: onTap,
+          tooltip: 'Notifications',
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.surface.withValues(alpha: 0.12),
+            fixedSize: Size(44.r, 44.r),
+          ),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedNotification01,
+            color: AppColors.surface,
+            size: 23,
+          ),
+        ),
+        Positioned(
+          right: -1.w,
+          top: -3.h,
+          child: Container(
+            width: 20.r,
+            height: 20.r,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.error,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.seekPrimary, width: 2),
+            ),
+            child: Text(
+              '2',
+              style: AppText.caption.copyWith(
+                color: AppColors.surface,
+                fontSize: 9.sp,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
