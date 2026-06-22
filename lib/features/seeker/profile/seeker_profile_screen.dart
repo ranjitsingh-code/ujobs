@@ -544,14 +544,6 @@ class _SeekerProfileHeader extends StatelessWidget {
                             size: 20.r,
                           ),
                         ],
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => context.push('/seeker/settings'),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          icon: HugeIcon(icon: HugeIcons.strokeRoundedSettings01, color: AppColors.white, size: 22.r),
-                        ),
                       ],
                     ),
                     SizedBox(height: 4.h),
@@ -569,6 +561,20 @@ class _SeekerProfileHeader extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
+                ),
+              ),
+              // Settings Button
+              IconButton(
+                onPressed: () => context.push('/seeker/settings'),
+                tooltip: 'Settings',
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.surface.withValues(alpha: 0.12),
+                  fixedSize: Size(44.r, 44.r),
+                ),
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedSettings01,
+                  color: AppColors.surface,
+                  size: 23.r,
                 ),
               ),
             ],
