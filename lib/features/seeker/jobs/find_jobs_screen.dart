@@ -67,15 +67,9 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
           physics: const BouncingScrollPhysics(),
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
-              SliverAppBar(
-                backgroundColor: AppColors.surface,
-                pinned: true,
-                floating: true,
-                elevation: innerBoxIsScrolled ? 2 : 0,
-                forceElevated: innerBoxIsScrolled,
-                toolbarHeight: 80.h,
-                titleSpacing: 0,
-                title: Padding(
+              SliverToBoxAdapter(
+                child: Container(
+                  color: AppColors.surface,
                   padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
                   child: Row(
                     children: [
@@ -116,18 +110,22 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                     ],
                   ),
                 ),
-                bottom: PreferredSize(
-                  preferredSize: Size.fromHeight(48.h),
+              ),
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _UJobTabsDelegate(
                   child: Container(
                     color: AppColors.surface,
-                    padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 12.h),
+                    padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 16.h),
                     child: UJobPillTabBar(
-                      tabs: const ['For you', 'All jobs'],
-                      isExpanded: true,
+                      tabs: const ['For You', 'All Jobs'],
                       selectedIndex: _tabIndex,
-                      onTabSelected: (v) {
-                        setState(() => _tabIndex = v);
-                        _pageCtrl.animateToPage(v, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                      onTabSelected: (index) {
+                        _pageCtrl.animateToPage(
+                          index,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
                       },
                     ),
                   ),
@@ -496,5 +494,27 @@ class _SortSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _UJobTabsDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _UJobTabsDelegate({required this.child});
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  double get maxExtent => 56.0 + 16.0; // UJobPillTabBar height approx + padding
+
+  @override
+  double get minExtent => 56.0 + 16.0;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return true;
   }
 }
