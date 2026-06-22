@@ -70,7 +70,11 @@ class SeekerDashboardScreen extends ConsumerWidget {
                     ),
                     SizedBox(height: 16.h),
                     if (data.recommendedJobs.isEmpty)
-                      const _EmptyState(message: 'No recent jobs')
+                      const _EmptyState(
+                        title: 'No recent jobs found',
+                        subtitle: 'Check back later or adjust your profile preferences.',
+                        icon: HugeIcons.strokeRoundedSearchMinus,
+                      )
                     else
                       ListView.separated(
                         shrinkWrap: true,
@@ -292,21 +296,49 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  final String message;
-  const _EmptyState({required this.message});
+  final String title;
+  final String subtitle;
+  final dynamic icon;
+  
+  const _EmptyState({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 32.h),
+      padding: EdgeInsets.symmetric(vertical: 48.h, horizontal: 24.w),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: AppRadius.md,
+        borderRadius: AppRadius.xl,
         border: Border.all(color: AppColors.borderLight),
       ),
       alignment: Alignment.center,
-      child: Text(message, style: AppText.body.copyWith(color: AppColors.muted)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          HugeIcon(
+            icon: icon,
+            color: AppColors.muted2,
+            size: 48.r,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            title,
+            style: AppText.heading3.copyWith(color: AppColors.text2),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            subtitle,
+            style: AppText.body.copyWith(color: AppColors.muted),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }
