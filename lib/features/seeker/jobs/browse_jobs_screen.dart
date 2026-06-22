@@ -28,6 +28,8 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
   final TextEditingController _searchController = TextEditingController();
   late final PageController _pageCtrl;
   int _tabIndex = 0;
+  String _sortBy = 'Most Recent';
+  final List<String> _sortOptions = ['Most Recent', 'Salary: High to Low', 'Salary: Low to High'];
 
   @override
   void initState() {
@@ -165,17 +167,48 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
               if (jobs.isEmpty) {
                 return Center(child: Text(l10n.noMatchingJobsFound, style: AppText.body.copyWith(color: AppColors.muted)));
               }
-              return ListView.separated(
-                padding: AppSpacing.pagePad,
-                itemCount: jobs.length,
-                separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                itemBuilder: (context, index) {
-                  final job = jobs[index];
-                  return UJobJobCard(
-                    job: job,
-                    onTap: () => context.push('/seeker/jobs/${job.id}'),
-                  );
-                },
+              return Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('${jobs.length} jobs found', style: AppText.bodyBold.copyWith(color: AppColors.muted2)),
+                        Row(
+                          children: [
+                            Text('Sort by: ', style: AppText.bodySmall.copyWith(color: AppColors.muted)),
+                            SizedBox(width: 4.w),
+                            DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _sortBy,
+                                icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, color: AppColors.muted, size: 16.r),
+                                style: AppText.bodySemiBold.copyWith(color: AppColors.seekPrimaryDark),
+                                dropdownColor: AppColors.surface,
+                                items: _sortOptions.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                                onChanged: (v) => setState(() => _sortBy = v!),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                      itemCount: jobs.length,
+                      separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                      itemBuilder: (context, index) {
+                        final job = jobs[index];
+                        return UJobJobCard(
+                          job: job,
+                          onTap: () => context.push('/seeker/jobs/${job.id}'),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               );
             },
           ),
