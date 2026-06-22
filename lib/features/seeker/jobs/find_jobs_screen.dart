@@ -293,6 +293,12 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                                 options: _sortOptions,
                                 onSelected: (val) {
                                   setState(() => _sortBy = val);
+                                  ref
+                                      .read(activeJobFilterProvider.notifier)
+                                      .state = ref
+                                      .read(activeJobFilterProvider)
+                                      .copyWith(sortBy: val);
+                                  Navigator.pop(context);
                                 },
                               ),
                             );
