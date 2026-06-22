@@ -126,6 +126,23 @@ final seekerJobsProvider = FutureProvider<List<Job>>((ref) async {
       if (job.category != filter.category) return false;
     }
 
+    if (filter.experienceLevel != null &&
+        filter.experienceLevel != 'Any level') {
+      if (job.experienceLevel != filter.experienceLevel) return false;
+    }
+
+    if (filter.minSalary != null && filter.minSalary != 'Any salary') {
+      final jobSalaryVal =
+          int.tryParse(
+            job.salaryMin?.replaceAll(RegExp(r'[^0-9]'), '') ?? '0',
+          ) ??
+          0;
+      final filterSalaryVal =
+          int.tryParse(filter.minSalary!.replaceAll(RegExp(r'[^0-9]'), '')) ??
+          0;
+      if (jobSalaryVal < filterSalaryVal) return false;
+    }
+
     return true;
   }).toList();
 

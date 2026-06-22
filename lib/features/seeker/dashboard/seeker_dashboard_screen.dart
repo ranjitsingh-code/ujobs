@@ -21,7 +21,8 @@ class SeekerDashboardScreen extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     final dashboardAsync = ref.watch(seekerDashboardProvider);
     final convAsync = ref.watch(seekerConversationsProvider);
-    final needsReply = convAsync.valueOrNull?.where((c) => c.unreadCount > 0).toList() ?? [];
+    final needsReply =
+        convAsync.valueOrNull?.where((c) => c.unreadCount > 0).toList() ?? [];
     final l10n = context.l10n;
 
     final String greeting =
@@ -533,9 +534,7 @@ class _MessagesToReply extends StatelessWidget {
             separatorBuilder: (_, _) => SizedBox(width: 16.w),
             itemBuilder: (context, index) {
               final conversation = conversations[index];
-              return _MessageAvatar(
-                conversation: conversation,
-              );
+              return _MessageAvatar(conversation: conversation);
             },
           ),
         ),
@@ -547,13 +546,12 @@ class _MessagesToReply extends StatelessWidget {
 class _MessageAvatar extends StatelessWidget {
   final Conversation conversation;
 
-  const _MessageAvatar({
-    required this.conversation,
-  });
+  const _MessageAvatar({required this.conversation});
 
   @override
   Widget build(BuildContext context) {
-    final initials = conversation.otherInitials ??
+    final initials =
+        conversation.otherInitials ??
         (conversation.otherName.isNotEmpty ? conversation.otherName[0] : '?');
 
     return Semantics(
