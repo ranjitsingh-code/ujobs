@@ -61,7 +61,6 @@ class SeekerDashboardScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 16.h),
 
                     _SectionHeader(
                       title: 'Latest Jobs',
@@ -134,7 +133,7 @@ class _DashboardHeader extends StatelessWidget {
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 48.h),
+              padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 24.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -193,7 +192,6 @@ class _DashboardHeader extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 24.h), // extra space for overlap
                 ],
               ),
             ),
@@ -223,7 +221,7 @@ class _StatCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 16.h),
+          padding: EdgeInsets.symmetric(vertical: 12.h),
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.surface
