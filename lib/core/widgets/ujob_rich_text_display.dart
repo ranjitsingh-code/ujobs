@@ -7,10 +7,7 @@ import '../theme/app_text_styles.dart';
 class UJobRichTextDisplay extends StatefulWidget {
   final String content;
 
-  const UJobRichTextDisplay({
-    required this.content,
-    super.key,
-  });
+  const UJobRichTextDisplay({required this.content, super.key});
 
   @override
   State<UJobRichTextDisplay> createState() => _UJobRichTextDisplayState();
@@ -68,15 +65,12 @@ class _UJobRichTextDisplayState extends State<UJobRichTextDisplay> {
         style: AppText.bodyMedium.copyWith(color: AppColors.muted2),
       );
     }
-    
+
     return DefaultTextStyle(
       style: AppText.bodyMedium.copyWith(color: AppColors.muted2),
       child: QuillEditor.basic(
         controller: _controller,
-        config: const QuillEditorConfig(
-          showCursor: false,
-          scrollable: false,
-        ),
+        config: const QuillEditorConfig(showCursor: false, scrollable: false),
       ),
     );
   }

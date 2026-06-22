@@ -31,7 +31,9 @@ class UJobRadioCard<T> extends StatelessWidget {
         padding: EdgeInsets.all(16.r),
         margin: EdgeInsets.only(bottom: 12.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surface,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.05)
+              : AppColors.surface,
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.borderLight,

@@ -67,7 +67,9 @@ class _UJobRichTextEditorState extends State<UJobRichTextEditor> {
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                border: Border(bottom: BorderSide(color: AppColors.borderLight)),
+                border: Border(
+                  bottom: BorderSide(color: AppColors.borderLight),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -76,12 +78,21 @@ class _UJobRichTextEditorState extends State<UJobRichTextEditor> {
                   GestureDetector(
                     onTap: _handleSave,
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 8.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: Text('Done', style: AppText.small.copyWith(color: AppColors.surface, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        'Done',
+                        style: AppText.small.copyWith(
+                          color: AppColors.surface,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -139,9 +150,7 @@ class _UJobRichTextEditorState extends State<UJobRichTextEditor> {
               child: Container(
                 color: AppColors.surface,
                 padding: EdgeInsets.all(20.r),
-                child: QuillEditor.basic(
-                  controller: _controller,
-                ),
+                child: QuillEditor.basic(controller: _controller),
               ),
             ),
           ],

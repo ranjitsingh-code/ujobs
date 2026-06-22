@@ -20,13 +20,16 @@ class AuthService {
     required String password,
     required String companyName,
   }) async {
-    final res = await _client.dio.post(Ep.registerEmployer, data: {
-      'first_name': firstName,
-      'last_name': lastName,
-      'email': email,
-      'password': password,
-      'company_name': companyName,
-    });
+    final res = await _client.dio.post(
+      Ep.registerEmployer,
+      data: {
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'password': password,
+        'company_name': companyName,
+      },
+    );
     return res.data as Map<String, dynamic>;
   }
 
@@ -36,12 +39,15 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final res = await _client.dio.post(Ep.registerSeeker, data: {
-      'first_name': firstName,
-      'last_name': lastName,
-      'email': email,
-      'password': password,
-    });
+    final res = await _client.dio.post(
+      Ep.registerSeeker,
+      data: {
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'password': password,
+      },
+    );
     return res.data as Map<String, dynamic>;
   }
 

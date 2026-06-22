@@ -6,6 +6,7 @@ import '../models/job.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/l10n_extensions.dart';
+
 Future<void> showUJobEmployerJobActionsSheet({
   required BuildContext context,
   required Job job,
@@ -25,34 +26,48 @@ Future<void> showUJobEmployerJobActionsSheet({
     ),
     builder: (ctx) => _UJobEmployerJobActionsSheet(
       job: job,
-      onEdit: onEdit == null ? null : () {
-        Navigator.pop(ctx);
-        onEdit();
-      },
-      onViewApplicants: onViewApplicants == null ? null : () {
-        Navigator.pop(ctx);
-        onViewApplicants();
-      },
-      onPause: onPause == null ? null : () {
-        Navigator.pop(ctx);
-        onPause();
-      },
-      onResume: onResume == null ? null : () {
-        Navigator.pop(ctx);
-        onResume();
-      },
-      onPublish: onPublish == null ? null : () {
-        Navigator.pop(ctx);
-        onPublish();
-      },
-      onReopen: onReopen == null ? null : () {
-        Navigator.pop(ctx);
-        onReopen();
-      },
-      onDelete: onDelete == null ? null : () {
-        Navigator.pop(ctx);
-        onDelete();
-      },
+      onEdit: onEdit == null
+          ? null
+          : () {
+              Navigator.pop(ctx);
+              onEdit();
+            },
+      onViewApplicants: onViewApplicants == null
+          ? null
+          : () {
+              Navigator.pop(ctx);
+              onViewApplicants();
+            },
+      onPause: onPause == null
+          ? null
+          : () {
+              Navigator.pop(ctx);
+              onPause();
+            },
+      onResume: onResume == null
+          ? null
+          : () {
+              Navigator.pop(ctx);
+              onResume();
+            },
+      onPublish: onPublish == null
+          ? null
+          : () {
+              Navigator.pop(ctx);
+              onPublish();
+            },
+      onReopen: onReopen == null
+          ? null
+          : () {
+              Navigator.pop(ctx);
+              onReopen();
+            },
+      onDelete: onDelete == null
+          ? null
+          : () {
+              Navigator.pop(ctx);
+              onDelete();
+            },
     ),
   );
 }
@@ -106,7 +121,9 @@ class _UJobEmployerJobActionsSheet extends StatelessWidget {
             label: l10n.viewApplicants,
             onTap: onViewApplicants!,
           ),
-        if (onEdit != null && job.status != JobStatus.closed && job.status != JobStatus.rejected)
+        if (onEdit != null &&
+            job.status != JobStatus.closed &&
+            job.status != JobStatus.rejected)
           _ActionTile(
             icon: HugeIcons.strokeRoundedPencilEdit01,
             label: l10n.edit,
@@ -138,7 +155,8 @@ class _UJobEmployerJobActionsSheet extends StatelessWidget {
           ),
         Divider(height: 1.h, color: AppColors.borderLight),
         if (onDelete != null)
-          if (job.status == JobStatus.closed || job.status == JobStatus.rejected)
+          if (job.status == JobStatus.closed ||
+              job.status == JobStatus.rejected)
             _ActionTile(
               icon: HugeIcons.strokeRoundedDelete01,
               label: l10n.delete,

@@ -10,7 +10,11 @@ class JobActionHelpers {
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit01, color: AppColors.primary, size: 32.r),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedPencilEdit01,
+          color: AppColors.primary,
+          size: 32.r,
+        ),
         iconBgColor: AppColors.primary,
         confirmColor: AppColors.primary,
         title: context.l10n.edit,
@@ -28,11 +32,16 @@ class JobActionHelpers {
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedPauseCircle, color: AppColors.warning, size: 32.r),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedPauseCircle,
+          color: AppColors.warning,
+          size: 32.r,
+        ),
         iconBgColor: AppColors.warning,
         confirmColor: AppColors.warning,
         title: context.l10n.pauseJob,
-        description: 'Do you want to pause this job? It will temporarily be hidden from job seekers.',
+        description:
+            'Do you want to pause this job? It will temporarily be hidden from job seekers.',
         confirmText: context.l10n.pauseJob,
         onConfirm: () {
           Navigator.pop(ctx);
@@ -46,7 +55,11 @@ class JobActionHelpers {
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedPlay, color: AppColors.success, size: 32.r),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedPlay,
+          color: AppColors.success,
+          size: 32.r,
+        ),
         iconBgColor: AppColors.success,
         confirmColor: AppColors.success,
         title: context.l10n.reactivateJob,
@@ -64,7 +77,11 @@ class JobActionHelpers {
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedSent, color: AppColors.success, size: 32.r),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedSent,
+          color: AppColors.success,
+          size: 32.r,
+        ),
         iconBgColor: AppColors.success,
         confirmColor: AppColors.success,
         title: context.l10n.publishJob,
@@ -82,7 +99,11 @@ class JobActionHelpers {
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedRefresh, color: AppColors.success, size: 32.r),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedRefresh,
+          color: AppColors.success,
+          size: 32.r,
+        ),
         iconBgColor: AppColors.success,
         confirmColor: AppColors.success,
         title: context.l10n.reopenJob,

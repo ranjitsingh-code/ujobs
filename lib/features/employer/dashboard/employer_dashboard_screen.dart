@@ -70,10 +70,15 @@ class EmployerDashboardScreen extends ConsumerWidget {
                       showDialog(
                         context: context,
                         builder: (ctx) => UJobAlertDialog(
-                          icon: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, color: AppColors.warning, size: 32.r),
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedAlert02,
+                            color: AppColors.warning,
+                            size: 32.r,
+                          ),
                           iconBgColor: AppColors.warning,
                           title: 'Action Required',
-                          description: 'You must complete your company profile before you can post a new job.',
+                          description:
+                              'You must complete your company profile before you can post a new job.',
                           confirmText: 'Setup Profile',
                           confirmColor: AppColors.primary,
                           cancelText: 'Cancel',
@@ -120,10 +125,15 @@ class EmployerDashboardScreen extends ConsumerWidget {
                         showDialog(
                           context: context,
                           builder: (ctx) => UJobAlertDialog(
-                            icon: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, color: AppColors.warning, size: 32.r),
+                            icon: HugeIcon(
+                              icon: HugeIcons.strokeRoundedAlert02,
+                              color: AppColors.warning,
+                              size: 32.r,
+                            ),
                             iconBgColor: AppColors.warning,
                             title: 'Action Required',
-                            description: 'You must complete your company profile before you can post a new job.',
+                            description:
+                                'You must complete your company profile before you can post a new job.',
                             confirmText: 'Setup Profile',
                             confirmColor: AppColors.primary,
                             cancelText: 'Cancel',
@@ -146,35 +156,84 @@ class EmployerDashboardScreen extends ConsumerWidget {
                         job: job,
                         isManaging: false,
                         onTap: () => context.push('/employer/jobs/${job.id}'),
-                        onApplicantsTap: () => context.push('/employer/jobs/${job.id}/applicants', extra: job),
+                        onApplicantsTap: () => context.push(
+                          '/employer/jobs/${job.id}/applicants',
+                          extra: job,
+                        ),
                         onMoreTap: () => showUJobEmployerJobActionsSheet(
                           context: context,
                           job: job,
-                          onEdit: () => JobActionHelpers.confirmEdit(context, () => context.push('/employer/jobs/${job.id}/edit', extra: job)),
-                          onViewApplicants: () => context.push('/employer/jobs/${job.id}/applicants', extra: job),
-                          onPause: () => JobActionHelpers.confirmPause(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.paused)),
-                          onResume: () => JobActionHelpers.confirmResume(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.active)),
-                          onPublish: () => JobActionHelpers.confirmPublish(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.active)),
-                          onReopen: () => JobActionHelpers.confirmReopen(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.active)),
+                          onEdit: () => JobActionHelpers.confirmEdit(
+                            context,
+                            () => context.push(
+                              '/employer/jobs/${job.id}/edit',
+                              extra: job,
+                            ),
+                          ),
+                          onViewApplicants: () => context.push(
+                            '/employer/jobs/${job.id}/applicants',
+                            extra: job,
+                          ),
+                          onPause: () => JobActionHelpers.confirmPause(
+                            context,
+                            () => ref
+                                .read(demoEmployerJobsProvider.notifier)
+                                .updateStatus(job.id, JobStatus.paused),
+                          ),
+                          onResume: () => JobActionHelpers.confirmResume(
+                            context,
+                            () => ref
+                                .read(demoEmployerJobsProvider.notifier)
+                                .updateStatus(job.id, JobStatus.active),
+                          ),
+                          onPublish: () => JobActionHelpers.confirmPublish(
+                            context,
+                            () => ref
+                                .read(demoEmployerJobsProvider.notifier)
+                                .updateStatus(job.id, JobStatus.active),
+                          ),
+                          onReopen: () => JobActionHelpers.confirmReopen(
+                            context,
+                            () => ref
+                                .read(demoEmployerJobsProvider.notifier)
+                                .updateStatus(job.id, JobStatus.active),
+                          ),
                           onDelete: () {
                             showDialog(
                               context: context,
                               builder: (ctx) => UJobAlertDialog(
                                 icon: HugeIcon(
-                                  icon: job.status == JobStatus.closed || job.status == JobStatus.rejected ? HugeIcons.strokeRoundedDelete01 : HugeIcons.strokeRoundedAlert02,
+                                  icon:
+                                      job.status == JobStatus.closed ||
+                                          job.status == JobStatus.rejected
+                                      ? HugeIcons.strokeRoundedDelete01
+                                      : HugeIcons.strokeRoundedAlert02,
                                   color: AppColors.error,
                                   size: 32.r,
                                 ),
                                 iconBgColor: AppColors.error,
-                                title: job.status == JobStatus.closed || job.status == JobStatus.rejected ? 'Delete Job' : 'Close Job',
-                                description: job.status == JobStatus.closed || job.status == JobStatus.rejected 
-                                    ? 'Are you sure you want to permanently delete this job?' 
+                                title:
+                                    job.status == JobStatus.closed ||
+                                        job.status == JobStatus.rejected
+                                    ? 'Delete Job'
+                                    : 'Close Job',
+                                description:
+                                    job.status == JobStatus.closed ||
+                                        job.status == JobStatus.rejected
+                                    ? 'Are you sure you want to permanently delete this job?'
                                     : 'Are you sure you want to close this job? You will no longer receive new applications.',
                                 cancelText: 'Cancel',
-                                confirmText: job.status == JobStatus.closed || job.status == JobStatus.rejected ? 'Delete' : 'Close Job',
+                                confirmText:
+                                    job.status == JobStatus.closed ||
+                                        job.status == JobStatus.rejected
+                                    ? 'Delete'
+                                    : 'Close Job',
                                 onConfirm: () {
-                                  if (!(job.status == JobStatus.closed || job.status == JobStatus.rejected)) {
-                                    ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.closed);
+                                  if (!(job.status == JobStatus.closed ||
+                                      job.status == JobStatus.rejected)) {
+                                    ref
+                                        .read(demoEmployerJobsProvider.notifier)
+                                        .updateStatus(job.id, JobStatus.closed);
                                   }
                                   Navigator.pop(ctx);
                                 },
@@ -193,7 +252,6 @@ class EmployerDashboardScreen extends ConsumerWidget {
     );
   }
 }
-
 
 class _DashboardHeader extends StatelessWidget {
   final String greeting;
@@ -434,7 +492,10 @@ class _QuickActions extends StatelessWidget {
   final bool isProfileComplete;
   final VoidCallback onPostJob;
 
-  const _QuickActions({required this.isProfileComplete, required this.onPostJob});
+  const _QuickActions({
+    required this.isProfileComplete,
+    required this.onPostJob,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -442,67 +503,67 @@ class _QuickActions extends StatelessWidget {
       opacity: isProfileComplete ? 1.0 : 0.5,
       child: Container(
         height: 58.h,
-      decoration: BoxDecoration(
-        borderRadius: AppRadius.md,
-        boxShadow: AppShadow.button(AppColors.primary),
-      ),
-      child: Material(
-        color: AppColors.primary,
-        clipBehavior: Clip.antiAlias,
-        borderRadius: AppRadius.md,
-        child: InkWell(
-          onTap: onPostJob,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14.w),
-            child: Row(
-              children: [
-                Container(
-                  width: 34.r,
-                  height: 34.r,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.16),
-                    borderRadius: AppRadius.sm,
+        decoration: BoxDecoration(
+          borderRadius: AppRadius.md,
+          boxShadow: AppShadow.button(AppColors.primary),
+        ),
+        child: Material(
+          color: AppColors.primary,
+          clipBehavior: Clip.antiAlias,
+          borderRadius: AppRadius.md,
+          child: InkWell(
+            onTap: onPostJob,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 14.w),
+              child: Row(
+                children: [
+                  Container(
+                    width: 34.r,
+                    height: 34.r,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withValues(alpha: 0.16),
+                      borderRadius: AppRadius.sm,
+                    ),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedPlusSign,
+                      color: AppColors.surface,
+                      size: 19.r,
+                    ),
                   ),
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedPlusSign,
-                    color: AppColors.surface,
-                    size: 19.r,
-                  ),
-                ),
-                SizedBox(width: 11.w),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Post a Job',
-                        style: AppText.titleSm.copyWith(
-                          color: AppColors.surface,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0,
+                  SizedBox(width: 11.w),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Post a Job',
+                          style: AppText.titleSm.copyWith(
+                            color: AppColors.surface,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 2.h),
-                      Text(
-                        'Create a new job listing',
-                        style: AppText.caption.copyWith(
-                          color: AppColors.surface.withValues(alpha: 0.72),
+                        SizedBox(height: 2.h),
+                        Text(
+                          'Create a new job listing',
+                          style: AppText.caption.copyWith(
+                            color: AppColors.surface.withValues(alpha: 0.72),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Icon(
-                  Icons.arrow_forward_rounded,
-                  color: AppColors.surface.withValues(alpha: 0.86),
-                  size: 21.r,
-                ),
-              ],
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    color: AppColors.surface.withValues(alpha: 0.86),
+                    size: 21.r,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -733,17 +794,17 @@ class _EmptyJobs extends StatelessWidget {
             opacity: isProfileComplete ? 1.0 : 0.5,
             child: FilledButton.icon(
               onPressed: onPostJob,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.surface,
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-              shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
-            ),
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedPlusSign,
-              color: AppColors.surface,
-              size: 18.r,
-            ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.surface,
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
+              ),
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedPlusSign,
+                color: AppColors.surface,
+                size: 18.r,
+              ),
               label: Text('Post a Job', style: AppText.button),
             ),
           ),
@@ -809,10 +870,16 @@ class _CompanyProfileSetup extends ConsumerWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.warning,
                     foregroundColor: AppColors.surface,
-                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.w,
+                      vertical: 8.h,
+                    ),
                     shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
                   ),
-                  child: Text('Setup Now', style: AppText.button.copyWith(color: Colors.white)),
+                  child: Text(
+                    'Setup Now',
+                    style: AppText.button.copyWith(color: Colors.white),
+                  ),
                 ),
               ],
             ),

@@ -25,7 +25,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // Notifications - Shared
   bool _pushNotif = true;
-  
+
   // Notifications - Employer
   bool _emailCandidateMessage = true;
   bool _emailInterviewResponse = true;
@@ -73,12 +73,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _NavTile(
                 label: l10n.changeEmail,
                 subtitle: 'Update your login email address',
-                onTap: () => _showChangeFieldSheet(context: context, title: l10n.changeEmail, fieldLabel: l10n.email, buttonLabel: l10n.save, type: TextInputType.emailAddress),
+                onTap: () => _showChangeFieldSheet(
+                  context: context,
+                  title: l10n.changeEmail,
+                  fieldLabel: l10n.email,
+                  buttonLabel: l10n.save,
+                  type: TextInputType.emailAddress,
+                ),
               ),
               _NavTile(
                 label: l10n.changePhone,
                 subtitle: 'Update your contact phone number',
-                onTap: () => _showChangeFieldSheet(context: context, title: l10n.changePhone, fieldLabel: l10n.phone, buttonLabel: l10n.save, type: TextInputType.phone),
+                onTap: () => _showChangeFieldSheet(
+                  context: context,
+                  title: l10n.changePhone,
+                  fieldLabel: l10n.phone,
+                  buttonLabel: l10n.save,
+                  type: TextInputType.phone,
+                ),
               ),
               if (isEmployer) ...[
                 Padding(
@@ -86,9 +98,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Two-Factor Authentication', style: AppText.bodyBold.copyWith(color: AppColors.text)),
+                      Text(
+                        'Two-Factor Authentication',
+                        style: AppText.bodyBold.copyWith(color: AppColors.text),
+                      ),
                       SizedBox(height: 4.h),
-                      Text('Add an extra layer of security to your account', style: AppText.small.copyWith(color: AppColors.muted)),
+                      Text(
+                        'Add an extra layer of security to your account',
+                        style: AppText.small.copyWith(color: AppColors.muted),
+                      ),
                       SizedBox(height: 12.h),
                       Container(
                         padding: EdgeInsets.all(12.r),
@@ -104,13 +122,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _twoFa ? 'Status: Enabled' : 'Status: Disabled',
-                                    style: AppText.bodyBold.copyWith(color: _twoFa ? AppColors.success : AppColors.muted),
+                                    _twoFa
+                                        ? 'Status: Enabled'
+                                        : 'Status: Disabled',
+                                    style: AppText.bodyBold.copyWith(
+                                      color: _twoFa
+                                          ? AppColors.success
+                                          : AppColors.muted,
+                                    ),
                                   ),
                                   SizedBox(height: 4.h),
                                   Text(
                                     'Authenticator App (Google, Authy)',
-                                    style: AppText.small.copyWith(color: AppColors.text),
+                                    style: AppText.small.copyWith(
+                                      color: AppColors.text,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -130,7 +156,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ],
             ],
           ),
-          
+
           SizedBox(height: 24.h),
 
           // ================= NOTIFICATIONS =================
@@ -162,7 +188,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 _NavTile(
                   label: 'Browser Notifications',
-                  subtitle: 'Get alerts when the app is running in the background',
+                  subtitle:
+                      'Get alerts when the app is running in the background',
                   showArrow: false,
                   showBorder: false,
                   onTap: () {},
@@ -193,7 +220,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ] else ...[
                 _ToggleTile(
                   label: 'New Job Recommendations',
-                  subtitle: 'Get notified when jobs matching your profile are posted',
+                  subtitle:
+                      'Get notified when jobs matching your profile are posted',
                   value: _pushNewJobs,
                   onChanged: (v) => setState(() => _pushNewJobs = v),
                 ),
@@ -350,7 +378,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // --- Helpers ---
   void _showChangePasswordSheet(BuildContext context) {
-    showModalBottomSheet(context: context, builder: (ctx) => Container(height: 300));
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => Container(height: 300),
+    );
   }
 
   void _showChangeFieldSheet({
@@ -360,14 +391,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     required String buttonLabel,
     required TextInputType type,
   }) {
-    showModalBottomSheet(context: context, builder: (ctx) => Container(height: 300));
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => Container(height: 300),
+    );
   }
 
   void _showLanguageSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 20.h),
@@ -379,17 +415,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               SizedBox(height: 16.h),
               ListTile(
                 title: const Text('English'),
-                trailing: ref.read(localeProvider).languageCode == 'en' ? const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkBadge01, color: AppColors.primary) : null,
+                trailing: ref.read(localeProvider).languageCode == 'en'
+                    ? const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                        color: AppColors.primary,
+                      )
+                    : null,
                 onTap: () {
-                  ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+                  ref
+                      .read(localeProvider.notifier)
+                      .setLocale(const Locale('en'));
                   Navigator.pop(ctx);
                 },
               ),
               ListTile(
                 title: const Text('العربية'),
-                trailing: ref.read(localeProvider).languageCode == 'ar' ? const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkBadge01, color: AppColors.primary) : null,
+                trailing: ref.read(localeProvider).languageCode == 'ar'
+                    ? const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                        color: AppColors.primary,
+                      )
+                    : null,
                 onTap: () {
-                  ref.read(localeProvider.notifier).setLocale(const Locale('ar'));
+                  ref
+                      .read(localeProvider.notifier)
+                      .setLocale(const Locale('ar'));
                   Navigator.pop(ctx);
                 },
               ),
@@ -404,10 +454,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, color: AppColors.error, size: 32.r),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedAlert02,
+          color: AppColors.error,
+          size: 32.r,
+        ),
         iconBgColor: AppColors.error,
         title: 'Delete Account',
-        description: 'Are you sure you want to delete your account? This action cannot be undone.',
+        description:
+            'Are you sure you want to delete your account? This action cannot be undone.',
         confirmText: 'Delete',
         confirmColor: AppColors.error,
         cancelText: 'Cancel',
@@ -432,7 +487,11 @@ class _SectionTitle extends StatelessWidget {
       padding: EdgeInsets.only(left: 4.w, bottom: 8.h),
       child: Text(
         title,
-        style: AppText.small.copyWith(color: AppColors.muted, letterSpacing: 1, fontWeight: FontWeight.bold),
+        style: AppText.small.copyWith(
+          color: AppColors.muted,
+          letterSpacing: 1,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -450,9 +509,7 @@ class _SectionContainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.borderLight),
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 }
@@ -481,7 +538,9 @@ class _NavTile extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.fromLTRB(20.w, 16.h, 16.w, 16.h),
         decoration: BoxDecoration(
-          border: showBorder ? Border(bottom: BorderSide(color: AppColors.borderLight)) : null,
+          border: showBorder
+              ? Border(bottom: BorderSide(color: AppColors.borderLight))
+              : null,
         ),
         child: Row(
           children: [
@@ -489,16 +548,28 @@ class _NavTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: AppText.bodyBold.copyWith(color: textColor ?? AppColors.text)),
+                  Text(
+                    label,
+                    style: AppText.bodyBold.copyWith(
+                      color: textColor ?? AppColors.text,
+                    ),
+                  ),
                   if (subtitle != null) ...[
                     SizedBox(height: 4.h),
-                    Text(subtitle!, style: AppText.small.copyWith(color: AppColors.muted)),
+                    Text(
+                      subtitle!,
+                      style: AppText.small.copyWith(color: AppColors.muted),
+                    ),
                   ],
                 ],
               ),
             ),
             if (showArrow)
-              HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: AppColors.muted, size: 20.r),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                color: AppColors.muted,
+                size: 20.r,
+              ),
           ],
         ),
       ),
@@ -523,13 +594,14 @@ class _ToggleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final primaryColor = AppColors.primary; // Or seeker primary if needed
 
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 16.w, 16.h),
       decoration: BoxDecoration(
-        border: showBorder ? Border(bottom: BorderSide(color: AppColors.borderLight)) : null,
+        border: showBorder
+            ? Border(bottom: BorderSide(color: AppColors.borderLight))
+            : null,
       ),
       child: Row(
         children: [
@@ -537,10 +609,16 @@ class _ToggleTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: AppText.bodyBold.copyWith(color: AppColors.text)),
+                Text(
+                  label,
+                  style: AppText.bodyBold.copyWith(color: AppColors.text),
+                ),
                 if (subtitle != null) ...[
                   SizedBox(height: 4.h),
-                  Text(subtitle!, style: AppText.small.copyWith(color: AppColors.muted)),
+                  Text(
+                    subtitle!,
+                    style: AppText.small.copyWith(color: AppColors.muted),
+                  ),
                 ],
               ],
             ),

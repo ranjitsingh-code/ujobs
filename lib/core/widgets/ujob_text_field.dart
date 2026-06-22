@@ -181,7 +181,9 @@ class _UJobTextFieldState extends State<UJobTextField> {
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: HugeIcon(
-                      icon: _obscureText ? HugeIcons.strokeRoundedView : HugeIcons.strokeRoundedViewOffSlash,
+                      icon: _obscureText
+                          ? HugeIcons.strokeRoundedView
+                          : HugeIcons.strokeRoundedViewOffSlash,
                       color: AppColors.muted,
                       size: 20.r,
                     ),

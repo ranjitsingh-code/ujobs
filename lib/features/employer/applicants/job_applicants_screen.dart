@@ -19,10 +19,12 @@ class JobApplicantsScreen extends ConsumerStatefulWidget {
   const JobApplicantsScreen({required this.job, super.key});
 
   @override
-  ConsumerState<JobApplicantsScreen> createState() => _JobApplicantsScreenState();
+  ConsumerState<JobApplicantsScreen> createState() =>
+      _JobApplicantsScreenState();
 }
 
-class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen> with SingleTickerProviderStateMixin {
+class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedIndex = 0;
   String _searchQuery = '';
@@ -78,10 +80,7 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen> with 
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.job.title,
-                          style: AppText.heading2,
-                        ),
+                        Text(widget.job.title, style: AppText.heading2),
                         SizedBox(height: 6.h),
                         Row(
                           children: [
@@ -92,7 +91,8 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen> with 
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            if (widget.job.location != null && widget.job.location!.isNotEmpty) ...[
+                            if (widget.job.location != null &&
+                                widget.job.location!.isNotEmpty) ...[
                               SizedBox(width: 8.w),
                               Container(
                                 width: 4.w,
@@ -105,7 +105,9 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen> with 
                               SizedBox(width: 8.w),
                               Text(
                                 widget.job.location!,
-                                style: AppText.body.copyWith(color: AppColors.muted),
+                                style: AppText.body.copyWith(
+                                  color: AppColors.muted,
+                                ),
                               ),
                             ],
                           ],
@@ -123,7 +125,11 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen> with 
                       hint: context.l10n.searchApplicants,
                       prefix: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedSearch01,
+                          color: AppColors.muted,
+                          size: 20.r,
+                        ),
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -169,8 +175,11 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen> with 
             // Filter applicants by job, tab and search query
             final filtered = allApplicants.where((a) {
               final matchesJob = a.targetJobTitle == widget.job.title;
-              final matchesTab = tab == 'All' || a.status.toLowerCase() == tab.toLowerCase();
-              final matchesSearch = _searchQuery.isEmpty || a.name.toLowerCase().contains(_searchQuery);
+              final matchesTab =
+                  tab == 'All' || a.status.toLowerCase() == tab.toLowerCase();
+              final matchesSearch =
+                  _searchQuery.isEmpty ||
+                  a.name.toLowerCase().contains(_searchQuery);
               return matchesJob && matchesTab && matchesSearch;
             }).toList();
 
@@ -193,10 +202,7 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen> with 
                       ),
                     ),
                     SizedBox(height: 16.h),
-                    Text(
-                      'No applicants yet',
-                      style: AppText.titleSm,
-                    ),
+                    Text('No applicants yet', style: AppText.titleSm),
                     SizedBox(height: 8.h),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 40.w),
@@ -223,7 +229,8 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen> with 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ApplicantDetailScreen(applicantId: applicant.id),
+                        builder: (context) =>
+                            ApplicantDetailScreen(applicantId: applicant.id),
                       ),
                     );
                   },

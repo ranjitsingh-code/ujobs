@@ -21,7 +21,6 @@ class UJobJobCard extends StatelessWidget {
     super.key,
   });
 
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -62,7 +61,11 @@ class UJobJobCard extends StatelessWidget {
                           color: AppColors.seekSurface,
                           borderRadius: AppRadius.md,
                         ),
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedBuilding03, color: AppColors.seekPrimary, size: 24.r),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedBuilding03,
+                          color: AppColors.seekPrimary,
+                          size: 24.r,
+                        ),
                       ),
                     SizedBox(width: 12.w),
                     Expanded(
@@ -76,33 +79,28 @@ class UJobJobCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           SizedBox(height: 4.h),
-                          Row(
-                            children: [
-                              if (showCompany)
-                                Flexible(
-                                  child: Text(
-                                    job.company?.name ?? 'TechCorp Solutions',
-                                    style: AppText.bodyMedium.copyWith(color: AppColors.muted2),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                          if (showCompany)
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 2.h),
+                              child: Text(
+                                job.company?.name ?? 'TechCorp Solutions',
+                                style: AppText.bodyMedium.copyWith(
+                                  color: AppColors.text,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              if (job.location != null && job.location!.isNotEmpty) ...[
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.w),
-                                  child: Container(width: 4.r, height: 4.r, decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle)),
-                                ),
-                                Flexible(
-                                  child: Text(
-                                    job.location!,
-                                    style: AppText.bodyMedium.copyWith(color: AppColors.muted2),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          if (job.location != null && job.location!.isNotEmpty)
+                            Text(
+                              job.location!,
+                              style: AppText.bodyMedium.copyWith(
+                                color: AppColors.muted2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                         ],
                       ),
                     ),
@@ -111,10 +109,16 @@ class UJobJobCard extends StatelessWidget {
                         onPressed: onSaveTap,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        style: const ButtonStyle(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         icon: HugeIcon(
-                          icon: job.isSaved ? HugeIcons.strokeRoundedBookmark01 : HugeIcons.strokeRoundedBookmark02,
-                          color: job.isSaved ? AppColors.seekPrimary : AppColors.muted,
+                          icon: job.isSaved
+                              ? HugeIcons.strokeRoundedBookmark01
+                              : HugeIcons.strokeRoundedBookmark02,
+                          color: job.isSaved
+                              ? AppColors.seekPrimary
+                              : AppColors.muted,
                           size: 24.r,
                         ),
                       ),
@@ -125,7 +129,11 @@ class UJobJobCard extends StatelessWidget {
                   spacing: 8.w,
                   runSpacing: 8.h,
                   children: [
-                    _Badge(label: job.employmentType.replaceAll('_', ' ').toUpperCase()),
+                    _Badge(
+                      label: job.employmentType
+                          .replaceAll('_', ' ')
+                          .toUpperCase(),
+                    ),
                     _Badge(label: job.workplaceType.toUpperCase()),
                     if (job.category != null && job.category!.isNotEmpty)
                       _Badge(label: job.category!.toUpperCase()),
@@ -145,30 +153,45 @@ class UJobJobCard extends StatelessWidget {
                               children: [
                                 Text(
                                   timeago.format(job.createdAt!),
-                                  style: AppText.bodySmall.copyWith(color: AppColors.muted),
+                                  style: AppText.bodySmall.copyWith(
+                                    color: AppColors.muted,
+                                  ),
                                 ),
                                 if (job.applicantCount > 0) ...[
                                   Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 6.w),
-                                    child: Container(width: 3.r, height: 3.r, decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle)),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 6.w,
+                                    ),
+                                    child: Container(
+                                      width: 3.r,
+                                      height: 3.r,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.border,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
                                   ),
                                   Text(
                                     '${job.applicantCount} applied',
-                                    style: AppText.bodySmall.copyWith(color: AppColors.muted),
+                                    style: AppText.bodySmall.copyWith(
+                                      color: AppColors.muted,
+                                    ),
                                   ),
                                 ],
                               ],
                             ),
-
                         ],
                       ),
                     ),
                     if (job.salaryMin != null)
                       Text(
-                        job.salaryMax != null 
-                          ? '${job.salaryMin} - ${job.salaryMax}' 
-                          : job.salaryMin!,
-                        style: AppText.heading3.copyWith(color: AppColors.text, fontSize: 16.sp),
+                        job.salaryMax != null
+                            ? '${job.salaryMin} - ${job.salaryMax}'
+                            : job.salaryMin!,
+                        style: AppText.heading3.copyWith(
+                          color: AppColors.text,
+                          fontSize: 16.sp,
+                        ),
                       ),
                   ],
                 ),
@@ -179,7 +202,6 @@ class UJobJobCard extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _Badge extends StatelessWidget {

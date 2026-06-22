@@ -84,7 +84,9 @@ class UJobDropdownField<T> extends StatelessWidget {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(
-                color: errorText != null ? AppColors.error : AppColors.borderLight,
+                color: errorText != null
+                    ? AppColors.error
+                    : AppColors.borderLight,
               ),
             ),
             padding: EdgeInsets.symmetric(horizontal: 14.w),
@@ -95,7 +97,9 @@ class UJobDropdownField<T> extends StatelessWidget {
                   child: Text(
                     selectedLabel ?? hint ?? context.l10n.selectPlaceholder,
                     style: AppText.body.copyWith(
-                      color: selectedLabel != null ? AppColors.text : AppColors.muted2,
+                      color: selectedLabel != null
+                          ? AppColors.text
+                          : AppColors.muted2,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -139,10 +143,12 @@ class _SearchableDropdownSheet<T> extends StatefulWidget {
   });
 
   @override
-  State<_SearchableDropdownSheet<T>> createState() => _SearchableDropdownSheetState<T>();
+  State<_SearchableDropdownSheet<T>> createState() =>
+      _SearchableDropdownSheetState<T>();
 }
 
-class _SearchableDropdownSheetState<T> extends State<_SearchableDropdownSheet<T>> {
+class _SearchableDropdownSheetState<T>
+    extends State<_SearchableDropdownSheet<T>> {
   late TextEditingController _searchController;
   late List<(String label, T value)> _filteredOptions;
 
@@ -208,18 +214,21 @@ class _SearchableDropdownSheetState<T> extends State<_SearchableDropdownSheet<T>
           Expanded(
             child: ListView.separated(
               itemCount: _filteredOptions.length,
-              separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.borderLight),
+              separatorBuilder: (context, index) =>
+                  Divider(height: 1, color: AppColors.borderLight),
               itemBuilder: (context, index) {
                 final option = _filteredOptions[index];
                 final isSelected = option.$2 == widget.selectedValue;
-                
+
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     option.$1,
                     style: AppText.body.copyWith(
                       color: isSelected ? AppColors.primary : AppColors.text,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
                     ),
                   ),
                   trailing: isSelected

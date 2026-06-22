@@ -27,11 +27,13 @@ class Step1JobDetails extends ConsumerWidget {
           UJobTextField(
             label: context.l10n.jobTitle,
             hint: context.l10n.egSeniorUxDesigner,
-            controller: TextEditingController(text: state.title)..selection = TextSelection.collapsed(offset: state.title.length),
-            onChanged: (val) => notifier.updateField(state.copyWith(title: val)),
+            controller: TextEditingController(text: state.title)
+              ..selection = TextSelection.collapsed(offset: state.title.length),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(title: val)),
           ),
           SizedBox(height: 16.h),
-          
+
           UJobDropdownField<String>.simple(
             label: context.l10n.jobCategory,
             value: state.category.isEmpty ? 'Technology' : state.category,
@@ -40,7 +42,10 @@ class Step1JobDetails extends ConsumerWidget {
               ('Agriculture', 'Agriculture'),
               ('Animation & Multimedia', 'Animation & Multimedia'),
               ('Architecture', 'Architecture'),
-              ('Artificial Intelligence & Machine Learning', 'Artificial Intelligence & Machine Learning'),
+              (
+                'Artificial Intelligence & Machine Learning',
+                'Artificial Intelligence & Machine Learning',
+              ),
               ('Automotive', 'Automotive'),
               ('Banking', 'Banking'),
               ('Biotechnology', 'Biotechnology'),
@@ -108,63 +113,95 @@ class Step1JobDetails extends ConsumerWidget {
             },
           ),
           SizedBox(height: 16.h),
-          
+
           if (state.category == 'Other') ...[
             UJobTextField(
               label: context.l10n.specifyCategory,
               hint: context.l10n.egSpaceExploration,
-              controller: TextEditingController(text: state.customCategory)..selection = TextSelection.collapsed(offset: state.customCategory.length),
-              onChanged: (val) => notifier.updateField(state.copyWith(customCategory: val)),
+              controller: TextEditingController(text: state.customCategory)
+                ..selection = TextSelection.collapsed(
+                  offset: state.customCategory.length,
+                ),
+              onChanged: (val) =>
+                  notifier.updateField(state.copyWith(customCategory: val)),
             ),
             SizedBox(height: 16.h),
           ],
-          
+
           UJobTextField(
             label: context.l10n.numberOfOpenings,
             hint: context.l10n.eg1,
             keyboardType: TextInputType.number,
-            controller: TextEditingController(text: state.openings)..selection = TextSelection.collapsed(offset: state.openings.length),
-            onChanged: (val) => notifier.updateField(state.copyWith(openings: val)),
+            controller: TextEditingController(text: state.openings)
+              ..selection = TextSelection.collapsed(
+                offset: state.openings.length,
+              ),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(openings: val)),
           ),
           SizedBox(height: 16.h),
-          
-          Text('Employment Type', style: AppText.label.copyWith(color: AppColors.muted)),
+
+          Text(
+            'Employment Type',
+            style: AppText.label.copyWith(color: AppColors.muted),
+          ),
           SizedBox(height: 8.h),
           UJobChipGroup<String>(
-            options: const ['Full-Time', 'Part-Time', 'Contract', 'Internship', 'Temporary', 'Freelance'],
-            selectedValue: state.employmentType.isEmpty ? 'Full-Time' : state.employmentType,
+            options: const [
+              'Full-Time',
+              'Part-Time',
+              'Contract',
+              'Internship',
+              'Temporary',
+              'Freelance',
+            ],
+            selectedValue: state.employmentType.isEmpty
+                ? 'Full-Time'
+                : state.employmentType,
             labelBuilder: (val) => val,
-            onChanged: (val) => notifier.updateField(state.copyWith(employmentType: val)),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(employmentType: val)),
           ),
           SizedBox(height: 20.h),
 
-          Text('Workplace Type', style: AppText.label.copyWith(color: AppColors.muted)),
+          Text(
+            'Workplace Type',
+            style: AppText.label.copyWith(color: AppColors.muted),
+          ),
           SizedBox(height: 8.h),
           UJobChipGroup<String>(
             options: const ['On-site', 'Remote', 'Hybrid'],
-            selectedValue: state.workplaceType.isEmpty ? 'On-site' : state.workplaceType,
+            selectedValue: state.workplaceType.isEmpty
+                ? 'On-site'
+                : state.workplaceType,
             labelBuilder: (val) => val,
-            onChanged: (val) => notifier.updateField(state.copyWith(workplaceType: val)),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(workplaceType: val)),
           ),
           SizedBox(height: 20.h),
 
           UJobTextField(
             label: context.l10n.city,
             hint: context.l10n.cityHint,
-            controller: TextEditingController(text: state.city)..selection = TextSelection.collapsed(offset: state.city.length),
+            controller: TextEditingController(text: state.city)
+              ..selection = TextSelection.collapsed(offset: state.city.length),
             onChanged: (val) => notifier.updateField(state.copyWith(city: val)),
           ),
           SizedBox(height: 16.h),
-          
+
           UJobCountryDropdown(
             value: state.country.isEmpty ? 'United Kingdom' : state.country,
             onChanged: (val) {
-              if (val != null) notifier.updateField(state.copyWith(country: val));
+              if (val != null)
+                notifier.updateField(state.copyWith(country: val));
             },
           ),
           SizedBox(height: 16.h),
 
-          Text('Salary Details (Optional)', style: AppText.label.copyWith(color: AppColors.muted)),
+          Text(
+            'Salary Details (Optional)',
+            style: AppText.label.copyWith(color: AppColors.muted),
+          ),
           SizedBox(height: 8.h),
           Container(
             padding: EdgeInsets.all(16.r),
@@ -189,7 +226,8 @@ class Step1JobDetails extends ConsumerWidget {
                           ('SAR', 'SAR'),
                         ],
                         onChanged: (val) {
-                          if (val != null) notifier.updateField(state.copyWith(currency: val));
+                          if (val != null)
+                            notifier.updateField(state.copyWith(currency: val));
                         },
                       ),
                     ),
@@ -197,14 +235,19 @@ class Step1JobDetails extends ConsumerWidget {
                     Expanded(
                       child: UJobDropdownField<String>.simple(
                         label: context.l10n.period,
-                        value: state.salaryPeriod.isEmpty ? 'Yearly' : state.salaryPeriod,
+                        value: state.salaryPeriod.isEmpty
+                            ? 'Yearly'
+                            : state.salaryPeriod,
                         options: const [
                           ('Hourly', 'Hourly'),
                           ('Monthly', 'Monthly'),
                           ('Yearly', 'Yearly'),
                         ],
                         onChanged: (val) {
-                          if (val != null) notifier.updateField(state.copyWith(salaryPeriod: val));
+                          if (val != null)
+                            notifier.updateField(
+                              state.copyWith(salaryPeriod: val),
+                            );
                         },
                       ),
                     ),
@@ -219,8 +262,13 @@ class Step1JobDetails extends ConsumerWidget {
                         label: context.l10n.minimum,
                         hint: context.l10n.eg50000,
                         keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: state.salaryMin)..selection = TextSelection.collapsed(offset: state.salaryMin.length),
-                        onChanged: (val) => notifier.updateField(state.copyWith(salaryMin: val)),
+                        controller: TextEditingController(text: state.salaryMin)
+                          ..selection = TextSelection.collapsed(
+                            offset: state.salaryMin.length,
+                          ),
+                        onChanged: (val) => notifier.updateField(
+                          state.copyWith(salaryMin: val),
+                        ),
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -229,8 +277,13 @@ class Step1JobDetails extends ConsumerWidget {
                         label: context.l10n.maximum,
                         hint: context.l10n.eg70000,
                         keyboardType: TextInputType.number,
-                        controller: TextEditingController(text: state.salaryMax)..selection = TextSelection.collapsed(offset: state.salaryMax.length),
-                        onChanged: (val) => notifier.updateField(state.copyWith(salaryMax: val)),
+                        controller: TextEditingController(text: state.salaryMax)
+                          ..selection = TextSelection.collapsed(
+                            offset: state.salaryMax.length,
+                          ),
+                        onChanged: (val) => notifier.updateField(
+                          state.copyWith(salaryMax: val),
+                        ),
                       ),
                     ),
                   ],
@@ -242,10 +295,11 @@ class Step1JobDetails extends ConsumerWidget {
 
           GestureDetector(
             onTap: () => showUJobRichTextEditor(
-              context: context, 
-              title: 'Job Description', 
-              initialValue: state.description, 
-              onSave: (val) => notifier.updateField(state.copyWith(description: val)),
+              context: context,
+              title: 'Job Description',
+              initialValue: state.description,
+              onSave: (val) =>
+                  notifier.updateField(state.copyWith(description: val)),
             ),
             child: UJobTextField(
               label: context.l10n.jobDescription1,
@@ -258,12 +312,15 @@ class Step1JobDetails extends ConsumerWidget {
                 color: AppColors.primary,
                 size: 20.r,
               ),
-              controller: TextEditingController(text: getPlainTextFromQuillJson(state.description)),
+              controller: TextEditingController(
+                text: getPlainTextFromQuillJson(state.description),
+              ),
               onTap: () => showUJobRichTextEditor(
-                context: context, 
-                title: 'Job Description', 
-                initialValue: state.description, 
-                onSave: (val) => notifier.updateField(state.copyWith(description: val)),
+                context: context,
+                title: 'Job Description',
+                initialValue: state.description,
+                onSave: (val) =>
+                    notifier.updateField(state.copyWith(description: val)),
               ),
             ),
           ),
@@ -271,10 +328,11 @@ class Step1JobDetails extends ConsumerWidget {
 
           GestureDetector(
             onTap: () => showUJobRichTextEditor(
-              context: context, 
-              title: 'Responsibilities', 
-              initialValue: state.responsibilities, 
-              onSave: (val) => notifier.updateField(state.copyWith(responsibilities: val)),
+              context: context,
+              title: 'Responsibilities',
+              initialValue: state.responsibilities,
+              onSave: (val) =>
+                  notifier.updateField(state.copyWith(responsibilities: val)),
             ),
             child: UJobTextField(
               label: context.l10n.responsibilities,
@@ -287,12 +345,15 @@ class Step1JobDetails extends ConsumerWidget {
                 color: AppColors.primary,
                 size: 20.r,
               ),
-              controller: TextEditingController(text: getPlainTextFromQuillJson(state.responsibilities)),
+              controller: TextEditingController(
+                text: getPlainTextFromQuillJson(state.responsibilities),
+              ),
               onTap: () => showUJobRichTextEditor(
-                context: context, 
-                title: 'Responsibilities', 
-                initialValue: state.responsibilities, 
-                onSave: (val) => notifier.updateField(state.copyWith(responsibilities: val)),
+                context: context,
+                title: 'Responsibilities',
+                initialValue: state.responsibilities,
+                onSave: (val) =>
+                    notifier.updateField(state.copyWith(responsibilities: val)),
               ),
             ),
           ),

@@ -140,7 +140,8 @@ class PostJobState {
       benefits: benefits ?? this.benefits,
       applyVia: applyVia ?? this.applyVia,
       resumeRequirement: resumeRequirement ?? this.resumeRequirement,
-      coverLetterRequirement: coverLetterRequirement ?? this.coverLetterRequirement,
+      coverLetterRequirement:
+          coverLetterRequirement ?? this.coverLetterRequirement,
       deadline: deadline ?? this.deadline,
       screeningQuestions: screeningQuestions ?? this.screeningQuestions,
     );
@@ -156,6 +157,8 @@ class PostJobWizardNotifier extends StateNotifier<PostJobState> {
 }
 
 final postJobWizardProvider =
-    StateNotifierProvider.autoDispose<PostJobWizardNotifier, PostJobState>((ref) {
-  return PostJobWizardNotifier();
-});
+    StateNotifierProvider.autoDispose<PostJobWizardNotifier, PostJobState>((
+      ref,
+    ) {
+      return PostJobWizardNotifier();
+    });

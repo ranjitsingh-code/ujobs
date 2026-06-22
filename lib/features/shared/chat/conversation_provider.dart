@@ -57,7 +57,8 @@ class Conversation {
       lastAt: lastAt ?? this.lastAt,
       unreadCount: unreadCount ?? this.unreadCount,
       otherOnline: otherOnline ?? this.otherOnline,
-      requiresEmployerReply: requiresEmployerReply ?? this.requiresEmployerReply,
+      requiresEmployerReply:
+          requiresEmployerReply ?? this.requiresEmployerReply,
       jobTitle: jobTitle,
       applicationStatus: applicationStatus ?? this.applicationStatus,
     );
@@ -141,7 +142,8 @@ final demoConversations = <Conversation>[
   ),
 ];
 
-class ConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>> {
+class ConversationsNotifier
+    extends StateNotifier<AsyncValue<List<Conversation>>> {
   ConversationsNotifier() : super(const AsyncLoading()) {
     _init();
   }
@@ -159,7 +161,15 @@ class ConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>
 
   void markAsRead(String id) {
     state.whenData((convs) {
-      state = AsyncData(convs.map((c) => c.id == id ? c.copyWith(unreadCount: 0, requiresEmployerReply: false) : c).toList());
+      state = AsyncData(
+        convs
+            .map(
+              (c) => c.id == id
+                  ? c.copyWith(unreadCount: 0, requiresEmployerReply: false)
+                  : c,
+            )
+            .toList(),
+      );
     });
   }
 
@@ -169,10 +179,17 @@ class ConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>
     });
   }
 
-  
   void updateLastMessage(String id, String lastMessage, DateTime lastAt) {
     state.whenData((convs) {
-      state = AsyncData(convs.map((c) => c.id == id ? c.copyWith(lastMessage: lastMessage, lastAt: lastAt) : c).toList());
+      state = AsyncData(
+        convs
+            .map(
+              (c) => c.id == id
+                  ? c.copyWith(lastMessage: lastMessage, lastAt: lastAt)
+                  : c,
+            )
+            .toList(),
+      );
     });
   }
 
@@ -183,10 +200,13 @@ class ConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>
   }
 }
 
-final conversationsProvider = StateNotifierProvider<ConversationsNotifier, AsyncValue<List<Conversation>>>((ref) {
-  return ConversationsNotifier();
-});
-
+final conversationsProvider =
+    StateNotifierProvider<
+      ConversationsNotifier,
+      AsyncValue<List<Conversation>>
+    >((ref) {
+      return ConversationsNotifier();
+    });
 
 final demoSeekerConversations = <Conversation>[
   Conversation(
@@ -239,7 +259,8 @@ final demoSeekerConversations = <Conversation>[
   ),
 ];
 
-class SeekerConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>> {
+class SeekerConversationsNotifier
+    extends StateNotifier<AsyncValue<List<Conversation>>> {
   SeekerConversationsNotifier() : super(const AsyncLoading()) {
     _init();
   }
@@ -257,7 +278,9 @@ class SeekerConversationsNotifier extends StateNotifier<AsyncValue<List<Conversa
 
   void markAsRead(String id) {
     state.whenData((convs) {
-      state = AsyncData(convs.map((c) => c.id == id ? c.copyWith(unreadCount: 0) : c).toList());
+      state = AsyncData(
+        convs.map((c) => c.id == id ? c.copyWith(unreadCount: 0) : c).toList(),
+      );
     });
   }
 
@@ -266,10 +289,18 @@ class SeekerConversationsNotifier extends StateNotifier<AsyncValue<List<Conversa
       state = AsyncData(convs.where((c) => c.id != id).toList());
     });
   }
-  
+
   void updateLastMessage(String id, String lastMessage, DateTime lastAt) {
     state.whenData((convs) {
-      state = AsyncData(convs.map((c) => c.id == id ? c.copyWith(lastMessage: lastMessage, lastAt: lastAt) : c).toList());
+      state = AsyncData(
+        convs
+            .map(
+              (c) => c.id == id
+                  ? c.copyWith(lastMessage: lastMessage, lastAt: lastAt)
+                  : c,
+            )
+            .toList(),
+      );
     });
   }
 
@@ -280,10 +311,13 @@ class SeekerConversationsNotifier extends StateNotifier<AsyncValue<List<Conversa
   }
 }
 
-final seekerConversationsProvider = StateNotifierProvider<SeekerConversationsNotifier, AsyncValue<List<Conversation>>>((ref) {
-  return SeekerConversationsNotifier();
-});
-
+final seekerConversationsProvider =
+    StateNotifierProvider<
+      SeekerConversationsNotifier,
+      AsyncValue<List<Conversation>>
+    >((ref) {
+      return SeekerConversationsNotifier();
+    });
 
 final chatMessagesProvider =
     StateNotifierProvider.family<
@@ -313,9 +347,12 @@ class DemoChatNotifier extends StateNotifier<AsyncValue<List<ChatMessage>>> {
         isRead: true,
       ),
     ]);
-    ref.read(conversationsProvider.notifier).updateLastMessage(conversationId, body, DateTime.now());
-    ref.read(seekerConversationsProvider.notifier).updateLastMessage(conversationId, body, DateTime.now());
-
+    ref
+        .read(conversationsProvider.notifier)
+        .updateLastMessage(conversationId, body, DateTime.now());
+    ref
+        .read(seekerConversationsProvider.notifier)
+        .updateLastMessage(conversationId, body, DateTime.now());
   }
 
   void sendAttachment({
@@ -373,7 +410,8 @@ List<ChatMessage> _demoMessages(String conversationId) {
       sentAt: now.subtract(const Duration(hours: 1, minutes: 45)),
       isRead: true,
       attachmentType: 'image',
-      attachmentUrl: 'https://images.unsplash.com/photo-1542435503-956c469947f6?auto=format&fit=crop&q=80&w=600',
+      attachmentUrl:
+          'https://images.unsplash.com/photo-1542435503-956c469947f6?auto=format&fit=crop&q=80&w=600',
     ),
     ChatMessage(
       id: '$conversationId-4',
@@ -383,7 +421,8 @@ List<ChatMessage> _demoMessages(String conversationId) {
       isRead: true,
       attachmentType: 'pdf',
       attachmentName: '${name}_Resume_2026.pdf',
-      attachmentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+      attachmentUrl:
+          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     ),
     ChatMessage(
       id: '$conversationId-5',

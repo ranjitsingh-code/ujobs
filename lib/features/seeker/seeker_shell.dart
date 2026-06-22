@@ -12,22 +12,20 @@ class SeekerShell extends ConsumerWidget {
   const SeekerShell({required this.child, super.key});
 
   int _indexFromPath(String path) {
-    if (path.startsWith('/seeker/jobs'))         return 1;
-    if (path.startsWith('/seeker/applied'))       return 2;
-    if (path.startsWith('/seeker/messages'))      return 3;
-    if (path.startsWith('/seeker/profile'))       return 4;
+    if (path.startsWith('/seeker/jobs')) return 1;
+    if (path.startsWith('/seeker/applied')) return 2;
+    if (path.startsWith('/seeker/messages')) return 3;
+    if (path.startsWith('/seeker/profile')) return 4;
     return 0;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location     = GoRouterState.of(context).matchedLocation;
+    final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _indexFromPath(location);
 
     return Scaffold(
-      body: AnimatedPageWrapper(
-        child: child,
-      ),
+      body: AnimatedPageWrapper(child: child),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         selectedFontSize: 10,
@@ -35,19 +33,89 @@ class SeekerShell extends ConsumerWidget {
         currentIndex: currentIndex,
         onTap: (i) {
           switch (i) {
-            case 0: context.go('/seeker');           break;
-            case 1: context.go('/seeker/jobs');      break;
-            case 2: context.go('/seeker/applied');   break;
-            case 3: context.go('/seeker/messages');  break;
-            case 4: context.go('/seeker/profile');   break;
+            case 0:
+              context.go('/seeker');
+              break;
+            case 1:
+              context.go('/seeker/jobs');
+              break;
+            case 2:
+              context.go('/seeker/applied');
+              break;
+            case 3:
+              context.go('/seeker/messages');
+              break;
+            case 4:
+              context.go('/seeker/profile');
+              break;
           }
         },
         items: [
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedHome01, color: AppColors.muted2, size: 22),         activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedHome01, color: AppColors.primary, size: 22),              label: context.l10n.home),
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted2, size: 22),        activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.primary, size: 22),            label: context.l10n.jobsTab),
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: AppColors.muted2, size: 22),    activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: AppColors.primary, size: 22),        label: context.l10n.applications),
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedBubbleChat, color: AppColors.muted2, size: 22),    activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedBubbleChat, color: AppColors.primary, size: 22),       label: context.l10n.messages),
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedUser03, color: AppColors.muted2, size: 22),         activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedUser03, color: AppColors.primary, size: 22),            label: context.l10n.profile),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedHome01,
+              color: AppColors.muted2,
+              size: 22,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedHome01,
+              color: AppColors.primary,
+              size: 22,
+            ),
+            label: context.l10n.home,
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedSearch01,
+              color: AppColors.muted2,
+              size: 22,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedSearch01,
+              color: AppColors.primary,
+              size: 22,
+            ),
+            label: context.l10n.jobsTab,
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedTask01,
+              color: AppColors.muted2,
+              size: 22,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedTask01,
+              color: AppColors.primary,
+              size: 22,
+            ),
+            label: context.l10n.applications,
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedBubbleChat,
+              color: AppColors.muted2,
+              size: 22,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedBubbleChat,
+              color: AppColors.primary,
+              size: 22,
+            ),
+            label: context.l10n.messages,
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedUser03,
+              color: AppColors.muted2,
+              size: 22,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedUser03,
+              color: AppColors.primary,
+              size: 22,
+            ),
+            label: context.l10n.profile,
+          ),
         ],
       ),
     );
@@ -64,7 +132,14 @@ class SeekerRoleSwitcherButton extends ConsumerWidget {
       ref.read(activeRoleProvider.notifier).switchRole();
       context.go('/employer');
     },
-    icon: HugeIcon(icon: HugeIcons.strokeRoundedExchange01, color: AppColors.empPrimary, size: 18),
-    label: const Text('Switch to Employer', style: TextStyle(color: AppColors.empPrimary, fontSize: 12)),
+    icon: HugeIcon(
+      icon: HugeIcons.strokeRoundedExchange01,
+      color: AppColors.empPrimary,
+      size: 18,
+    ),
+    label: const Text(
+      'Switch to Employer',
+      style: TextStyle(color: AppColors.empPrimary, fontSize: 12),
+    ),
   );
 }

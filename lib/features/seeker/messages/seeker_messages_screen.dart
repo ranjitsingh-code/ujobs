@@ -51,15 +51,22 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedDelete02, color: AppColors.error, size: 32.r),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedDelete02,
+          color: AppColors.error,
+          size: 32.r,
+        ),
         iconBgColor: AppColors.error,
         confirmColor: AppColors.error,
         title: 'Delete Conversations',
-        description: 'Are you sure you want to delete ${_selectedIds.length} conversation(s)? This action cannot be undone.',
+        description:
+            'Are you sure you want to delete ${_selectedIds.length} conversation(s)? This action cannot be undone.',
         cancelText: 'Cancel',
         confirmText: 'Delete',
         onConfirm: () {
-          ref.read(seekerConversationsProvider.notifier).deleteConversations(_selectedIds.toList());
+          ref
+              .read(seekerConversationsProvider.notifier)
+              .deleteConversations(_selectedIds.toList());
           setState(() {
             _selectedIds.clear();
             _isSelectionMode = false;
@@ -74,7 +81,9 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.r))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 40.h),
         child: Column(
@@ -87,13 +96,21 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                 Text('Options', style: AppText.heading3),
                 IconButton(
                   onPressed: () => Navigator.pop(ctx),
-                  icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.text, size: 24.r),
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    color: AppColors.text,
+                    size: 24.r,
+                  ),
                 ),
               ],
             ),
             SizedBox(height: 16.h),
             ListTile(
-              leading: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.text, size: 24.r),
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedSearch01,
+                color: AppColors.text,
+                size: 24.r,
+              ),
               title: Text('Search Messages', style: AppText.bodyBold),
               onTap: () {
                 Navigator.pop(ctx);
@@ -101,7 +118,11 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
               },
             ),
             ListTile(
-              leading: HugeIcon(icon: HugeIcons.strokeRoundedTaskDone01, color: AppColors.text, size: 24.r),
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedTaskDone01,
+                color: AppColors.text,
+                size: 24.r,
+              ),
               title: Text('Select Messages', style: AppText.bodyBold),
               onTap: () {
                 Navigator.pop(ctx);
@@ -109,8 +130,15 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
               },
             ),
             ListTile(
-              leading: HugeIcon(icon: HugeIcons.strokeRoundedMailOpen01, color: AppColors.primary, size: 24.r),
-              title: Text('Mark All as Read', style: AppText.bodyBold.copyWith(color: AppColors.primary)),
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedMailOpen01,
+                color: AppColors.primary,
+                size: 24.r,
+              ),
+              title: Text(
+                'Mark All as Read',
+                style: AppText.bodyBold.copyWith(color: AppColors.primary),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 ref.read(seekerConversationsProvider.notifier).markAllAsRead();
@@ -135,16 +163,26 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
               leadingWidth: 80.w,
               leading: TextButton(
                 onPressed: _toggleSelectionMode,
-                child: Text('Cancel', style: AppText.bodyBold.copyWith(color: AppColors.muted)),
+                child: Text(
+                  'Cancel',
+                  style: AppText.bodyBold.copyWith(color: AppColors.muted),
+                ),
               ),
-              title: Text('${_selectedIds.length} Selected', style: AppText.heading3),
+              title: Text(
+                '${_selectedIds.length} Selected',
+                style: AppText.heading3,
+              ),
               centerTitle: true,
               actions: [
                 IconButton(
-                  onPressed: _selectedIds.isEmpty ? null : () => _confirmDeleteSelected(ref),
+                  onPressed: _selectedIds.isEmpty
+                      ? null
+                      : () => _confirmDeleteSelected(ref),
                   icon: HugeIcon(
                     icon: HugeIcons.strokeRoundedDelete02,
-                    color: _selectedIds.isEmpty ? AppColors.border : AppColors.error,
+                    color: _selectedIds.isEmpty
+                        ? AppColors.border
+                        : AppColors.error,
                     size: 24.r,
                   ),
                 ),
@@ -154,7 +192,11 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
               title: 'Messages',
               showBack: false,
               rightWidget: IconButton(
-                icon: HugeIcon(icon: HugeIcons.strokeRoundedMoreVerticalCircle01, color: AppColors.text, size: 24.r),
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedMoreVerticalCircle01,
+                  color: AppColors.text,
+                  size: 24.r,
+                ),
                 onPressed: () => _showMoreOptionsSheet(context, ref),
               ),
             ),
@@ -171,10 +213,15 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                       label: '',
                       hint: context.l10n.searchConversations,
                       controller: _searchCtrl,
-                      onChanged: (v) => setState(() => _query = v.toLowerCase()),
+                      onChanged: (v) =>
+                          setState(() => _query = v.toLowerCase()),
                       prefix: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted2, size: 20.r),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedSearch01,
+                          color: AppColors.muted2,
+                          size: 20.r,
+                        ),
                       ),
                     ),
                   ),
@@ -187,7 +234,10 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                         _searchCtrl.clear();
                       });
                     },
-                    child: Text('Cancel', style: AppText.bodyBold.copyWith(color: AppColors.muted)),
+                    child: Text(
+                      'Cancel',
+                      style: AppText.bodyBold.copyWith(color: AppColors.muted),
+                    ),
                   ),
                 ],
               ),
@@ -202,13 +252,16 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
               data: (convs) {
                 var list = convs;
                 if (_query.isNotEmpty) {
-                  list = list.where((c) => c.otherName.toLowerCase().contains(_query)).toList();
+                  list = list
+                      .where((c) => c.otherName.toLowerCase().contains(_query))
+                      .toList();
                 }
 
                 if (list.isEmpty) {
                   return UJobEmpty(
                     title: 'No messages',
-                    subtitle: 'Try changing your search or start a conversation.',
+                    subtitle:
+                        'Try changing your search or start a conversation.',
                     icon: HugeIcons.strokeRoundedBubbleChat,
                   );
                 }
@@ -217,11 +270,16 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                   children: [
                     if (_isSelectionMode)
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24.w,
+                          vertical: 8.h,
+                        ),
                         child: Row(
                           children: [
                             UJobCheckbox(
-                              value: _selectedIds.length == list.length && list.isNotEmpty,
+                              value:
+                                  _selectedIds.length == list.length &&
+                                  list.isNotEmpty,
                               onChanged: (v) {
                                 setState(() {
                                   if (v) {
@@ -252,10 +310,14 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                             onTap: () {
                               if (_isSelectionMode) {
                                 setState(() {
-                                  isSelected ? _selectedIds.remove(conv.id) : _selectedIds.add(conv.id);
+                                  isSelected
+                                      ? _selectedIds.remove(conv.id)
+                                      : _selectedIds.add(conv.id);
                                 });
                               } else {
-                                ref.read(seekerConversationsProvider.notifier).markAsRead(conv.id);
+                                ref
+                                    .read(seekerConversationsProvider.notifier)
+                                    .markAsRead(conv.id);
                                 context.push(
                                   '/conversations/${conv.id}',
                                   extra: {
@@ -287,11 +349,17 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
     );
   }
 
-  void _showSingleMessageOptions(BuildContext context, WidgetRef ref, Conversation conv) {
+  void _showSingleMessageOptions(
+    BuildContext context,
+    WidgetRef ref,
+    Conversation conv,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.r))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 40.h),
         child: Column(
@@ -304,14 +372,25 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                 Text('Message Options', style: AppText.heading3),
                 IconButton(
                   onPressed: () => Navigator.pop(ctx),
-                  icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.text, size: 24.r),
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    color: AppColors.text,
+                    size: 24.r,
+                  ),
                 ),
               ],
             ),
             SizedBox(height: 16.h),
             ListTile(
-              leading: HugeIcon(icon: HugeIcons.strokeRoundedDelete02, color: AppColors.error, size: 24.r),
-              title: Text('Delete Conversation', style: AppText.bodyBold.copyWith(color: AppColors.error)),
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedDelete02,
+                color: AppColors.error,
+                size: 24.r,
+              ),
+              title: Text(
+                'Delete Conversation',
+                style: AppText.bodyBold.copyWith(color: AppColors.error),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _confirmDeleteSingle(ref, conv);
@@ -327,15 +406,22 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedDelete02, color: AppColors.error, size: 32.r),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedDelete02,
+          color: AppColors.error,
+          size: 32.r,
+        ),
         iconBgColor: AppColors.error,
         confirmColor: AppColors.error,
         title: 'Delete Conversation',
-        description: 'Are you sure you want to delete your conversation with ${conv.otherName}? This cannot be undone.',
+        description:
+            'Are you sure you want to delete your conversation with ${conv.otherName}? This cannot be undone.',
         cancelText: 'Cancel',
         confirmText: 'Delete',
         onConfirm: () {
-          ref.read(seekerConversationsProvider.notifier).deleteConversation(conv.id);
+          ref
+              .read(seekerConversationsProvider.notifier)
+              .deleteConversation(conv.id);
           Navigator.pop(ctx);
         },
       ),
@@ -362,10 +448,14 @@ class _ConvTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surface,
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.05)
+            : AppColors.surface,
         borderRadius: AppRadius.xl,
         boxShadow: AppShadow.card(),
-        border: Border.all(color: isSelected ? AppColors.primary : AppColors.borderLight),
+        border: Border.all(
+          color: isSelected ? AppColors.primary : AppColors.borderLight,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -398,7 +488,10 @@ class _ConvTile extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: AppColors.success,
                             shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.surface, width: 2.r),
+                            border: Border.all(
+                              color: AppColors.surface,
+                              width: 2.r,
+                            ),
                           ),
                         ),
                       ),
@@ -409,7 +502,12 @@ class _ConvTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(conv.otherName, style: AppText.bodyBold.copyWith(color: AppColors.text2)),
+                      Text(
+                        conv.otherName,
+                        style: AppText.bodyBold.copyWith(
+                          color: AppColors.text2,
+                        ),
+                      ),
                       if (conv.jobTitle != null) ...[
                         SizedBox(height: 2.h),
                         Row(
@@ -417,13 +515,19 @@ class _ConvTile extends StatelessWidget {
                           children: [
                             Padding(
                               padding: EdgeInsets.only(top: 1.h),
-                              child: HugeIcon(icon: HugeIcons.strokeRoundedBriefcase02, size: 12.r, color: AppColors.primary),
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedBriefcase02,
+                                size: 12.r,
+                                color: AppColors.primary,
+                              ),
                             ),
                             SizedBox(width: 4.w),
                             Expanded(
                               child: Text(
                                 conv.jobTitle!,
-                                style: AppText.caption.copyWith(color: AppColors.primary),
+                                style: AppText.caption.copyWith(
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ),
                           ],
@@ -433,8 +537,12 @@ class _ConvTile extends StatelessWidget {
                       Text(
                         conv.lastMessage ?? 'No messages yet',
                         style: AppText.small.copyWith(
-                          color: conv.unreadCount > 0 ? AppColors.text : AppColors.muted,
-                          fontWeight: conv.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+                          color: conv.unreadCount > 0
+                              ? AppColors.text
+                              : AppColors.muted,
+                          fontWeight: conv.unreadCount > 0
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -453,12 +561,17 @@ class _ConvTile extends StatelessWidget {
                     if (conv.lastAt != null)
                       Text(
                         timeago.format(conv.lastAt!, allowFromNow: true),
-                        style: AppText.caption.copyWith(color: AppColors.muted2),
+                        style: AppText.caption.copyWith(
+                          color: AppColors.muted2,
+                        ),
                       ),
                     if (conv.unreadCount > 0 && !isSelectionMode) ...[
                       SizedBox(height: 8.h),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 6.w,
+                          vertical: 2.h,
+                        ),
                         decoration: const BoxDecoration(
                           color: AppColors.empPrimary,
                           shape: BoxShape.rectangle,
@@ -466,7 +579,9 @@ class _ConvTile extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            conv.unreadCount > 9 ? '9+' : conv.unreadCount.toString(),
+                            conv.unreadCount > 9
+                                ? '9+'
+                                : conv.unreadCount.toString(),
                             style: AppText.caption.copyWith(
                               color: AppColors.white,
                               fontSize: 10.sp,
@@ -491,7 +606,6 @@ class _ConvTile extends StatelessWidget {
     dynamic icon;
     String text;
     switch (status) {
-
       case ApplicationStatus.applied:
         color = AppColors.muted2;
         icon = HugeIcons.strokeRoundedTask01;
@@ -541,7 +655,14 @@ class _ConvTile extends StatelessWidget {
         children: [
           HugeIcon(icon: icon, size: 10.r, color: color),
           SizedBox(width: 4.w),
-          Text(text, style: AppText.caption.copyWith(color: color, fontSize: 10.sp, fontWeight: FontWeight.bold)),
+          Text(
+            text,
+            style: AppText.caption.copyWith(
+              color: color,
+              fontSize: 10.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

@@ -36,7 +36,10 @@ class UJobStatCard extends StatelessWidget {
               Text(value, style: AppText.heading2.copyWith(color: color)),
               if (trend != null) ...[
                 SizedBox(width: 8.w),
-                Text(trend!, style: AppText.labelSm.copyWith(color: AppColors.success)),
+                Text(
+                  trend!,
+                  style: AppText.labelSm.copyWith(color: AppColors.success),
+                ),
               ],
             ],
           ),

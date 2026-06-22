@@ -22,7 +22,8 @@ class ApplicantsScreen extends ConsumerStatefulWidget {
   ConsumerState<ApplicantsScreen> createState() => _ApplicantsScreenState();
 }
 
-class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen> with SingleTickerProviderStateMixin {
+class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late int _selectedIndex;
   String _searchQuery = '';
@@ -42,7 +43,11 @@ class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen> with Single
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
-    _tabController = TabController(length: _tabs.length, vsync: this, initialIndex: widget.initialIndex);
+    _tabController = TabController(
+      length: _tabs.length,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
     _tabController.addListener(() {
       if (_tabController.index != _selectedIndex) {
         setState(() {
@@ -61,7 +66,7 @@ class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen> with Single
   @override
   Widget build(BuildContext context) {
     final allApplicants = ref.watch(employerApplicantsProvider);
-    
+
     // Extract unique job titles from applicants for the filter
     final availableJobs = allApplicants
         .where((a) => a.targetJobTitle != null && a.targetJobTitle!.isNotEmpty)
@@ -90,7 +95,11 @@ class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen> with Single
                           hint: context.l10n.searchApplicantsByName,
                           prefix: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedSearch01,
+                              color: AppColors.muted,
+                              size: 20.r,
+                            ),
                           ),
                           onChanged: (value) {
                             setState(() {
@@ -114,7 +123,7 @@ class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen> with Single
                               });
                             },
                           ),
-                        ]
+                        ],
                       ],
                     ),
                   ),
@@ -154,9 +163,14 @@ class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen> with Single
           children: _tabs.map((tab) {
             // Filter applicants by tab, search query, and job title
             final filtered = allApplicants.where((a) {
-              final matchesTab = tab == 'All' || a.status.toLowerCase() == tab.toLowerCase();
-              final matchesSearch = _searchQuery.isEmpty || a.name.toLowerCase().contains(_searchQuery);
-              final matchesJob = _selectedJobFilter == null || a.targetJobTitle == _selectedJobFilter;
+              final matchesTab =
+                  tab == 'All' || a.status.toLowerCase() == tab.toLowerCase();
+              final matchesSearch =
+                  _searchQuery.isEmpty ||
+                  a.name.toLowerCase().contains(_searchQuery);
+              final matchesJob =
+                  _selectedJobFilter == null ||
+                  a.targetJobTitle == _selectedJobFilter;
               return matchesTab && matchesSearch && matchesJob;
             }).toList();
 
@@ -179,10 +193,7 @@ class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen> with Single
                       ),
                     ),
                     SizedBox(height: 16.h),
-                    Text(
-                      'No applicants found',
-                      style: AppText.titleSm,
-                    ),
+                    Text('No applicants found', style: AppText.titleSm),
                   ],
                 ),
               );
@@ -200,7 +211,8 @@ class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen> with Single
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ApplicantDetailScreen(applicantId: applicant.id),
+                        builder: (context) =>
+                            ApplicantDetailScreen(applicantId: applicant.id),
                       ),
                     );
                   },

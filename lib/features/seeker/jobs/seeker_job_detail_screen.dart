@@ -19,10 +19,12 @@ class SeekerJobDetailScreen extends ConsumerStatefulWidget {
   const SeekerJobDetailScreen({required this.jobId, super.key});
 
   @override
-  ConsumerState<SeekerJobDetailScreen> createState() => _SeekerJobDetailScreenState();
+  ConsumerState<SeekerJobDetailScreen> createState() =>
+      _SeekerJobDetailScreenState();
 }
 
-class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> with SingleTickerProviderStateMixin {
+class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
+    with SingleTickerProviderStateMixin {
   bool _hasApplied = false;
   late TabController _tabController;
 
@@ -58,12 +60,20 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> w
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              onPressed: () {}, 
-              icon: HugeIcon(icon: HugeIcons.strokeRoundedShare01, color: AppColors.text, size: 24.r),
+              onPressed: () {},
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedShare01,
+                color: AppColors.text,
+                size: 24.r,
+              ),
             ),
             IconButton(
-              onPressed: () {}, 
-              icon: HugeIcon(icon: HugeIcons.strokeRoundedBookmark01, color: AppColors.text, size: 24.r),
+              onPressed: () {},
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedBookmark01,
+                color: AppColors.text,
+                size: 24.r,
+              ),
             ),
           ],
         ),
@@ -94,13 +104,17 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> w
                               width: 72.r,
                               height: 72.r,
                               decoration: BoxDecoration(
-                                color: AppColors.error, // Just a placeholder color (red for Airbnb)
+                                color: AppColors
+                                    .error, // Just a placeholder color (red for Airbnb)
                                 borderRadius: BorderRadius.circular(18.r),
                               ),
                               alignment: Alignment.center,
                               child: Text(
                                 job.company?.name[0].toUpperCase() ?? 'C',
-                                style: AppText.heading1.copyWith(color: AppColors.surface, fontSize: 32.sp),
+                                style: AppText.heading1.copyWith(
+                                  color: AppColors.surface,
+                                  fontSize: 32.sp,
+                                ),
                               ),
                             ),
                             SizedBox(height: 16.h),
@@ -112,15 +126,26 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> w
                             SizedBox(height: 4.h),
                             Text(
                               job.company?.name ?? 'Company',
-                              style: AppText.heading3.copyWith(color: AppColors.seekPrimary),
+                              style: AppText.heading3.copyWith(
+                                color: AppColors.seekPrimary,
+                              ),
                             ),
                             SizedBox(height: 8.h),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                HugeIcon(icon: HugeIcons.strokeRoundedLocation01, color: AppColors.muted, size: 16.r),
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedLocation01,
+                                  color: AppColors.muted,
+                                  size: 16.r,
+                                ),
                                 SizedBox(width: 4.w),
-                                Text(job.location ?? 'Remote', style: AppText.body.copyWith(color: AppColors.muted)),
+                                Text(
+                                  job.location ?? 'Remote',
+                                  style: AppText.body.copyWith(
+                                    color: AppColors.muted,
+                                  ),
+                                ),
                               ],
                             ),
                             SizedBox(height: 16.h),
@@ -132,7 +157,9 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> w
                               children: [
                                 _TagChip(
                                   label: '\$120k-\$160k',
-                                  color: AppColors.seekPrimary.withValues(alpha: 0.1),
+                                  color: AppColors.seekPrimary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   textColor: AppColors.seekPrimary,
                                 ),
                                 _TagChip(
@@ -142,7 +169,9 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> w
                                 ),
                                 _TagChip(
                                   label: 'Remote',
-                                  color: AppColors.success.withValues(alpha: 0.1),
+                                  color: AppColors.success.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   textColor: AppColors.success,
                                 ),
                               ],
@@ -150,7 +179,9 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> w
                             SizedBox(height: 16.h),
                             Text(
                               'Posted ${_formatDate(job.createdAt)} · 47 applicants',
-                              style: AppText.small.copyWith(color: AppColors.grey600),
+                              style: AppText.small.copyWith(
+                                color: AppColors.grey600,
+                              ),
                             ),
                             SizedBox(height: 24.h),
                           ],
@@ -187,7 +218,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> w
                   ],
                 ),
               ),
-              
+
               // Fixed Bottom Bar
               Positioned(
                 left: 0,
@@ -197,9 +228,15 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> w
                   padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    border: Border(top: BorderSide(color: AppColors.borderLight)),
+                    border: Border(
+                      top: BorderSide(color: AppColors.borderLight),
+                    ),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
+                      ),
                     ],
                   ),
                   child: Row(
@@ -217,21 +254,25 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen> w
                       Expanded(
                         child: UJobButton(
                           label: isApplied ? 'Applied' : 'Apply Now',
-                          color: isApplied ? AppColors.success : AppColors.seekPrimary,
-                          onTap: isApplied ? null : () async {
-                            final result = await context.push<bool>(
-                              '/seeker/jobs/${widget.jobId}/apply',
-                              extra: {
-                                'title': job.title,
-                                'company': job.company?.name ?? '',
-                              },
-                            );
-                            if (result == true) {
-                              setState(() {
-                                _hasApplied = true;
-                              });
-                            }
-                          },
+                          color: isApplied
+                              ? AppColors.success
+                              : AppColors.seekPrimary,
+                          onTap: isApplied
+                              ? null
+                              : () async {
+                                  final result = await context.push<bool>(
+                                    '/seeker/jobs/${widget.jobId}/apply',
+                                    extra: {
+                                      'title': job.title,
+                                      'company': job.company?.name ?? '',
+                                    },
+                                  );
+                                  if (result == true) {
+                                    setState(() {
+                                      _hasApplied = true;
+                                    });
+                                  }
+                                },
                         ),
                       ),
                     ],
@@ -251,17 +292,23 @@ class _TagChip extends StatelessWidget {
   final Color color;
   final Color textColor;
 
-  const _TagChip({required this.label, required this.color, required this.textColor});
+  const _TagChip({
+    required this.label,
+    required this.color,
+    required this.textColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: AppRadius.pill,
+      decoration: BoxDecoration(color: color, borderRadius: AppRadius.pill),
+      child: Text(
+        label,
+        style: AppText.small
+            .copyWith(fontWeight: FontWeight.bold)
+            .copyWith(color: textColor),
       ),
-      child: Text(label, style: AppText.small.copyWith(fontWeight: FontWeight.bold).copyWith(color: textColor)),
     );
   }
 }
@@ -276,11 +323,12 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => tabBar.preferredSize.height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: AppColors.surface,
-      child: tabBar,
-    );
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: AppColors.surface, child: tabBar);
   }
 
   @override
@@ -301,16 +349,29 @@ class _OverviewTab extends StatelessWidget {
         if (job.description != null && job.description!.isNotEmpty)
           job.description!.startsWith('{')
               ? UJobRichTextDisplay(content: job.description!)
-              : Text(job.description!, style: AppText.body.copyWith(color: AppColors.text2, height: 1.5))
+              : Text(
+                  job.description!,
+                  style: AppText.body.copyWith(
+                    color: AppColors.text2,
+                    height: 1.5,
+                  ),
+                )
         else
-          Text('We are looking for an experienced professional to join our team.', style: AppText.body.copyWith(color: AppColors.text2, height: 1.5)),
-        
+          Text(
+            'We are looking for an experienced professional to join our team.',
+            style: AppText.body.copyWith(color: AppColors.text2, height: 1.5),
+          ),
+
         SizedBox(height: 24.h),
         Text('Key Responsibilities', style: AppText.heading3),
         SizedBox(height: 12.h),
         // Placeholder for responsibilities if not in description json
-        _BulletPoint(text: 'Lead product design end-to-end from concept to launch'),
-        _BulletPoint(text: 'Collaborate with cross-functional teams on product strategy'),
+        _BulletPoint(
+          text: 'Lead product design end-to-end from concept to launch',
+        ),
+        _BulletPoint(
+          text: 'Collaborate with cross-functional teams on product strategy',
+        ),
         _BulletPoint(text: 'Build and maintain our core design system'),
         _BulletPoint(text: 'Conduct user research and usability testing'),
         _BulletPoint(text: 'Present design decisions to senior leadership'),
@@ -347,10 +408,14 @@ class _CompanyTab extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 100.h),
       children: [
-        Text('About ${job.company?.name ?? 'Company'}', style: AppText.heading2),
+        Text(
+          'About ${job.company?.name ?? 'Company'}',
+          style: AppText.heading2,
+        ),
         SizedBox(height: 12.h),
         Text(
-          job.company?.description ?? 'No description available for this company.',
+          job.company?.description ??
+              'No description available for this company.',
           style: AppText.body.copyWith(color: AppColors.text2, height: 1.5),
         ),
       ],
@@ -381,7 +446,12 @@ class _BulletPoint extends StatelessWidget {
             ),
           ),
           SizedBox(width: 12.w),
-          Expanded(child: Text(text, style: AppText.body.copyWith(color: AppColors.text2, height: 1.5))),
+          Expanded(
+            child: Text(
+              text,
+              style: AppText.body.copyWith(color: AppColors.text2, height: 1.5),
+            ),
+          ),
         ],
       ),
     );

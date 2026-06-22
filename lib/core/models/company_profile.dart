@@ -17,7 +17,7 @@ class CompanyProfile {
   final String? country;
   final String? linkedInUrl;
   final String? facebookUrl;
-  
+
   final int activeJobs;
   final int applicants;
 

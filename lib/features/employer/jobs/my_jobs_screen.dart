@@ -93,7 +93,10 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                 controller: _pageController,
                 onPageChanged: _onPageChanged,
                 children: _statuses
-                    .map((status) => _JobList(status: status, isManaging: _isManaging))
+                    .map(
+                      (status) =>
+                          _JobList(status: status, isManaging: _isManaging),
+                    )
                     .toList(),
               ),
             ),
@@ -107,10 +110,15 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
             showDialog(
               context: context,
               builder: (ctx) => UJobAlertDialog(
-                icon: HugeIcon(icon: HugeIcons.strokeRoundedAlert02, color: AppColors.warning, size: 32.r),
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedAlert02,
+                  color: AppColors.warning,
+                  size: 32.r,
+                ),
                 iconBgColor: AppColors.warning,
                 title: 'Action Required',
-                description: 'You must complete your company profile before you can post a new job.',
+                description:
+                    'You must complete your company profile before you can post a new job.',
                 confirmText: 'Setup Profile',
                 confirmColor: AppColors.primary,
                 cancelText: 'Cancel',
@@ -196,7 +204,10 @@ class _CompactPostJobButton extends StatelessWidget {
   final bool isProfileComplete;
   final VoidCallback onTap;
 
-  const _CompactPostJobButton({required this.isProfileComplete, required this.onTap});
+  const _CompactPostJobButton({
+    required this.isProfileComplete,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) => Opacity(
@@ -255,13 +266,40 @@ class _JobList extends ConsumerWidget {
                 job: job,
                 isManaging: isManaging,
                 onTap: () => context.push('/employer/jobs/${job.id}'),
-                onApplicantsTap: () => context.push('/employer/jobs/${job.id}/applicants', extra: job),
+                onApplicantsTap: () => context.push(
+                  '/employer/jobs/${job.id}/applicants',
+                  extra: job,
+                ),
                 onMoreTap: () => _showJobActions(context, ref, job),
-                onEdit: () => JobActionHelpers.confirmEdit(context, () => context.push('/employer/jobs/${job.id}/edit', extra: job)),
-                onPause: () => JobActionHelpers.confirmPause(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.paused)),
-                onResume: () => JobActionHelpers.confirmResume(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.active)),
-                onPublish: () => JobActionHelpers.confirmPublish(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.active)),
-                onReopen: () => JobActionHelpers.confirmReopen(context, () => ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.active)),
+                onEdit: () => JobActionHelpers.confirmEdit(
+                  context,
+                  () =>
+                      context.push('/employer/jobs/${job.id}/edit', extra: job),
+                ),
+                onPause: () => JobActionHelpers.confirmPause(
+                  context,
+                  () => ref
+                      .read(demoEmployerJobsProvider.notifier)
+                      .updateStatus(job.id, JobStatus.paused),
+                ),
+                onResume: () => JobActionHelpers.confirmResume(
+                  context,
+                  () => ref
+                      .read(demoEmployerJobsProvider.notifier)
+                      .updateStatus(job.id, JobStatus.active),
+                ),
+                onPublish: () => JobActionHelpers.confirmPublish(
+                  context,
+                  () => ref
+                      .read(demoEmployerJobsProvider.notifier)
+                      .updateStatus(job.id, JobStatus.active),
+                ),
+                onReopen: () => JobActionHelpers.confirmReopen(
+                  context,
+                  () => ref
+                      .read(demoEmployerJobsProvider.notifier)
+                      .updateStatus(job.id, JobStatus.active),
+                ),
                 onDelete: () => _confirmDelete(context, ref, job),
               ),
             );
@@ -277,13 +315,28 @@ class _JobList extends ConsumerWidget {
     showUJobEmployerJobActionsSheet(
       context: context,
       job: job,
-      onEdit: () => JobActionHelpers.confirmEdit(context, () => context.push('/employer/jobs/${job.id}/edit', extra: job)),
+      onEdit: () => JobActionHelpers.confirmEdit(
+        context,
+        () => context.push('/employer/jobs/${job.id}/edit', extra: job),
+      ),
       onViewApplicants: () =>
           context.push('/employer/jobs/${job.id}/applicants', extra: job),
-      onPause: () => JobActionHelpers.confirmPause(context, () => notifier.updateStatus(job.id, JobStatus.paused)),
-      onResume: () => JobActionHelpers.confirmResume(context, () => notifier.updateStatus(job.id, JobStatus.active)),
-      onPublish: () => JobActionHelpers.confirmPublish(context, () => notifier.updateStatus(job.id, JobStatus.active)),
-      onReopen: () => JobActionHelpers.confirmReopen(context, () => notifier.updateStatus(job.id, JobStatus.active)),
+      onPause: () => JobActionHelpers.confirmPause(
+        context,
+        () => notifier.updateStatus(job.id, JobStatus.paused),
+      ),
+      onResume: () => JobActionHelpers.confirmResume(
+        context,
+        () => notifier.updateStatus(job.id, JobStatus.active),
+      ),
+      onPublish: () => JobActionHelpers.confirmPublish(
+        context,
+        () => notifier.updateStatus(job.id, JobStatus.active),
+      ),
+      onReopen: () => JobActionHelpers.confirmReopen(
+        context,
+        () => notifier.updateStatus(job.id, JobStatus.active),
+      ),
       onDelete: () => _confirmDelete(context, ref, job),
     );
   }
@@ -293,26 +346,31 @@ class _JobList extends ConsumerWidget {
     WidgetRef ref,
     Job job,
   ) async {
-    final isClosedOrRejected = job.status == JobStatus.closed || job.status == JobStatus.rejected;
-    
+    final isClosedOrRejected =
+        job.status == JobStatus.closed || job.status == JobStatus.rejected;
+
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
         icon: HugeIcon(
-          icon: isClosedOrRejected ? HugeIcons.strokeRoundedDelete01 : HugeIcons.strokeRoundedAlert02,
+          icon: isClosedOrRejected
+              ? HugeIcons.strokeRoundedDelete01
+              : HugeIcons.strokeRoundedAlert02,
           color: AppColors.error,
           size: 32.r,
         ),
         iconBgColor: AppColors.error,
         title: isClosedOrRejected ? 'Delete Job' : 'Close Job',
-        description: isClosedOrRejected 
-            ? 'Are you sure you want to permanently delete this job?' 
+        description: isClosedOrRejected
+            ? 'Are you sure you want to permanently delete this job?'
             : 'Are you sure you want to close this job? You will no longer receive new applications.',
         cancelText: 'Cancel',
         confirmText: isClosedOrRejected ? 'Delete' : 'Close Job',
         onConfirm: () {
           if (!isClosedOrRejected) {
-            ref.read(demoEmployerJobsProvider.notifier).updateStatus(job.id, JobStatus.closed);
+            ref
+                .read(demoEmployerJobsProvider.notifier)
+                .updateStatus(job.id, JobStatus.closed);
           }
           Navigator.pop(ctx);
         },

@@ -37,16 +37,26 @@ class _UJobPdfViewerScreenState extends State<UJobPdfViewerScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: HugeIcon(icon: HugeIcons.strokeRoundedZoomInArea, color: AppColors.text, size: 24.r),
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedZoomInArea,
+                color: AppColors.text,
+                size: 24.r,
+              ),
               onPressed: () {
-                _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel + 0.5;
+                _pdfViewerController.zoomLevel =
+                    _pdfViewerController.zoomLevel + 0.5;
               },
             ),
             IconButton(
-              icon: HugeIcon(icon: HugeIcons.strokeRoundedZoomOutArea, color: AppColors.text, size: 24.r),
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedZoomOutArea,
+                color: AppColors.text,
+                size: 24.r,
+              ),
               onPressed: () {
                 if (_pdfViewerController.zoomLevel > 1.0) {
-                  _pdfViewerController.zoomLevel = _pdfViewerController.zoomLevel - 0.5;
+                  _pdfViewerController.zoomLevel =
+                      _pdfViewerController.zoomLevel - 0.5;
                 }
               },
             ),

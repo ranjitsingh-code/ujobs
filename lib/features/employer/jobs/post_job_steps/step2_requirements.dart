@@ -35,7 +35,8 @@ class Step2Requirements extends ConsumerWidget {
               ('PhD', 'PhD'),
             ],
             onChanged: (val) {
-              if (val != null) notifier.updateField(state.copyWith(education: val));
+              if (val != null)
+                notifier.updateField(state.copyWith(education: val));
             },
           ),
           SizedBox(height: 20.h),
@@ -44,8 +45,12 @@ class Step2Requirements extends ConsumerWidget {
             label: context.l10n.experienceRequiredYears,
             hint: context.l10n.eg2,
             keyboardType: TextInputType.number,
-            controller: TextEditingController(text: state.experience)..selection = TextSelection.collapsed(offset: state.experience.length),
-            onChanged: (val) => notifier.updateField(state.copyWith(experience: val)),
+            controller: TextEditingController(text: state.experience)
+              ..selection = TextSelection.collapsed(
+                offset: state.experience.length,
+              ),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(experience: val)),
           ),
           SizedBox(height: 20.h),
 
@@ -54,7 +59,8 @@ class Step2Requirements extends ConsumerWidget {
               context: context,
               title: 'Required Skills',
               initialValue: state.requiredSkills,
-              onSave: (val) => notifier.updateField(state.copyWith(requiredSkills: val)),
+              onSave: (val) =>
+                  notifier.updateField(state.copyWith(requiredSkills: val)),
             ),
             child: UJobTextField(
               label: context.l10n.requiredSkills,
@@ -67,12 +73,15 @@ class Step2Requirements extends ConsumerWidget {
                 color: AppColors.primary,
                 size: 20.r,
               ),
-              controller: TextEditingController(text: getPlainTextFromQuillJson(state.requiredSkills)),
+              controller: TextEditingController(
+                text: getPlainTextFromQuillJson(state.requiredSkills),
+              ),
               onTap: () => showUJobRichTextEditor(
                 context: context,
                 title: 'Required Skills',
                 initialValue: state.requiredSkills,
-                onSave: (val) => notifier.updateField(state.copyWith(requiredSkills: val)),
+                onSave: (val) =>
+                    notifier.updateField(state.copyWith(requiredSkills: val)),
               ),
             ),
           ),
@@ -82,8 +91,22 @@ class Step2Requirements extends ConsumerWidget {
             label: context.l10n.preferredSkills,
             hint: context.l10n.typeToSearchOrAddASkill,
             tags: state.preferredSkills,
-            suggestions: const ['Flutter', 'Dart', 'Python', 'Data Analysis', 'React', 'Node.js', 'UI/UX Design', 'Java', 'Swift', 'Kotlin', 'Go', 'C++'],
-            onChanged: (tags) => notifier.updateField(state.copyWith(preferredSkills: tags)),
+            suggestions: const [
+              'Flutter',
+              'Dart',
+              'Python',
+              'Data Analysis',
+              'React',
+              'Node.js',
+              'UI/UX Design',
+              'Java',
+              'Swift',
+              'Kotlin',
+              'Go',
+              'C++',
+            ],
+            onChanged: (tags) =>
+                notifier.updateField(state.copyWith(preferredSkills: tags)),
           ),
           SizedBox(height: 8.h),
           Text(
@@ -100,9 +123,16 @@ class Step2Requirements extends ConsumerWidget {
           UJobTextField(
             label: context.l10n.languagesRequired,
             hint: context.l10n.egEnglishHindi,
-            controller: TextEditingController(text: state.languages.join(', '))..selection = TextSelection.collapsed(offset: state.languages.join(', ').length),
+            controller: TextEditingController(text: state.languages.join(', '))
+              ..selection = TextSelection.collapsed(
+                offset: state.languages.join(', ').length,
+              ),
             onChanged: (val) {
-              final list = val.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+              final list = val
+                  .split(',')
+                  .map((e) => e.trim())
+                  .where((e) => e.isNotEmpty)
+                  .toList();
               notifier.updateField(state.copyWith(languages: list));
             },
           ),
@@ -111,9 +141,17 @@ class Step2Requirements extends ConsumerWidget {
           UJobTextField(
             label: context.l10n.certifications,
             hint: context.l10n.egAwsPmpCfa,
-            controller: TextEditingController(text: state.certifications.join(', '))..selection = TextSelection.collapsed(offset: state.certifications.join(', ').length),
+            controller:
+                TextEditingController(text: state.certifications.join(', '))
+                  ..selection = TextSelection.collapsed(
+                    offset: state.certifications.join(', ').length,
+                  ),
             onChanged: (val) {
-              final list = val.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+              final list = val
+                  .split(',')
+                  .map((e) => e.trim())
+                  .where((e) => e.isNotEmpty)
+                  .toList();
               notifier.updateField(state.copyWith(certifications: list));
             },
           ),
@@ -127,8 +165,12 @@ class Step2Requirements extends ConsumerWidget {
                   label: context.l10n.ageMinOptional,
                   hint: context.l10n.eg22,
                   keyboardType: TextInputType.number,
-                  controller: TextEditingController(text: state.ageMin)..selection = TextSelection.collapsed(offset: state.ageMin.length),
-                  onChanged: (val) => notifier.updateField(state.copyWith(ageMin: val)),
+                  controller: TextEditingController(text: state.ageMin)
+                    ..selection = TextSelection.collapsed(
+                      offset: state.ageMin.length,
+                    ),
+                  onChanged: (val) =>
+                      notifier.updateField(state.copyWith(ageMin: val)),
                 ),
               ),
               SizedBox(width: 16.w),
@@ -137,8 +179,12 @@ class Step2Requirements extends ConsumerWidget {
                   label: context.l10n.ageMaxOptional,
                   hint: context.l10n.eg45,
                   keyboardType: TextInputType.number,
-                  controller: TextEditingController(text: state.ageMax)..selection = TextSelection.collapsed(offset: state.ageMax.length),
-                  onChanged: (val) => notifier.updateField(state.copyWith(ageMax: val)),
+                  controller: TextEditingController(text: state.ageMax)
+                    ..selection = TextSelection.collapsed(
+                      offset: state.ageMax.length,
+                    ),
+                  onChanged: (val) =>
+                      notifier.updateField(state.copyWith(ageMax: val)),
                 ),
               ),
             ],

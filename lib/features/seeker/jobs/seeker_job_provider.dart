@@ -9,7 +9,12 @@ class JobFilter {
   final String? employmentType;
   final String? workplaceType;
 
-  JobFilter({this.search, this.category, this.employmentType, this.workplaceType});
+  JobFilter({
+    this.search,
+    this.category,
+    this.employmentType,
+    this.workplaceType,
+  });
 
   @override
   bool operator ==(Object other) =>
@@ -22,28 +27,39 @@ class JobFilter {
           workplaceType == other.workplaceType;
 
   @override
-  int get hashCode => search.hashCode ^ category.hashCode ^ employmentType.hashCode ^ workplaceType.hashCode;
+  int get hashCode =>
+      search.hashCode ^
+      category.hashCode ^
+      employmentType.hashCode ^
+      workplaceType.hashCode;
 }
 
-final seekerJobsProvider = FutureProvider.family<List<Job>, JobFilter>((ref, filter) async {
+final seekerJobsProvider = FutureProvider.family<List<Job>, JobFilter>((
+  ref,
+  filter,
+) async {
   // Wait a bit to simulate network
   await Future.delayed(const Duration(milliseconds: 500));
-  
+
   final allJobs = ref.watch(demoEmployerJobsProvider);
-  
+
   // Simple mock filtering
   return allJobs.where((job) {
     if (filter.search != null && filter.search!.isNotEmpty) {
-      if (!job.title.toLowerCase().contains(filter.search!.toLowerCase())) return false;
+      if (!job.title.toLowerCase().contains(filter.search!.toLowerCase()))
+        return false;
     }
     return true;
   }).toList();
 });
 
-final seekerJobDetailProvider = FutureProvider.family<Job, int>((ref, id) async {
+final seekerJobDetailProvider = FutureProvider.family<Job, int>((
+  ref,
+  id,
+) async {
   // Wait a bit to simulate network
   await Future.delayed(const Duration(milliseconds: 500));
-  
+
   final allJobs = ref.watch(demoEmployerJobsProvider);
   return allJobs.firstWhere((j) => j.id == id, orElse: () => allJobs.first);
 });

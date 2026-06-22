@@ -72,7 +72,7 @@ class AppTheme {
     required Brightness brightness,
     required RoleThemeExtension extension,
   }) {
-    final isDark    = brightness == Brightness.dark;
+    final isDark = brightness == Brightness.dark;
     final onSurface = isDark ? AppColors.darkText : AppColors.text;
 
     return ThemeData(
@@ -114,8 +114,14 @@ class AppTheme {
         backgroundColor: cardColor,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
-        selectedLabelStyle: GoogleFonts.inter(fontSize: 11.sp, fontWeight: FontWeight.w700),
-        unselectedLabelStyle: GoogleFonts.inter(fontSize: 11.sp, fontWeight: FontWeight.w500),
+        selectedLabelStyle: GoogleFonts.inter(
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: GoogleFonts.inter(
+          fontSize: 11.sp,
+          fontWeight: FontWeight.w500,
+        ),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -125,7 +131,10 @@ class AppTheme {
           minimumSize: Size(double.infinity, 54.h),
           shape: RoundedRectangleBorder(borderRadius: AppRadius.lg),
           elevation: 0,
-          textStyle: GoogleFonts.inter(fontSize: 16.sp, fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.inter(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
 
@@ -135,7 +144,10 @@ class AppTheme {
           minimumSize: Size(double.infinity, 54.h),
           side: BorderSide(color: primary.withValues(alpha: 0.5), width: 1.5),
           shape: RoundedRectangleBorder(borderRadius: AppRadius.lg),
-          textStyle: GoogleFonts.inter(fontSize: 16.sp, fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.inter(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
 

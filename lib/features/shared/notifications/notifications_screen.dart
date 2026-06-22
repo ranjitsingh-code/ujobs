@@ -42,17 +42,73 @@ class _Notif {
 }
 
 final _empMock = [
-  _Notif(id: 'e1', title: 'New Candidate Applied', body: 'Michael Scott applied for Regional Manager.', type: 'application', isRead: false, createdAt: DateTime.now().subtract(const Duration(minutes: 5))),
-  _Notif(id: 'e2', title: 'Application Withdrawn', body: 'Dwight Schrute withdrew his application.', type: 'application', isRead: false, createdAt: DateTime.now().subtract(const Duration(hours: 2))),
-  _Notif(id: 'e3', title: 'New Message', body: 'Jim Halpert sent you a message.', type: 'message', isRead: true, createdAt: DateTime.now().subtract(const Duration(days: 1))),
-  _Notif(id: 'e4', title: 'System Update', body: 'We have updated our terms of service.', type: 'system', isRead: true, createdAt: DateTime.now().subtract(const Duration(days: 3))),
+  _Notif(
+    id: 'e1',
+    title: 'New Candidate Applied',
+    body: 'Michael Scott applied for Regional Manager.',
+    type: 'application',
+    isRead: false,
+    createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+  ),
+  _Notif(
+    id: 'e2',
+    title: 'Application Withdrawn',
+    body: 'Dwight Schrute withdrew his application.',
+    type: 'application',
+    isRead: false,
+    createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+  ),
+  _Notif(
+    id: 'e3',
+    title: 'New Message',
+    body: 'Jim Halpert sent you a message.',
+    type: 'message',
+    isRead: true,
+    createdAt: DateTime.now().subtract(const Duration(days: 1)),
+  ),
+  _Notif(
+    id: 'e4',
+    title: 'System Update',
+    body: 'We have updated our terms of service.',
+    type: 'system',
+    isRead: true,
+    createdAt: DateTime.now().subtract(const Duration(days: 3)),
+  ),
 ];
 
 final _seekerMock = [
-  _Notif(id: 's1', title: 'Application Viewed', body: 'Your application was viewed by Google.', type: 'application', isRead: false, createdAt: DateTime.now().subtract(const Duration(minutes: 5))),
-  _Notif(id: 's2', title: 'New Message', body: 'You have a new message from nexovia solutions.', type: 'message', isRead: false, createdAt: DateTime.now().subtract(const Duration(hours: 2))),
-  _Notif(id: 's3', title: 'Job Match', body: 'A new job matches your profile: Senior Flutter Dev.', type: 'job', isRead: true, createdAt: DateTime.now().subtract(const Duration(days: 1))),
-  _Notif(id: 's4', title: 'System Update', body: 'We have updated our terms of service.', type: 'system', isRead: true, createdAt: DateTime.now().subtract(const Duration(days: 3))),
+  _Notif(
+    id: 's1',
+    title: 'Application Viewed',
+    body: 'Your application was viewed by Google.',
+    type: 'application',
+    isRead: false,
+    createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+  ),
+  _Notif(
+    id: 's2',
+    title: 'New Message',
+    body: 'You have a new message from nexovia solutions.',
+    type: 'message',
+    isRead: false,
+    createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+  ),
+  _Notif(
+    id: 's3',
+    title: 'Job Match',
+    body: 'A new job matches your profile: Senior Flutter Dev.',
+    type: 'job',
+    isRead: true,
+    createdAt: DateTime.now().subtract(const Duration(days: 1)),
+  ),
+  _Notif(
+    id: 's4',
+    title: 'System Update',
+    body: 'We have updated our terms of service.',
+    type: 'system',
+    isRead: true,
+    createdAt: DateTime.now().subtract(const Duration(days: 3)),
+  ),
 ];
 
 class _NotifsNotifier extends AutoDisposeNotifier<List<_Notif>> {
@@ -67,7 +123,9 @@ class _NotifsNotifier extends AutoDisposeNotifier<List<_Notif>> {
   }
 
   void markAsRead(String id) {
-    state = state.map((n) => n.id == id ? n.copyWith(isRead: true) : n).toList();
+    state = state
+        .map((n) => n.id == id ? n.copyWith(isRead: true) : n)
+        .toList();
   }
 
   void deleteNotifications(List<String> ids) {
@@ -75,7 +133,10 @@ class _NotifsNotifier extends AutoDisposeNotifier<List<_Notif>> {
   }
 }
 
-final _notifsProvider = NotifierProvider.autoDispose<_NotifsNotifier, List<_Notif>>(() => _NotifsNotifier());
+final _notifsProvider =
+    NotifierProvider.autoDispose<_NotifsNotifier, List<_Notif>>(
+      () => _NotifsNotifier(),
+    );
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -104,8 +165,14 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
     super.dispose();
   }
 
-  static const _tabs   = ['all', 'unread', 'application', 'message', 'system'];
-  static const _labels = ['All', 'Unread', 'Applications', 'Messages', 'System'];
+  static const _tabs = ['all', 'unread', 'application', 'message', 'system'];
+  static const _labels = [
+    'All',
+    'Unread',
+    'Applications',
+    'Messages',
+    'System',
+  ];
 
   void _toggleSelectionMode() {
     setState(() {
@@ -118,14 +185,21 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedDelete02, color: AppColors.error, size: 24.r),
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedDelete02,
+          color: AppColors.error,
+          size: 24.r,
+        ),
         title: 'Delete Notifications',
-        description: 'Are you sure you want to delete ${_selectedIds.length} notification(s)? This action cannot be undone.',
+        description:
+            'Are you sure you want to delete ${_selectedIds.length} notification(s)? This action cannot be undone.',
         cancelText: 'Cancel',
         confirmText: 'Delete',
         onCancel: () => Navigator.pop(ctx),
         onConfirm: () {
-          ref.read(_notifsProvider.notifier).deleteNotifications(_selectedIds.toList());
+          ref
+              .read(_notifsProvider.notifier)
+              .deleteNotifications(_selectedIds.toList());
           setState(() {
             _selectedIds.clear();
             _isSelectionMode = false;
@@ -136,11 +210,17 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  void _showMoreOptionsSheet(BuildContext context, WidgetRef ref, Color primaryColor) {
+  void _showMoreOptionsSheet(
+    BuildContext context,
+    WidgetRef ref,
+    Color primaryColor,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24.r))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 40.h),
         child: Column(
@@ -153,13 +233,21 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                 Text('Options', style: AppText.heading3),
                 IconButton(
                   onPressed: () => Navigator.pop(ctx),
-                  icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.text, size: 24.r),
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    color: AppColors.text,
+                    size: 24.r,
+                  ),
                 ),
               ],
             ),
             SizedBox(height: 16.h),
             ListTile(
-              leading: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.text, size: 24.r),
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedSearch01,
+                color: AppColors.text,
+                size: 24.r,
+              ),
               title: Text('Search Notifications', style: AppText.bodyBold),
               onTap: () {
                 Navigator.pop(ctx);
@@ -167,7 +255,11 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
               },
             ),
             ListTile(
-              leading: HugeIcon(icon: HugeIcons.strokeRoundedTaskDone01, color: AppColors.text, size: 24.r),
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedTaskDone01,
+                color: AppColors.text,
+                size: 24.r,
+              ),
               title: Text('Select Notifications', style: AppText.bodyBold),
               onTap: () {
                 Navigator.pop(ctx);
@@ -175,8 +267,15 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
               },
             ),
             ListTile(
-              leading: HugeIcon(icon: HugeIcons.strokeRoundedMailOpen01, color: primaryColor, size: 24.r),
-              title: Text('Mark all as read', style: AppText.bodyBold.copyWith(color: primaryColor)),
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedMailOpen01,
+                color: primaryColor,
+                size: 24.r,
+              ),
+              title: Text(
+                'Mark all as read',
+                style: AppText.bodyBold.copyWith(color: primaryColor),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 ref.read(_notifsProvider.notifier).markAllRead();
@@ -189,23 +288,25 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
   }
 
   Color _borderColor(String type, Color primaryColor) => switch (type) {
-        'application' => Colors.blue,
-        'job'         => Colors.green,
-        'message'     => primaryColor,
-        _             => Colors.orange,
-      };
+    'application' => Colors.blue,
+    'job' => Colors.green,
+    'message' => primaryColor,
+    _ => Colors.orange,
+  };
 
   dynamic _iconFor(String type) => switch (type) {
-        'application' => HugeIcons.strokeRoundedNote01,
-        'job'         => HugeIcons.strokeRoundedBriefcase02,
-        'message'     => HugeIcons.strokeRoundedMessage01,
-        _             => HugeIcons.strokeRoundedNotification01,
-      };
+    'application' => HugeIcons.strokeRoundedNote01,
+    'job' => HugeIcons.strokeRoundedBriefcase02,
+    'message' => HugeIcons.strokeRoundedMessage01,
+    _ => HugeIcons.strokeRoundedNotification01,
+  };
 
   @override
   Widget build(BuildContext context) {
     final role = ref.watch(activeRoleProvider);
-    final primaryColor = role == 'employer' ? AppColors.primary : AppColors.seekPrimary;
+    final primaryColor = role == 'employer'
+        ? AppColors.primary
+        : AppColors.seekPrimary;
 
     final notifs = ref.watch(_notifsProvider);
 
@@ -218,52 +319,76 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
               leadingWidth: 80.w,
               leading: TextButton(
                 onPressed: _toggleSelectionMode,
-                child: Text('Cancel', style: AppText.bodyBold.copyWith(color: AppColors.muted)),
+                child: Text(
+                  'Cancel',
+                  style: AppText.bodyBold.copyWith(color: AppColors.muted),
+                ),
               ),
-              title: Text('${_selectedIds.length} Selected', style: AppText.heading3),
+              title: Text(
+                '${_selectedIds.length} Selected',
+                style: AppText.heading3,
+              ),
               centerTitle: true,
               actions: [
                 IconButton(
-                  onPressed: _selectedIds.isEmpty ? null : () => _confirmDeleteSelected(ref, primaryColor),
+                  onPressed: _selectedIds.isEmpty
+                      ? null
+                      : () => _confirmDeleteSelected(ref, primaryColor),
                   icon: HugeIcon(
                     icon: HugeIcons.strokeRoundedDelete02,
-                    color: _selectedIds.isEmpty ? AppColors.border : AppColors.error,
+                    color: _selectedIds.isEmpty
+                        ? AppColors.border
+                        : AppColors.error,
                     size: 24.r,
                   ),
                 ),
               ],
             )
           : (_isSearching
-              ? AppBar(
-                  backgroundColor: AppColors.surface,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: AppColors.text, size: 24.r),
-                    onPressed: () => setState(() {
-                      _isSearching = false;
-                      _query = '';
-                    }),
-                  ),
-                  title: TextField(
-                    autofocus: true,
-                    onChanged: (v) => setState(() => _query = v),
-                    decoration: InputDecoration(
-                      hintText: 'Search...',
-                      border: InputBorder.none,
-                      hintStyle: AppText.body.copyWith(color: AppColors.muted),
+                ? AppBar(
+                    backgroundColor: AppColors.surface,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowLeft01,
+                        color: AppColors.text,
+                        size: 24.r,
+                      ),
+                      onPressed: () => setState(() {
+                        _isSearching = false;
+                        _query = '';
+                      }),
                     ),
-                  ),
-                )
-              : UJobAppBar(
-                  title: 'Notifications',
-                  showBack: true,
-                  rightWidget: Row(mainAxisSize: MainAxisSize.min, children: [
-                    IconButton(
-                      icon: HugeIcon(icon: HugeIcons.strokeRoundedMoreVerticalCircle01, color: AppColors.muted, size: 24.r),
-                      onPressed: () => _showMoreOptionsSheet(context, ref, primaryColor),
+                    title: TextField(
+                      autofocus: true,
+                      onChanged: (v) => setState(() => _query = v),
+                      decoration: InputDecoration(
+                        hintText: 'Search...',
+                        border: InputBorder.none,
+                        hintStyle: AppText.body.copyWith(
+                          color: AppColors.muted,
+                        ),
+                      ),
                     ),
-                  ]),
-                )),
+                  )
+                : UJobAppBar(
+                    title: 'Notifications',
+                    showBack: true,
+                    rightWidget: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedMoreVerticalCircle01,
+                            color: AppColors.muted,
+                            size: 24.r,
+                          ),
+                          onPressed: () =>
+                              _showMoreOptionsSheet(context, ref, primaryColor),
+                        ),
+                      ],
+                    ),
+                  )),
       body: Column(
         children: [
           if (!_isSearching && !_isSelectionMode) _buildTabs(primaryColor),
@@ -283,25 +408,41 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                   filtered = filtered.where((n) => n.type == filter).toList();
                 }
                 if (_query.isNotEmpty) {
-                  filtered = filtered.where((n) => 
-                    n.title.toLowerCase().contains(_query.toLowerCase()) || 
-                    (n.body ?? '').toLowerCase().contains(_query.toLowerCase())
-                  ).toList();
+                  filtered = filtered
+                      .where(
+                        (n) =>
+                            n.title.toLowerCase().contains(
+                              _query.toLowerCase(),
+                            ) ||
+                            (n.body ?? '').toLowerCase().contains(
+                              _query.toLowerCase(),
+                            ),
+                      )
+                      .toList();
                 }
 
                 return Column(
                   children: [
                     if (_isSelectionMode)
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 8.h,
+                        ),
                         child: Row(
                           children: [
                             UJobCheckbox(
-                              value: _selectedIds.length == filtered.length && filtered.isNotEmpty,
+                              value:
+                                  _selectedIds.length == filtered.length &&
+                                  filtered.isNotEmpty,
                               onChanged: (v) {
                                 setState(() {
-                                  if (v) _selectedIds.addAll(filtered.map((n) => n.id));
-                                  else _selectedIds.clear();
+                                  if (v)
+                                    _selectedIds.addAll(
+                                      filtered.map((n) => n.id),
+                                    );
+                                  else
+                                    _selectedIds.clear();
                                 });
                               },
                               label: 'Select All',
@@ -319,30 +460,46 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                               ),
                             )
                           : ListView.separated(
-                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20.w,
+                                vertical: 16.h,
+                              ),
                               itemCount: filtered.length,
-                              separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                              separatorBuilder: (_, __) =>
+                                  SizedBox(height: 12.h),
                               itemBuilder: (ctx, i) {
                                 final n = filtered[i];
                                 final isSelected = _selectedIds.contains(n.id);
                                 return _NotifCard(
                                   notif: n,
                                   icon: _iconFor(n.type),
-                                  borderColor: _borderColor(n.type, primaryColor),
+                                  borderColor: _borderColor(
+                                    n.type,
+                                    primaryColor,
+                                  ),
                                   primaryColor: primaryColor,
                                   isSelectionMode: _isSelectionMode,
                                   isSelected: isSelected,
                                   onTap: () {
                                     if (_isSelectionMode) {
                                       setState(() {
-                                        isSelected ? _selectedIds.remove(n.id) : _selectedIds.add(n.id);
+                                        isSelected
+                                            ? _selectedIds.remove(n.id)
+                                            : _selectedIds.add(n.id);
                                       });
                                     } else {
-                                      ref.read(_notifsProvider.notifier).markAsRead(n.id);
+                                      ref
+                                          .read(_notifsProvider.notifier)
+                                          .markAsRead(n.id);
                                     }
                                   },
                                   onLongPress: () {
-                                    if (!_isSelectionMode) _showMoreOptionsSheet(context, ref, primaryColor);
+                                    if (!_isSelectionMode)
+                                      _showMoreOptionsSheet(
+                                        context,
+                                        ref,
+                                        primaryColor,
+                                      );
                                   },
                                 );
                               },
@@ -427,16 +584,28 @@ class _NotifCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected ? primaryColor.withValues(alpha: 0.05) : (notif.isRead ? AppColors.surface : AppColors.surface.withValues(alpha: 0.5)),
+        color: isSelected
+            ? primaryColor.withValues(alpha: 0.05)
+            : (notif.isRead
+                  ? AppColors.surface
+                  : AppColors.surface.withValues(alpha: 0.5)),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: isSelected ? primaryColor : (notif.isRead ? AppColors.borderLight : borderColor.withValues(alpha: 0.5))),
-        boxShadow: notif.isRead ? null : [
-          BoxShadow(
-            color: borderColor.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(
+          color: isSelected
+              ? primaryColor
+              : (notif.isRead
+                    ? AppColors.borderLight
+                    : borderColor.withValues(alpha: 0.5)),
+        ),
+        boxShadow: notif.isRead
+            ? null
+            : [
+                BoxShadow(
+                  color: borderColor.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -476,7 +645,10 @@ class _NotifCard extends StatelessWidget {
                         children: [
                           Text(
                             timeago.format(notif.createdAt),
-                            style: AppText.small.copyWith(color: AppColors.muted, fontSize: 11.sp),
+                            style: AppText.small.copyWith(
+                              color: AppColors.muted,
+                              fontSize: 11.sp,
+                            ),
                           ),
                           if (!notif.isRead)
                             Container(

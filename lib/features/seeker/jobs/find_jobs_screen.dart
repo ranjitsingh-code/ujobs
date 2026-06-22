@@ -33,7 +33,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
     'Most relevant',
     'Newest/latest',
     'Salary: High to low',
-    'Salary: Low to high'
+    'Salary: Low to high',
   ];
 
   @override
@@ -101,7 +101,11 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                           controller: _searchController,
                           prefix: Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedSearch01,
+                              color: AppColors.muted,
+                              size: 20.r,
+                            ),
                           ),
                           onChanged: (_) {},
                         ),
@@ -116,7 +120,11 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                             borderRadius: BorderRadius.circular(16.r),
                           ),
                           child: IconButton(
-                            icon: HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, color: AppColors.surface, size: 24.r),
+                            icon: HugeIcon(
+                              icon: HugeIcons.strokeRoundedFilterHorizontal,
+                              color: AppColors.surface,
+                              size: 24.r,
+                            ),
                             onPressed: () {
                               showModalBottomSheet(
                                 context: context,
@@ -188,7 +196,12 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
       ),
       data: (jobs) {
         if (jobs.isEmpty) {
-          return Center(child: Text(l10n.noMatchingJobsFound, style: AppText.body.copyWith(color: AppColors.muted)));
+          return Center(
+            child: Text(
+              l10n.noMatchingJobsFound,
+              style: AppText.body.copyWith(color: AppColors.muted),
+            ),
+          );
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,7 +212,12 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                 children: [
                   Text('Recommended', style: AppText.heading3),
                   const Spacer(),
-                  Text('${jobs.length} matches', style: AppText.bodyMedium.copyWith(color: AppColors.seekPrimary)),
+                  Text(
+                    '${jobs.length} matches',
+                    style: AppText.bodyMedium.copyWith(
+                      color: AppColors.seekPrimary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -226,7 +244,6 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
   Widget _buildAllJobsTab(AsyncValue jobsAsync, dynamic l10n) {
     return Column(
       children: [
-
         // Jobs List
         Expanded(
           child: jobsAsync.when(
@@ -237,7 +254,12 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
             ),
             data: (jobs) {
               if (jobs.isEmpty) {
-                return Center(child: Text(l10n.noMatchingJobsFound, style: AppText.body.copyWith(color: AppColors.muted)));
+                return Center(
+                  child: Text(
+                    l10n.noMatchingJobsFound,
+                    style: AppText.body.copyWith(color: AppColors.muted),
+                  ),
+                );
               }
               return Column(
                 children: [
@@ -247,14 +269,19 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text('${jobs.length} positions', style: AppText.bodyBold),
+                        Text(
+                          '${jobs.length} positions',
+                          style: AppText.bodyBold,
+                        ),
                         GestureDetector(
                           onTap: () {
                             showModalBottomSheet(
                               context: context,
                               backgroundColor: AppColors.surface,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(24.r),
+                                ),
                               ),
                               builder: (ctx) => _SortSheet(
                                 currentValue: _sortBy,
@@ -267,9 +294,18 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                           },
                           child: Row(
                             children: [
-                              Text(_sortBy, style: AppText.bodyMedium.copyWith(color: AppColors.seekPrimaryDark)),
+                              Text(
+                                _sortBy,
+                                style: AppText.bodyMedium.copyWith(
+                                  color: AppColors.seekPrimaryDark,
+                                ),
+                              ),
                               SizedBox(width: 4.w),
-                              HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, color: AppColors.seekPrimaryDark, size: 18.r),
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedArrowDown01,
+                                color: AppColors.seekPrimaryDark,
+                                size: 18.r,
+                              ),
                             ],
                           ),
                         ),
@@ -311,7 +347,7 @@ class _FilterSheetState extends State<_FilterSheet> {
   final _keywordsCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
   final _companyCtrl = TextEditingController();
-  
+
   String _datePosted = 'Any time';
   List<String> _employmentTypes = ['Full-time'];
   List<String> _workplaces = ['On-site'];
@@ -362,7 +398,10 @@ class _FilterSheetState extends State<_FilterSheet> {
                       _category = 'All Categories';
                     });
                   },
-                  child: Text('Reset', style: AppText.bodyBold.copyWith(color: AppColors.muted)),
+                  child: Text(
+                    'Reset',
+                    style: AppText.bodyBold.copyWith(color: AppColors.muted),
+                  ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
@@ -394,11 +433,18 @@ class _FilterSheetState extends State<_FilterSheet> {
                     controller: _locationCtrl,
                   ),
                   SizedBox(height: 24.h),
-                  
+
                   UJobDropdown(
                     label: 'Date Posted',
                     value: _datePosted,
-                    items: const ['Any time', 'Last 24 hours', 'Last 3 days', 'Last 7 days', 'Last 14 days', 'Last 30 days'],
+                    items: const [
+                      'Any time',
+                      'Last 24 hours',
+                      'Last 3 days',
+                      'Last 7 days',
+                      'Last 14 days',
+                      'Last 30 days',
+                    ],
                     onChanged: (v) => setState(() => _datePosted = v!),
                   ),
                   SizedBox(height: 24.h),
@@ -406,7 +452,13 @@ class _FilterSheetState extends State<_FilterSheet> {
                   Text('Employment Type', style: AppText.bodyBold),
                   SizedBox(height: 12.h),
                   UJobMultiChipGroup<String>(
-                    options: const ['Full-time', 'Part-time', 'Contract', 'Internship', 'Temporary'],
+                    options: const [
+                      'Full-time',
+                      'Part-time',
+                      'Contract',
+                      'Internship',
+                      'Temporary',
+                    ],
                     selectedValues: _employmentTypes,
                     labelBuilder: (v) => v,
                     onChanged: (v) => setState(() => _employmentTypes = v),
@@ -426,7 +478,13 @@ class _FilterSheetState extends State<_FilterSheet> {
                   UJobDropdown(
                     label: 'Experience Level',
                     value: _experienceLevel,
-                    items: const ['Any level', 'Fresher', '1-3 years', '3-5 years', '5+ years'],
+                    items: const [
+                      'Any level',
+                      'Fresher',
+                      '1-3 years',
+                      '3-5 years',
+                      '5+ years',
+                    ],
                     onChanged: (v) => setState(() => _experienceLevel = v!),
                   ),
                   SizedBox(height: 24.h),
@@ -434,7 +492,15 @@ class _FilterSheetState extends State<_FilterSheet> {
                   UJobDropdown(
                     label: 'Minimum Salary',
                     value: _minSalary,
-                    items: const ['Any salary', '£20,000+', '£30,000+', '£40,000+', '£50,000+', '£70,000+', '£100,000+'],
+                    items: const [
+                      'Any salary',
+                      '£20,000+',
+                      '£30,000+',
+                      '£40,000+',
+                      '£50,000+',
+                      '£70,000+',
+                      '£100,000+',
+                    ],
                     onChanged: (v) => setState(() => _minSalary = v!),
                   ),
                   SizedBox(height: 24.h),
@@ -449,7 +515,14 @@ class _FilterSheetState extends State<_FilterSheet> {
                   UJobDropdown(
                     label: 'Category',
                     value: _category,
-                    items: const ['All Categories', 'Technology', 'Software Development', 'Accounting & Auditing', 'Healthcare', 'Logistics & Supply Chain'],
+                    items: const [
+                      'All Categories',
+                      'Technology',
+                      'Software Development',
+                      'Accounting & Auditing',
+                      'Healthcare',
+                      'Logistics & Supply Chain',
+                    ],
                     onChanged: (v) => setState(() => _category = v!),
                   ),
                   SizedBox(height: 40.h),
@@ -459,12 +532,21 @@ class _FilterSheetState extends State<_FilterSheet> {
           ),
           // Apply Button
           Container(
-            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, MediaQuery.of(context).padding.bottom + 16.h),
+            padding: EdgeInsets.fromLTRB(
+              20.w,
+              16.h,
+              20.w,
+              MediaQuery.of(context).padding.bottom + 16.h,
+            ),
             decoration: BoxDecoration(
               color: AppColors.surface,
               border: Border(top: BorderSide(color: AppColors.borderLight)),
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5)),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
               ],
             ),
             child: UJobButton(
@@ -496,7 +578,12 @@ class _SortSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, MediaQuery.of(context).padding.bottom + 24.h),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        24.h,
+        20.w,
+        MediaQuery.of(context).padding.bottom + 24.h,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,7 +594,11 @@ class _SortSheet extends StatelessWidget {
               Text('Sort By', style: AppText.heading3),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.text, size: 24.r),
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedCancel01,
+                  color: AppColors.text,
+                  size: 24.r,
+                ),
               ),
             ],
           ),
@@ -524,7 +615,11 @@ class _SortSheet extends StatelessWidget {
                 ),
               ),
               trailing: isSelected
-                  ? HugeIcon(icon: HugeIcons.strokeRoundedTick02, color: AppColors.seekPrimary, size: 20.r)
+                  ? HugeIcon(
+                      icon: HugeIcons.strokeRoundedTick02,
+                      color: AppColors.seekPrimary,
+                      size: 20.r,
+                    )
                   : null,
               onTap: () {
                 onSelected(option);
@@ -544,7 +639,11 @@ class _UJobTabsDelegate extends SliverPersistentHeaderDelegate {
   _UJobTabsDelegate({required this.child});
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return child;
   }
 

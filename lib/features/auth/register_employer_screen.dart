@@ -130,7 +130,7 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
     });
     // Simulate API success
     await Future.delayed(const Duration(milliseconds: 1500));
-    
+
     if (mounted) {
       setState(() => _loading = false);
       context.go('/otp');
@@ -189,8 +189,7 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
                         onTermsChanged: _setTermsAccepted,
                         error: _error,
                         onContinue: _goStep2,
-                        onSignIn: () =>
-                            context.go('/login', extra: 'employer'),
+                        onSignIn: () => context.go('/login', extra: 'employer'),
                         onOtherRole: () => context.go('/register/seeker'),
                       )
                     : _EmpStep2(
@@ -204,8 +203,7 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
                         error: _error,
                         loading: _loading,
                         onRegister: _register,
-                        onSignIn: () =>
-                            context.go('/login', extra: 'employer'),
+                        onSignIn: () => context.go('/login', extra: 'employer'),
                         onOtherRole: () => context.go('/register/seeker'),
                       ),
               ),

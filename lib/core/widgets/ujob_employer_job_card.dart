@@ -146,66 +146,73 @@ class UJobEmployerJobCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: Wrap(
-                  alignment: WrapAlignment.end,
-                  spacing: 8.w,
-                  runSpacing: 8.h,
-                  children: [
-                    if (job.status == JobStatus.active && onPause != null)
-                      _ActionButton(
-                        label: l10n.pauseJob,
-                        icon: HugeIcons.strokeRoundedPauseCircle,
-                        onTap: onPause!,
-                      ),
-                    if (job.status == JobStatus.paused && onResume != null)
-                      _ActionButton(
-                        label: l10n.reactivateJob,
-                        icon: HugeIcons.strokeRoundedPlay,
-                        onTap: onResume!,
-                      ),
-                    if (job.status == JobStatus.draft && onPublish != null)
-                      _ActionButton(
-                        label: l10n.publishJob,
-                        icon: HugeIcons.strokeRoundedSent,
-                        onTap: onPublish!,
-                      ),
-                    if (job.status == JobStatus.closed && onReopen != null)
-                      _ActionButton(
-                        label: l10n.reopenJob,
-                        icon: HugeIcons.strokeRoundedRefresh,
-                        onTap: onReopen!,
-                      ),
-                    if (job.status != JobStatus.closed && job.status != JobStatus.rejected && onEdit != null)
-                      _ActionButton(
-                        label: l10n.edit,
-                        icon: HugeIcons.strokeRoundedPencilEdit01,
-                        onTap: onEdit!,
-                      ),
-                    if (onDelete != null)
-                      if (job.status == JobStatus.closed || job.status == JobStatus.rejected)
+                    alignment: WrapAlignment.end,
+                    spacing: 8.w,
+                    runSpacing: 8.h,
+                    children: [
+                      if (job.status == JobStatus.active && onPause != null)
                         _ActionButton(
-                          label: l10n.delete,
-                          icon: HugeIcons.strokeRoundedDelete01,
-                          color: AppColors.error,
-                          onTap: onDelete!,
-                        )
-                      else
-                        _ActionButton(
-                          label: l10n.closeJob,
-                          icon: HugeIcons.strokeRoundedAlert02,
-                          color: AppColors.error,
-                          onTap: onDelete!,
+                          label: l10n.pauseJob,
+                          icon: HugeIcons.strokeRoundedPauseCircle,
+                          onTap: onPause!,
                         ),
-                  ],
+                      if (job.status == JobStatus.paused && onResume != null)
+                        _ActionButton(
+                          label: l10n.reactivateJob,
+                          icon: HugeIcons.strokeRoundedPlay,
+                          onTap: onResume!,
+                        ),
+                      if (job.status == JobStatus.draft && onPublish != null)
+                        _ActionButton(
+                          label: l10n.publishJob,
+                          icon: HugeIcons.strokeRoundedSent,
+                          onTap: onPublish!,
+                        ),
+                      if (job.status == JobStatus.closed && onReopen != null)
+                        _ActionButton(
+                          label: l10n.reopenJob,
+                          icon: HugeIcons.strokeRoundedRefresh,
+                          onTap: onReopen!,
+                        ),
+                      if (job.status != JobStatus.closed &&
+                          job.status != JobStatus.rejected &&
+                          onEdit != null)
+                        _ActionButton(
+                          label: l10n.edit,
+                          icon: HugeIcons.strokeRoundedPencilEdit01,
+                          onTap: onEdit!,
+                        ),
+                      if (onDelete != null)
+                        if (job.status == JobStatus.closed ||
+                            job.status == JobStatus.rejected)
+                          _ActionButton(
+                            label: l10n.delete,
+                            icon: HugeIcons.strokeRoundedDelete01,
+                            color: AppColors.error,
+                            onTap: onDelete!,
+                          )
+                        else
+                          _ActionButton(
+                            label: l10n.closeJob,
+                            icon: HugeIcons.strokeRoundedAlert02,
+                            color: AppColors.error,
+                            onTap: onDelete!,
+                          ),
+                    ],
                   ),
                 )
-              else if (job.status != JobStatus.draft && job.status != JobStatus.pending)
+              else if (job.status != JobStatus.draft &&
+                  job.status != JobStatus.pending)
                 Row(
                   children: [
                     InkWell(
                       onTap: onApplicantsTap,
                       borderRadius: AppRadius.sm,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 2.w),
+                        padding: EdgeInsets.symmetric(
+                          vertical: 4.h,
+                          horizontal: 2.w,
+                        ),
                         child: _StatItem(
                           icon: HugeIcons.strokeRoundedUserGroup,
                           count: job.applicantCount,

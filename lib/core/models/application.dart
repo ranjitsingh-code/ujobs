@@ -32,11 +32,16 @@ class Application {
 
   static ApplicationStatus _parseStatus(String? status) {
     switch (status) {
-      case 'reviewing': return ApplicationStatus.reviewing;
-      case 'shortlisting': return ApplicationStatus.shortlisting;
-      case 'rejected': return ApplicationStatus.rejected;
-      case 'accepted': return ApplicationStatus.accepted;
-      default: return ApplicationStatus.applied;
+      case 'reviewing':
+        return ApplicationStatus.reviewing;
+      case 'shortlisting':
+        return ApplicationStatus.shortlisting;
+      case 'rejected':
+        return ApplicationStatus.rejected;
+      case 'accepted':
+        return ApplicationStatus.accepted;
+      default:
+        return ApplicationStatus.applied;
     }
   }
 }

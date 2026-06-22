@@ -36,10 +36,10 @@ class UJobApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final role      = ref.watch(activeRoleProvider);
-    final router    = ref.watch(routerProvider);
+    final role = ref.watch(activeRoleProvider);
+    final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
-    final locale    = ref.watch(localeProvider);
+    final locale = ref.watch(localeProvider);
 
     final isEmployer = role == 'employer';
 
@@ -57,38 +57,42 @@ class UJobApp extends ConsumerWidget {
 
         return ScreenUtilInit(
           designSize: designSize,
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) => UpgradeAlert(
-        upgrader: Upgrader(
-          debugLogging: false,
-          durationUntilAlertAgain: const Duration(days: 3),
-        ),
-        child: MaterialApp.router(
-          title: 'UJob',
-          debugShowCheckedModeBanner: false,
+          minTextAdapt: true,
+          splitScreenMode: true,
+          builder: (context, child) => UpgradeAlert(
+            upgrader: Upgrader(
+              debugLogging: false,
+              durationUntilAlertAgain: const Duration(days: 3),
+            ),
+            child: MaterialApp.router(
+              title: 'UJob',
+              debugShowCheckedModeBanner: false,
 
-          // ── Themes (light + dark per role) ──────────────────────────────────
-          theme:     isEmployer ? AppTheme.employerTheme()     : AppTheme.seekerTheme(),
-          darkTheme: isEmployer ? AppTheme.employerDarkTheme() : AppTheme.seekerDarkTheme(),
-          themeMode: themeMode,
+              // ── Themes (light + dark per role) ──────────────────────────────────
+              theme: isEmployer
+                  ? AppTheme.employerTheme()
+                  : AppTheme.seekerTheme(),
+              darkTheme: isEmployer
+                  ? AppTheme.employerDarkTheme()
+                  : AppTheme.seekerDarkTheme(),
+              themeMode: themeMode,
 
-          // ── i18n ────────────────────────────────────────────────────────────
-          locale: locale,
-          supportedLocales: supportedLocales,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            FlutterQuillLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
+              // ── i18n ────────────────────────────────────────────────────────────
+              locale: locale,
+              supportedLocales: supportedLocales,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                FlutterQuillLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
 
-          routerConfig: router,
-        ),
-      ),
-    );
-    },
+              routerConfig: router,
+            ),
+          ),
+        );
+      },
     );
   }
 }

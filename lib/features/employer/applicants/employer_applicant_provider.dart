@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/applicant.dart';
 
-final employerApplicantsProvider = StateNotifierProvider<EmployerApplicantsNotifier, List<Applicant>>((ref) {
-  return EmployerApplicantsNotifier();
-});
+final employerApplicantsProvider =
+    StateNotifierProvider<EmployerApplicantsNotifier, List<Applicant>>((ref) {
+      return EmployerApplicantsNotifier();
+    });
 
 class EmployerApplicantsNotifier extends StateNotifier<List<Applicant>> {
   EmployerApplicantsNotifier() : super(_demoApplicants);
@@ -44,12 +45,16 @@ final _demoApplicants = [
     experienceYears: '5 Years',
     expectedSalary: r'$140,000',
     availability: '2 Weeks Notice',
-    about: 'Passionate software engineer with 5 years of experience building scalable web and mobile applications using Flutter and Node.js. Strong focus on clean code and performance optimization.',
-    coverLetter: 'Dear Hiring Manager,\n\nI am writing to express my strong interest in the Software Engineer position. With my extensive background in Flutter and Dart, I have successfully delivered multiple cross-platform applications that reached thousands of users.\n\nIn my previous role at TechCorp, I led the mobile development team and improved application performance by 40%. I am excited about the opportunity to bring my skills to your team and contribute to your innovative products.\n\nThank you for your consideration.\n\nSincerely,\nAlice Johnson',
+    about:
+        'Passionate software engineer with 5 years of experience building scalable web and mobile applications using Flutter and Node.js. Strong focus on clean code and performance optimization.',
+    coverLetter:
+        'Dear Hiring Manager,\n\nI am writing to express my strong interest in the Software Engineer position. With my extensive background in Flutter and Dart, I have successfully delivered multiple cross-platform applications that reached thousands of users.\n\nIn my previous role at TechCorp, I led the mobile development team and improved application performance by 40%. I am excited about the opportunity to bring my skills to your team and contribute to your innovative products.\n\nThank you for your consideration.\n\nSincerely,\nAlice Johnson',
     skills: ['Flutter', 'Dart', 'Firebase', 'Node.js', 'React'],
     screeningAnswers: {
-      'Do you have 3+ years of experience in Flutter?': 'Yes, I have been working with Flutter since 2019.',
-      'Are you comfortable working in a fully remote environment?': 'Absolutely. I have worked remotely for the past 3 years.',
+      'Do you have 3+ years of experience in Flutter?':
+          'Yes, I have been working with Flutter since 2019.',
+      'Are you comfortable working in a fully remote environment?':
+          'Absolutely. I have worked remotely for the past 3 years.',
     },
     workExperience: [
       {
@@ -57,15 +62,17 @@ final _demoApplicants = [
         'company': 'TechCorp Solutions',
         'location': 'Remote',
         'period': 'Jan 2022 - Present',
-        'description': 'Lead developer for the flagship mobile app. Managed a team of 4 developers and implemented CI/CD pipelines.',
+        'description':
+            'Lead developer for the flagship mobile app. Managed a team of 4 developers and implemented CI/CD pipelines.',
       },
       {
         'title': 'Flutter Developer',
         'company': 'AppWorks Inc',
         'location': 'San Francisco, CA',
         'period': 'Mar 2019 - Dec 2021',
-        'description': 'Developed cross-platform mobile apps for various clients. Integrated REST APIs and third-party SDKs.',
-      }
+        'description':
+            'Developed cross-platform mobile apps for various clients. Integrated REST APIs and third-party SDKs.',
+      },
     ],
     education: [
       {
@@ -73,7 +80,7 @@ final _demoApplicants = [
         'degree': 'Bachelor of Science',
         'field': 'Computer Science',
         'grade': '3.8 GPA',
-      }
+      },
     ],
   ),
   Applicant(
@@ -92,12 +99,16 @@ final _demoApplicants = [
     experienceYears: '3 Years',
     expectedSalary: r'$120,000',
     availability: 'Immediate',
-    about: 'Dedicated developer specializing in front-end technologies and cross-platform mobile development.',
-    coverLetter: 'Hi Team,\n\nI would love to join as a Software Engineer. I have built several personal projects in Flutter and have 3 years of professional experience with React Native. I am quick to learn and eager to transition fully into Flutter development.',
+    about:
+        'Dedicated developer specializing in front-end technologies and cross-platform mobile development.',
+    coverLetter:
+        'Hi Team,\n\nI would love to join as a Software Engineer. I have built several personal projects in Flutter and have 3 years of professional experience with React Native. I am quick to learn and eager to transition fully into Flutter development.',
     skills: ['React Native', 'JavaScript', 'Flutter (Basic)', 'Git'],
     screeningAnswers: {
-      'Do you have 3+ years of experience in Flutter?': 'I have 3 years of mobile experience, primarily in React Native, with 6 months in Flutter.',
-      'Are you comfortable working in a fully remote environment?': 'Yes, I prefer remote work.',
+      'Do you have 3+ years of experience in Flutter?':
+          'I have 3 years of mobile experience, primarily in React Native, with 6 months in Flutter.',
+      'Are you comfortable working in a fully remote environment?':
+          'Yes, I prefer remote work.',
     },
     workExperience: [
       {
@@ -105,8 +116,9 @@ final _demoApplicants = [
         'company': 'Digital Frontiers',
         'location': 'Austin, TX',
         'period': 'Jun 2021 - Present',
-        'description': 'Built and maintained multiple React Native applications.',
-      }
+        'description':
+            'Built and maintained multiple React Native applications.',
+      },
     ],
     education: [
       {
@@ -114,7 +126,7 @@ final _demoApplicants = [
         'degree': 'Bachelor of Arts',
         'field': 'Software Engineering',
         'grade': '3.6 GPA',
-      }
+      },
     ],
   ),
   Applicant(
@@ -133,8 +145,10 @@ final _demoApplicants = [
     experienceYears: '6 Years',
     expectedSalary: r'$110,000',
     availability: '1 Month',
-    about: 'Creative web developer with a strong eye for design and expertise in modern JavaScript frameworks.',
-    coverLetter: 'To the Hiring Team,\n\nI am applying for the Website Developer position. With over 6 years of experience building responsive, accessible, and performant web applications using React and Vue.js, I am confident I can make an immediate impact.',
+    about:
+        'Creative web developer with a strong eye for design and expertise in modern JavaScript frameworks.',
+    coverLetter:
+        'To the Hiring Team,\n\nI am applying for the Website Developer position. With over 6 years of experience building responsive, accessible, and performant web applications using React and Vue.js, I am confident I can make an immediate impact.',
     skills: ['React', 'Vue.js', 'TypeScript', 'CSS/SASS', 'Figma'],
     screeningAnswers: {
       'Can you share a link to your portfolio?': 'https://charliebrown.dev',
@@ -145,8 +159,9 @@ final _demoApplicants = [
         'company': 'WebStudio NY',
         'location': 'New York, NY',
         'period': 'Aug 2018 - Present',
-        'description': 'Developed high-traffic e-commerce websites and internal dashboards.',
-      }
+        'description':
+            'Developed high-traffic e-commerce websites and internal dashboards.',
+      },
     ],
     education: [
       {
@@ -154,7 +169,7 @@ final _demoApplicants = [
         'degree': 'Bachelor of Fine Arts',
         'field': 'Interactive Media Arts',
         'grade': '3.9 GPA',
-      }
+      },
     ],
   ),
   Applicant(
@@ -174,7 +189,8 @@ final _demoApplicants = [
     expectedSalary: '£75,000',
     availability: 'Immediate',
     skills: ['Swift', 'Objective-C', 'Flutter', 'Firebase'],
-    about: 'Experienced iOS developer expanding into cross-platform development with Flutter.',
+    about:
+        'Experienced iOS developer expanding into cross-platform development with Flutter.',
     workExperience: [
       {
         'title': 'iOS Developer',
@@ -182,7 +198,7 @@ final _demoApplicants = [
         'location': 'London',
         'period': '2020 - 2024',
         'description': 'Developed native iOS applications.',
-      }
+      },
     ],
     education: [
       {
@@ -190,7 +206,7 @@ final _demoApplicants = [
         'degree': 'BSc',
         'field': 'Computer Science',
         'grade': 'First Class',
-      }
+      },
     ],
   ),
   Applicant(
@@ -210,9 +226,11 @@ final _demoApplicants = [
     expectedSalary: r'$95,000',
     availability: '2 Weeks',
     skills: ['SEO', 'Google Analytics', 'Ahrefs', 'Content Strategy'],
-    about: 'Results-driven SEO specialist who increased organic traffic by 300% in my last role.',
+    about:
+        'Results-driven SEO specialist who increased organic traffic by 300% in my last role.',
     screeningAnswers: {
-      'What is your most successful SEO campaign to date?': 'I led a campaign for an e-commerce brand that resulted in a 300% increase in organic traffic over 6 months by targeting long-tail keywords and optimizing site speed.',
+      'What is your most successful SEO campaign to date?':
+          'I led a campaign for an e-commerce brand that resulted in a 300% increase in organic traffic over 6 months by targeting long-tail keywords and optimizing site speed.',
     },
     workExperience: [
       {
@@ -221,7 +239,7 @@ final _demoApplicants = [
         'location': 'Remote',
         'period': '2019 - Present',
         'description': 'Managed SEO strategy for 10+ enterprise clients.',
-      }
+      },
     ],
     education: [
       {
@@ -229,7 +247,7 @@ final _demoApplicants = [
         'degree': 'BA',
         'field': 'Marketing',
         'grade': 'Pass',
-      }
+      },
     ],
   ),
   Applicant(
@@ -256,7 +274,7 @@ final _demoApplicants = [
         'location': 'Berlin',
         'period': '2022 - 2024',
         'description': 'Assisted in data cleaning and report generation.',
-      }
+      },
     ],
     education: [
       {
@@ -264,7 +282,7 @@ final _demoApplicants = [
         'degree': 'BSc',
         'field': 'Mathematics',
         'grade': '1.5',
-      }
+      },
     ],
   ),
   Applicant(
@@ -283,15 +301,17 @@ final _demoApplicants = [
     expectedSalary: 'CAD 130,000',
     availability: 'Immediate',
     skills: ['Network Security', 'Penetration Testing', 'CISSP', 'Python'],
-    about: 'Certified Information Systems Security Professional with 8 years of experience in enterprise environments.',
+    about:
+        'Certified Information Systems Security Professional with 8 years of experience in enterprise environments.',
     workExperience: [
       {
         'title': 'Security Consultant',
         'company': 'SecureNet',
         'location': 'Toronto',
         'period': '2016 - Present',
-        'description': 'Conducted penetration tests and security audits for financial institutions.',
-      }
+        'description':
+            'Conducted penetration tests and security audits for financial institutions.',
+      },
     ],
     education: [
       {
@@ -299,7 +319,7 @@ final _demoApplicants = [
         'degree': 'MSc',
         'field': 'Cybersecurity',
         'grade': 'A',
-      }
+      },
     ],
   ),
   Applicant(
@@ -326,7 +346,7 @@ final _demoApplicants = [
         'degree': 'BA',
         'field': 'Communications',
         'grade': '3.2 GPA',
-      }
+      },
     ],
   ),
 ];

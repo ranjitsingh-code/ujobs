@@ -32,8 +32,12 @@ class AccountSuspendedScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: AppColors.error.withValues(alpha: 0.05),
                 border: Border(
-                  top: BorderSide(color: AppColors.error.withValues(alpha: 0.1)),
-                  bottom: BorderSide(color: AppColors.error.withValues(alpha: 0.1)),
+                  top: BorderSide(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                  ),
+                  bottom: BorderSide(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                  ),
                 ),
               ),
               child: Text(
@@ -44,7 +48,7 @@ class AccountSuspendedScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            
+
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.fromLTRB(24.w, 40.h, 24.w, 40.h),
@@ -53,7 +57,7 @@ class AccountSuspendedScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(height: 20.h),
-                    
+
                     // Shield Icon
                     Container(
                       width: 120.r,
@@ -71,7 +75,7 @@ class AccountSuspendedScreen extends ConsumerWidget {
                       ),
                     ),
                     SizedBox(height: 40.h),
-                    
+
                     // Title
                     Text(
                       context.l10n.accountSuspendedTitle,
@@ -82,7 +86,7 @@ class AccountSuspendedScreen extends ConsumerWidget {
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 16.h),
-                    
+
                     // Description
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -96,10 +100,13 @@ class AccountSuspendedScreen extends ConsumerWidget {
                       ),
                     ),
                     SizedBox(height: 32.h),
-                    
+
                     // Date Pill
                     Container(
-                      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 16.h,
+                        horizontal: 24.w,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(16.r),
@@ -117,9 +124,9 @@ class AccountSuspendedScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    
+
                     SizedBox(height: 48.h),
-                    
+
                     // Contact Support Button
                     SizedBox(
                       width: double.infinity,
@@ -131,14 +138,20 @@ class AccountSuspendedScreen extends ConsumerWidget {
                         ),
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(context.l10n.supportFeaturesAreNotAvailableInTheDemo)),
+                            SnackBar(
+                              content: Text(
+                                context
+                                    .l10n
+                                    .supportFeaturesAreNotAvailableInTheDemo,
+                              ),
+                            ),
                           );
                         },
                       ),
                     ),
-                    
+
                     SizedBox(height: 16.h),
-                    
+
                     // Sign Out Button
                     SizedBox(
                       width: double.infinity,
@@ -146,7 +159,7 @@ class AccountSuspendedScreen extends ConsumerWidget {
                         label: context.l10n.signOutBtn,
                         outlined: true,
                         // Always force the primary blue/cyan color for sign out as per screenshot
-                        color: AppColors.primary, 
+                        color: AppColors.primary,
                         onTap: () {
                           ref.read(authProvider.notifier).logout();
                           context.go('/login');

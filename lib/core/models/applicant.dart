@@ -7,7 +7,8 @@ class Applicant {
   final String initials;
   final String role;
   final String? targetJobTitle; // The specific job they applied for
-  final String status; // 'Applied', 'Shortlisted', 'Interview', 'Offered', 'Hired', 'Rejected'
+  final String
+  status; // 'Applied', 'Shortlisted', 'Interview', 'Offered', 'Hired', 'Rejected'
   final DateTime appliedAt;
   final String email;
   final String phone;
@@ -58,13 +59,20 @@ class Applicant {
 
   Color get statusColor {
     switch (status.toLowerCase()) {
-      case 'applied': return AppColors.stageApplied;
-      case 'shortlisted': return AppColors.stageShortlisted;
-      case 'interview': return AppColors.stageInterviewed;
-      case 'offered': return AppColors.stageOffered;
-      case 'hired': return AppColors.success;
-      case 'rejected': return AppColors.error;
-      default: return AppColors.muted;
+      case 'applied':
+        return AppColors.stageApplied;
+      case 'shortlisted':
+        return AppColors.stageShortlisted;
+      case 'interview':
+        return AppColors.stageInterviewed;
+      case 'offered':
+        return AppColors.stageOffered;
+      case 'hired':
+        return AppColors.success;
+      case 'rejected':
+        return AppColors.error;
+      default:
+        return AppColors.muted;
     }
   }
 

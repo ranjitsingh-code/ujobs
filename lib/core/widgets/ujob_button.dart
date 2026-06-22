@@ -44,9 +44,10 @@ class _UJobButtonState extends State<UJobButton>
       vsync: this,
       duration: const Duration(milliseconds: 80),
     );
-    _scale = Tween(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _scaleCtrl, curve: Curves.easeInOut),
-    );
+    _scale = Tween(
+      begin: 1.0,
+      end: 0.97,
+    ).animate(CurvedAnimation(parent: _scaleCtrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -59,6 +60,7 @@ class _UJobButtonState extends State<UJobButton>
   void _onDown(PointerDownEvent _) {
     if (widget.onTap != null && !widget.isLoading) _scaleCtrl.forward();
   }
+
   void _onUp(PointerUpEvent _) => _scaleCtrl.reverse();
   void _onCancel(PointerCancelEvent _) => _scaleCtrl.reverse();
 
@@ -78,7 +80,9 @@ class _UJobButtonState extends State<UJobButton>
             side: BorderSide(color: bg),
             foregroundColor: bg,
             padding: EdgeInsets.symmetric(horizontal: 4.w),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14.r),
+            ),
           ),
           child: _child(color: bg),
         ),
@@ -91,11 +95,12 @@ class _UJobButtonState extends State<UJobButton>
         child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: enabled
-                ? (widget.gradient ?? LinearGradient(
-                    colors: [bg, AppColors.primaryDark],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ))
+                ? (widget.gradient ??
+                      LinearGradient(
+                        colors: [bg, AppColors.primaryDark],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ))
                 : null,
             color: enabled ? null : AppColors.muted2,
             borderRadius: BorderRadius.circular(14.r),
@@ -109,7 +114,9 @@ class _UJobButtonState extends State<UJobButton>
               foregroundColor: AppColors.surface,
               padding: EdgeInsets.symmetric(horizontal: 4.w),
               minimumSize: Size(double.infinity, h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14.r),
+              ),
               elevation: 0,
             ),
             child: _child(),
@@ -124,7 +131,8 @@ class _UJobButtonState extends State<UJobButton>
       onPointerCancel: _onCancel,
       child: AnimatedBuilder(
         animation: _scale,
-        builder: (_, child) => Transform.scale(scale: _scale.value, child: child),
+        builder: (_, child) =>
+            Transform.scale(scale: _scale.value, child: child),
         child: button,
       ),
     );
@@ -141,16 +149,18 @@ class _UJobButtonState extends State<UJobButton>
         ),
       );
     }
-    final style = (widget.textStyle ?? AppText.button).copyWith(color: color ?? AppColors.surface);
+    final style = (widget.textStyle ?? AppText.button).copyWith(
+      color: color ?? AppColors.surface,
+    );
     if (widget.icon != null) {
       return Row(
-        mainAxisAlignment: MainAxisAlignment.center, 
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           widget.icon!,
           SizedBox(width: 8.w),
           Flexible(
             child: Text(
-              widget.label, 
+              widget.label,
               style: style,
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -183,7 +193,8 @@ class UJobTextButton extends StatelessWidget {
       onTap: onTap,
       child: Text(
         label,
-        style: style ??
+        style:
+            style ??
             AppText.bodyBold.copyWith(
               color: color ?? AppColors.primary,
               decoration: TextDecoration.none,

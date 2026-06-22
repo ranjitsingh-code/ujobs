@@ -39,7 +39,13 @@ class AuthNotifier extends AsyncNotifier<User?> {
 
   Future<void> mockLogin() async {
     state = const AsyncLoading();
-    final user = User(id: '1', email: 'test@example.com', firstName: 'Test', lastName: 'User', role: 'seeker');
+    final user = User(
+      id: '1',
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      role: 'seeker',
+    );
     state = AsyncData(user);
   }
 
@@ -56,8 +62,14 @@ class AuthNotifier extends AsyncNotifier<User?> {
       final data = (res.data['data'] ?? res.data) as Map<String, dynamic>;
       final userData = (data['user'] ?? data) as Map<String, dynamic>;
 
-      final accessToken  = data['accessToken']  as String? ?? data['access_token']  as String? ?? '';
-      final refreshToken = data['refreshToken'] as String? ?? data['refresh_token'] as String? ?? '';
+      final accessToken =
+          data['accessToken'] as String? ??
+          data['access_token'] as String? ??
+          '';
+      final refreshToken =
+          data['refreshToken'] as String? ??
+          data['refresh_token'] as String? ??
+          '';
 
       await storage.saveTokens(accessToken, refreshToken);
       final user = User.fromJson(userData);
@@ -82,5 +94,6 @@ class AuthNotifier extends AsyncNotifier<User?> {
   }
 }
 
-final authProvider =
-    AsyncNotifierProvider<AuthNotifier, User?>(AuthNotifier.new);
+final authProvider = AsyncNotifierProvider<AuthNotifier, User?>(
+  AuthNotifier.new,
+);

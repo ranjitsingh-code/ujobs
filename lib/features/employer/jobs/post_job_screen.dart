@@ -43,17 +43,19 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.job != null) {
         final job = widget.job!;
-        ref.read(postJobWizardProvider.notifier).updateField(
-          PostJobState(
-            title: job.title,
-            description: job.description,
-            city: job.location ?? '',
-            employmentType: job.employmentType,
-            workplaceType: job.workplaceType,
-            salaryMin: job.salaryMin ?? '',
-            salaryMax: job.salaryMax ?? '',
-          ),
-        );
+        ref
+            .read(postJobWizardProvider.notifier)
+            .updateField(
+              PostJobState(
+                title: job.title,
+                description: job.description,
+                city: job.location ?? '',
+                employmentType: job.employmentType,
+                workplaceType: job.workplaceType,
+                salaryMin: job.salaryMin ?? '',
+                salaryMax: job.salaryMax ?? '',
+              ),
+            );
       }
     });
   }
@@ -95,7 +97,9 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
     final data = {
       'title': state.title,
       'description': state.description,
-      'category': state.category == 'Other' && state.customCategory.isNotEmpty ? '${state.category} (${state.customCategory})' : state.category,
+      'category': state.category == 'Other' && state.customCategory.isNotEmpty
+          ? '${state.category} (${state.customCategory})'
+          : state.category,
       'employment_type': state.employmentType,
       'workplace_type': state.workplaceType,
       'city': state.city,
@@ -115,14 +119,13 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
       'certifications': state.certifications,
       'age_min': state.ageMin,
       'age_max': state.ageMax,
-      'screening_questions': state.screeningQuestions.map((q) => {
-        'text': q.text,
-        'is_required': q.isRequired,
-      }).toList(),
+      'screening_questions': state.screeningQuestions
+          .map((q) => {'text': q.text, 'is_required': q.isRequired})
+          .toList(),
     };
-    
+
     final notifier = ref.read(demoEmployerJobsProvider.notifier);
-    
+
     if (_isEditing) {
       notifier.updateFromForm(widget.job!.id, data);
       notifier.updateStatus(widget.job!.id, targetStatus);
@@ -130,22 +133,24 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
       final newJob = notifier.addFromForm(data);
       notifier.updateStatus(newJob.id, targetStatus);
     }
-    
+
     UJobToast.success(
-      context, 
-      targetStatus == JobStatus.draft 
-          ? 'Job saved to drafts' 
-          : (_isEditing ? 'Job updated successfully' : 'Job published successfully'),
+      context,
+      targetStatus == JobStatus.draft
+          ? 'Job saved to drafts'
+          : (_isEditing
+                ? 'Job updated successfully'
+                : 'Job published successfully'),
     );
-    
+
     context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    
-    // Create translation labels manually if they don't exist yet, 
+
+    // Create translation labels manually if they don't exist yet,
     // to avoid breaking build before arb update.
     final stepLabels = [
       'Job Details',
@@ -153,7 +158,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
       'Benefits',
       'Application',
       'Screening',
-      'Review'
+      'Review',
     ];
 
     return Scaffold(
@@ -180,10 +185,12 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                   Step3Benefits(),
                   Step4Application(),
                   Step5Screening(),
-                  Step6Review(onPublish: () {
-                    // TODO: call API
-                    context.pop();
-                  }),
+                  Step6Review(
+                    onPublish: () {
+                      // TODO: call API
+                      context.pop();
+                    },
+                  ),
                 ],
               ),
             ),
@@ -205,7 +212,11 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                                 label: context.l10n.saveToDraft,
                                 outlined: true,
                                 color: AppColors.primary,
-                                icon: HugeIcon(icon: HugeIcons.strokeRoundedBookmark02, color: AppColors.primary, size: 20.r),
+                                icon: HugeIcon(
+                                  icon: HugeIcons.strokeRoundedBookmark02,
+                                  color: AppColors.primary,
+                                  size: 20.r,
+                                ),
                                 onTap: () => _submitJob(JobStatus.draft),
                               ),
                             ),
@@ -213,9 +224,13 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                             Expanded(
                               flex: 1,
                               child: UJobButton(
-                                label: _isEditing ? 'Update Job' : 'Publish Job',
+                                label: _isEditing
+                                    ? 'Update Job'
+                                    : 'Publish Job',
                                 icon: HugeIcon(
-                                  icon: _isEditing ? HugeIcons.strokeRoundedRefresh : HugeIcons.strokeRoundedSent,
+                                  icon: _isEditing
+                                      ? HugeIcons.strokeRoundedRefresh
+                                      : HugeIcons.strokeRoundedSent,
                                   color: AppColors.surface,
                                   size: 20.r,
                                 ),
@@ -229,7 +244,11 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                           label: l10n.back,
                           outlined: true,
                           color: AppColors.muted,
-                          icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: AppColors.muted, size: 20.r),
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedArrowLeft01,
+                            color: AppColors.muted,
+                            size: 20.r,
+                          ),
                           onTap: _prevStep,
                         ),
                       ],
@@ -255,7 +274,11 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                           flex: 2,
                           child: UJobButton(
                             label: l10n.next,
-                            icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: AppColors.surface, size: 20.r),
+                            icon: HugeIcon(
+                              icon: HugeIcons.strokeRoundedArrowRight01,
+                              color: AppColors.surface,
+                              size: 20.r,
+                            ),
                             onTap: _nextStep,
                           ),
                         ),

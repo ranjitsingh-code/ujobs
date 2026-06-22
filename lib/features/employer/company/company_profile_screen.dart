@@ -21,7 +21,8 @@ class CompanyProfileScreen extends ConsumerStatefulWidget {
   const CompanyProfileScreen({super.key});
 
   @override
-  ConsumerState<CompanyProfileScreen> createState() => _CompanyProfileScreenState();
+  ConsumerState<CompanyProfileScreen> createState() =>
+      _CompanyProfileScreenState();
 }
 
 class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
@@ -29,7 +30,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
   Widget build(BuildContext context) {
     final company = ref.watch(companyProfileProvider);
     final completeness = ref.watch(companyProfileCompletenessProvider);
-    
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: SingleChildScrollView(
@@ -38,7 +39,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             CompanyProfileHeader(
-              company: company, 
+              company: company,
               completeness: completeness,
               onEditLogo: () => _showEditCompanyInfo(context, ref, company),
             ),
@@ -49,25 +50,49 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                 children: [
                   _SectionCard(
                     title: 'Company Information',
-                    subtitle: [company.name, company.industry, company.website].where((e) => e != null && e.isNotEmpty).join(' · '),
+                    subtitle: [
+                      company.name,
+                      company.industry,
+                      company.website,
+                    ].where((e) => e != null && e.isNotEmpty).join(' · '),
                     icon: HugeIcons.strokeRoundedBuilding03,
                     onEdit: () => _showEditCompanyInfo(context, ref, company),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _DetailRow(label: context.l10n.companyNameLabel, value: company.name),
-                        _DetailRow(label: context.l10n.industryLabel, value: company.industry),
-                        _DetailRow(label: context.l10n.website, value: company.website),
+                        _DetailRow(
+                          label: context.l10n.companyNameLabel,
+                          value: company.name,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.industryLabel,
+                          value: company.industry,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.website,
+                          value: company.website,
+                        ),
                         SizedBox(height: 8.h),
-                        Text('About Company', style: AppText.bodyMd.copyWith(color: AppColors.muted)),
+                        Text(
+                          'About Company',
+                          style: AppText.bodyMd.copyWith(
+                            color: AppColors.muted,
+                          ),
+                        ),
                         SizedBox(height: 4.h),
                         Text(
-                          company.description?.isNotEmpty == true ? getPlainTextFromQuillJson(company.description!) : 'Not set',
+                          company.description?.isNotEmpty == true
+                              ? getPlainTextFromQuillJson(company.description!)
+                              : 'Not set',
                           maxLines: 4,
                           overflow: TextOverflow.ellipsis,
                           style: AppText.bodyMd.copyWith(
-                            color: company.description?.isNotEmpty == true ? AppColors.text2 : AppColors.muted2,
-                            fontStyle: company.description?.isNotEmpty == true ? FontStyle.normal : FontStyle.italic,
+                            color: company.description?.isNotEmpty == true
+                                ? AppColors.text2
+                                : AppColors.muted2,
+                            fontStyle: company.description?.isNotEmpty == true
+                                ? FontStyle.normal
+                                : FontStyle.italic,
                           ),
                         ),
                       ],
@@ -76,43 +101,84 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   SizedBox(height: 16.h),
                   _SectionCard(
                     title: 'Hiring Information',
-                    subtitle: [company.size, company.workType].where((e) => e != null && e.isNotEmpty).join(' · '),
+                    subtitle: [
+                      company.size,
+                      company.workType,
+                    ].where((e) => e != null && e.isNotEmpty).join(' · '),
                     icon: HugeIcons.strokeRoundedBriefcase01,
                     onEdit: () => _showEditHiringInfo(context, ref, company),
                     child: Column(
                       children: [
-                        _DetailRow(label: context.l10n.companySizeLabel, value: company.size),
-                        _DetailRow(label: context.l10n.workType, value: company.workType),
+                        _DetailRow(
+                          label: context.l10n.companySizeLabel,
+                          value: company.size,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.workType,
+                          value: company.workType,
+                        ),
                       ],
                     ),
                   ),
                   SizedBox(height: 16.h),
                   _SectionCard(
                     title: 'Location',
-                    subtitle: [company.city, company.country].where((e) => e != null && e.isNotEmpty).join(' · '),
+                    subtitle: [
+                      company.city,
+                      company.country,
+                    ].where((e) => e != null && e.isNotEmpty).join(' · '),
                     icon: HugeIcons.strokeRoundedLocation01,
                     onEdit: () => _showEditLocation(context, ref, company),
                     child: Column(
                       children: [
-                        _DetailRow(label: context.l10n.address, value: company.address),
-                        _DetailRow(label: context.l10n.city, value: company.city),
-                        _DetailRow(label: context.l10n.postcode, value: company.postcode),
-                        _DetailRow(label: context.l10n.country, value: company.country),
+                        _DetailRow(
+                          label: context.l10n.address,
+                          value: company.address,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.city,
+                          value: company.city,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.postcode,
+                          value: company.postcode,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.country,
+                          value: company.country,
+                        ),
                       ],
                     ),
                   ),
                   SizedBox(height: 16.h),
                   _SectionCard(
                     title: 'Contact Information',
-                    subtitle: [company.contactPersonName, company.contactEmail].where((e) => e != null && e.isNotEmpty).join(' · '),
+                    subtitle: [
+                      company.contactPersonName,
+                      company.contactEmail,
+                    ].where((e) => e != null && e.isNotEmpty).join(' · '),
                     icon: HugeIcons.strokeRoundedContactBook,
                     onEdit: () => _showEditContact(context, ref, company),
                     child: Column(
                       children: [
-                        _DetailRow(label: context.l10n.contactPerson, value: company.contactPersonName),
-                        _DetailRow(label: context.l10n.emailLabel, value: company.contactEmail),
-                        _DetailRow(label: context.l10n.phone, value: company.contactPhone),
-                        _DetailRow(label: context.l10n.visibility, value: company.showContactInfo ? 'Visible to job seekers' : 'Hidden from public page'),
+                        _DetailRow(
+                          label: context.l10n.contactPerson,
+                          value: company.contactPersonName,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.emailLabel,
+                          value: company.contactEmail,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.phone,
+                          value: company.contactPhone,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.visibility,
+                          value: company.showContactInfo
+                              ? 'Visible to job seekers'
+                              : 'Hidden from public page',
+                        ),
                       ],
                     ),
                   ),
@@ -120,15 +186,25 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   _SectionCard(
                     title: 'Social Links',
                     subtitle: [
-                      if (company.linkedInUrl != null && company.linkedInUrl!.isNotEmpty) 'LinkedIn',
-                      if (company.facebookUrl != null && company.facebookUrl!.isNotEmpty) 'Facebook',
+                      if (company.linkedInUrl != null &&
+                          company.linkedInUrl!.isNotEmpty)
+                        'LinkedIn',
+                      if (company.facebookUrl != null &&
+                          company.facebookUrl!.isNotEmpty)
+                        'Facebook',
                     ].join(' · '),
                     icon: HugeIcons.strokeRoundedLink01,
                     onEdit: () => _showEditSocialLinks(context, ref, company),
                     child: Column(
                       children: [
-                        _DetailRow(label: context.l10n.linkedin, value: company.linkedInUrl),
-                        _DetailRow(label: context.l10n.facebook, value: company.facebookUrl),
+                        _DetailRow(
+                          label: context.l10n.linkedin,
+                          value: company.linkedInUrl,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.facebook,
+                          value: company.facebookUrl,
+                        ),
                       ],
                     ),
                   ),
@@ -163,7 +239,10 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(title, style: AppText.heading3.copyWith(color: AppColors.text2)),
+                    Text(
+                      title,
+                      style: AppText.heading3.copyWith(color: AppColors.text2),
+                    ),
                     GestureDetector(
                       onTap: () => Navigator.pop(ctx),
                       child: Container(
@@ -172,17 +251,18 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                           color: AppColors.bg,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.close_rounded, size: 20.r, color: AppColors.text2),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 20.r,
+                          color: AppColors.text2,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
               const Divider(color: AppColors.border, height: 1),
-              Padding(
-                padding: EdgeInsets.all(20.r),
-                child: child,
-              ),
+              Padding(padding: EdgeInsets.all(20.r), child: child),
             ],
           ),
         ),
@@ -190,22 +270,30 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
     );
   }
 
-  void _showEditCompanyInfo(BuildContext context, WidgetRef ref, CompanyProfile company) {
+  void _showEditCompanyInfo(
+    BuildContext context,
+    WidgetRef ref,
+    CompanyProfile company,
+  ) {
     final nameCtrl = TextEditingController(text: company.name);
-    String? currentIndustry = company.industry?.isNotEmpty == true ? company.industry : null;
+    String? currentIndustry = company.industry?.isNotEmpty == true
+        ? company.industry
+        : null;
     final websiteCtrl = TextEditingController(text: company.website);
     String currentDescription = company.description ?? '';
     String? currentLogo = company.logo;
     String? nameError;
     String? websiteError;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -220,7 +308,12 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Company Information', style: AppText.heading3.copyWith(color: AppColors.text2)),
+                      Text(
+                        'Company Information',
+                        style: AppText.heading3.copyWith(
+                          color: AppColors.text2,
+                        ),
+                      ),
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx),
                         child: Container(
@@ -229,7 +322,11 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             color: AppColors.bg,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.close_rounded, size: 20.r, color: AppColors.text2),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 20.r,
+                            color: AppColors.text2,
+                          ),
                         ),
                       ),
                     ],
@@ -241,14 +338,24 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      UJobTextField(label: context.l10n.companyName, hint: context.l10n.egAcmeLtd, controller: nameCtrl, errorText: nameError),
+                      UJobTextField(
+                        label: context.l10n.companyName,
+                        hint: context.l10n.egAcmeLtd,
+                        controller: nameCtrl,
+                        errorText: nameError,
+                      ),
                       SizedBox(height: 16.h),
-                      Text('Company Logo', style: AppText.label.copyWith(color: AppColors.text2)),
+                      Text(
+                        'Company Logo',
+                        style: AppText.label.copyWith(color: AppColors.text2),
+                      ),
                       SizedBox(height: 8.h),
                       GestureDetector(
                         onTap: () async {
                           final picker = ImagePicker();
-                          final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                          final pickedFile = await picker.pickImage(
+                            source: ImageSource.gallery,
+                          );
                           if (pickedFile != null) {
                             setState(() {
                               currentLogo = pickedFile.path;
@@ -260,9 +367,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.bg,
                             borderRadius: AppRadius.md,
-                            border: Border.all(
-                              color: AppColors.border,
-                            ),
+                            border: Border.all(color: AppColors.border),
                           ),
                           child: Row(
                             children: [
@@ -274,28 +379,48 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                                   borderRadius: AppRadius.sm,
                                 ),
                                 clipBehavior: Clip.hardEdge,
-                                child: currentLogo != null && currentLogo!.isNotEmpty
-                                  ? (currentLogo!.startsWith('http') 
-                                      ? Image.network(currentLogo!, fit: BoxFit.cover)
-                                      : Image.file(File(currentLogo!), fit: BoxFit.cover))
-                                  : Center(
-                                      child: HugeIcon(
-                                        icon: HugeIcons.strokeRoundedImage01,
-                                        color: AppColors.primary,
-                                        size: 24.r,
+                                child:
+                                    currentLogo != null &&
+                                        currentLogo!.isNotEmpty
+                                    ? (currentLogo!.startsWith('http')
+                                          ? Image.network(
+                                              currentLogo!,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Image.file(
+                                              File(currentLogo!),
+                                              fit: BoxFit.cover,
+                                            ))
+                                    : Center(
+                                        child: HugeIcon(
+                                          icon: HugeIcons.strokeRoundedImage01,
+                                          color: AppColors.primary,
+                                          size: 24.r,
+                                        ),
                                       ),
-                                    ),
                               ),
                               SizedBox(width: 16.w),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(currentLogo != null && currentLogo!.isNotEmpty ? 'Change Logo' : 'Upload Logo', style: AppText.bodyMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                                    Text(
+                                      currentLogo != null &&
+                                              currentLogo!.isNotEmpty
+                                          ? 'Change Logo'
+                                          : 'Upload Logo',
+                                      style: AppText.bodyMd.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                     SizedBox(height: 4.h),
                                     Text(
                                       'PNG, JPG or SVG · Max 3 MB\nSquare recommended',
-                                      style: AppText.caption.copyWith(color: AppColors.muted2, height: 1.2),
+                                      style: AppText.caption.copyWith(
+                                        color: AppColors.muted2,
+                                        height: 1.2,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -309,7 +434,12 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                         label: context.l10n.industryLabel,
                         hint: context.l10n.selectIndustry,
                         value: currentIndustry,
-                        options: const [('Software Development', 'Software Development'), ('Finance', 'Finance'), ('Healthcare', 'Healthcare'), ('Education', 'Education')],
+                        options: const [
+                          ('Software Development', 'Software Development'),
+                          ('Finance', 'Finance'),
+                          ('Healthcare', 'Healthcare'),
+                          ('Education', 'Education'),
+                        ],
                         onChanged: (val) {
                           setState(() {
                             currentIndustry = val;
@@ -318,8 +448,8 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                       ),
                       SizedBox(height: 16.h),
                       UJobTextField(
-                        label: context.l10n.website, 
-                        hint: context.l10n.egHttpsacmecom, 
+                        label: context.l10n.website,
+                        hint: context.l10n.egHttpsacmecom,
                         controller: websiteCtrl,
                         errorText: websiteError,
                       ),
@@ -341,7 +471,9 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                           readOnly: true,
                           maxLines: 4,
                           minLines: 4,
-                          controller: TextEditingController(text: getPlainTextFromQuillJson(currentDescription)),
+                          controller: TextEditingController(
+                            text: getPlainTextFromQuillJson(currentDescription),
+                          ),
                           labelTrailing: HugeIcon(
                             icon: HugeIcons.strokeRoundedMaximize01,
                             color: AppColors.primary,
@@ -367,23 +499,31 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             nameError = null;
                             websiteError = null;
                           });
-                          
+
                           bool hasError = false;
                           if (nameCtrl.text.trim().isEmpty) {
-                            setState(() => nameError = 'Company Name is required');
+                            setState(
+                              () => nameError = 'Company Name is required',
+                            );
                             hasError = true;
                           }
-                          
+
                           if (websiteCtrl.text.isNotEmpty) {
-                            if (!websiteCtrl.text.startsWith('http://') && !websiteCtrl.text.startsWith('https://')) {
-                              setState(() => websiteError = 'URL must start with http:// or https://');
+                            if (!websiteCtrl.text.startsWith('http://') &&
+                                !websiteCtrl.text.startsWith('https://')) {
+                              setState(
+                                () => websiteError =
+                                    'URL must start with http:// or https://',
+                              );
                               hasError = true;
                             }
                           }
-                          
+
                           if (hasError) return;
-                          
-                          ref.read(companyProfileProvider.notifier).state = company.copyWith(
+
+                          ref
+                              .read(companyProfileProvider.notifier)
+                              .state = company.copyWith(
                             name: nameCtrl.text,
                             logo: currentLogo,
                             industry: currentIndustry ?? '',
@@ -404,17 +544,27 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
     );
   }
 
-  void _showEditHiringInfo(BuildContext context, WidgetRef ref, CompanyProfile company) {
-    String? currentSize = company.size?.isNotEmpty == true ? company.size : null;
-    String? currentWorkType = company.workType?.isNotEmpty == true ? company.workType : null;
-    
+  void _showEditHiringInfo(
+    BuildContext context,
+    WidgetRef ref,
+    CompanyProfile company,
+  ) {
+    String? currentSize = company.size?.isNotEmpty == true
+        ? company.size
+        : null;
+    String? currentWorkType = company.workType?.isNotEmpty == true
+        ? company.workType
+        : null;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -429,7 +579,12 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Hiring Information', style: AppText.heading3.copyWith(color: AppColors.text2)),
+                      Text(
+                        'Hiring Information',
+                        style: AppText.heading3.copyWith(
+                          color: AppColors.text2,
+                        ),
+                      ),
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx),
                         child: Container(
@@ -438,7 +593,11 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             color: AppColors.bg,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.close_rounded, size: 20.r, color: AppColors.text2),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 20.r,
+                            color: AppColors.text2,
+                          ),
                         ),
                       ),
                     ],
@@ -454,7 +613,13 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                         label: context.l10n.companySizeLabel,
                         hint: context.l10n.selectSize,
                         value: currentSize,
-                        options: const [('1-10', '1-10'), ('11-50', '11-50'), ('51-200', '51-200'), ('201-500', '201-500'), ('500+', '500+')],
+                        options: const [
+                          ('1-10', '1-10'),
+                          ('11-50', '11-50'),
+                          ('51-200', '51-200'),
+                          ('201-500', '201-500'),
+                          ('500+', '500+'),
+                        ],
                         onChanged: (val) {
                           setState(() => currentSize = val);
                         },
@@ -464,7 +629,11 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                         label: context.l10n.workType,
                         hint: context.l10n.selectWorkType,
                         value: currentWorkType,
-                        options: const [('Remote', 'Remote'), ('Hybrid', 'Hybrid'), ('On-site', 'On-site')],
+                        options: const [
+                          ('Remote', 'Remote'),
+                          ('Hybrid', 'Hybrid'),
+                          ('On-site', 'On-site'),
+                        ],
                         onChanged: (val) {
                           setState(() => currentWorkType = val);
                         },
@@ -473,7 +642,9 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                       UJobButton(
                         label: context.l10n.save,
                         onTap: () {
-                          ref.read(companyProfileProvider.notifier).state = company.copyWith(
+                          ref
+                              .read(companyProfileProvider.notifier)
+                              .state = company.copyWith(
                             size: currentSize ?? '',
                             workType: currentWorkType ?? '',
                           );
@@ -491,22 +662,30 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
     );
   }
 
-  void _showEditLocation(BuildContext context, WidgetRef ref, CompanyProfile company) {
+  void _showEditLocation(
+    BuildContext context,
+    WidgetRef ref,
+    CompanyProfile company,
+  ) {
     final addressCtrl = TextEditingController(text: company.address);
     final cityCtrl = TextEditingController(text: company.city);
     final postCtrl = TextEditingController(text: company.postcode);
-    String? currentCountry = company.country?.isNotEmpty == true ? company.country : null;
+    String? currentCountry = company.country?.isNotEmpty == true
+        ? company.country
+        : null;
     String? addressError;
     String? cityError;
     String? countryError;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -521,7 +700,12 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Location', style: AppText.heading3.copyWith(color: AppColors.text2)),
+                      Text(
+                        'Location',
+                        style: AppText.heading3.copyWith(
+                          color: AppColors.text2,
+                        ),
+                      ),
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx),
                         child: Container(
@@ -530,7 +714,11 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             color: AppColors.bg,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.close_rounded, size: 20.r, color: AppColors.text2),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 20.r,
+                            color: AppColors.text2,
+                          ),
                         ),
                       ),
                     ],
@@ -542,18 +730,37 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      UJobTextField(label: context.l10n.address1, hint: context.l10n.eg123BusinessStreet, controller: addressCtrl, errorText: addressError),
+                      UJobTextField(
+                        label: context.l10n.address1,
+                        hint: context.l10n.eg123BusinessStreet,
+                        controller: addressCtrl,
+                        errorText: addressError,
+                      ),
                       SizedBox(height: 16.h),
-                      UJobTextField(label: context.l10n.city1, hint: context.l10n.cityHint, controller: cityCtrl, errorText: cityError),
+                      UJobTextField(
+                        label: context.l10n.city1,
+                        hint: context.l10n.cityHint,
+                        controller: cityCtrl,
+                        errorText: cityError,
+                      ),
                       SizedBox(height: 16.h),
-                      UJobTextField(label: context.l10n.postcodePin, hint: context.l10n.egSw1a1aa, controller: postCtrl),
+                      UJobTextField(
+                        label: context.l10n.postcodePin,
+                        hint: context.l10n.egSw1a1aa,
+                        controller: postCtrl,
+                      ),
                       SizedBox(height: 16.h),
                       UJobDropdownField(
                         label: context.l10n.country1,
                         hint: context.l10n.selectCountry,
                         errorText: countryError,
                         value: currentCountry,
-                        options: const [('United Kingdom', 'United Kingdom'), ('United States', 'United States'), ('Canada', 'Canada'), ('Australia', 'Australia')],
+                        options: const [
+                          ('United Kingdom', 'United Kingdom'),
+                          ('United States', 'United States'),
+                          ('Canada', 'Canada'),
+                          ('Australia', 'Australia'),
+                        ],
                         onChanged: (val) {
                           setState(() => currentCountry = val);
                         },
@@ -567,24 +774,31 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             cityError = null;
                             countryError = null;
                           });
-                          
+
                           bool hasError = false;
                           if (addressCtrl.text.trim().isEmpty) {
-                            setState(() => addressError = 'Address is required');
+                            setState(
+                              () => addressError = 'Address is required',
+                            );
                             hasError = true;
                           }
                           if (cityCtrl.text.trim().isEmpty) {
                             setState(() => cityError = 'City is required');
                             hasError = true;
                           }
-                          if (currentCountry == null || currentCountry!.isEmpty) {
-                            setState(() => countryError = 'Country is required');
+                          if (currentCountry == null ||
+                              currentCountry!.isEmpty) {
+                            setState(
+                              () => countryError = 'Country is required',
+                            );
                             hasError = true;
                           }
-                          
+
                           if (hasError) return;
 
-                          ref.read(companyProfileProvider.notifier).state = company.copyWith(
+                          ref
+                              .read(companyProfileProvider.notifier)
+                              .state = company.copyWith(
                             address: addressCtrl.text,
                             city: cityCtrl.text,
                             postcode: postCtrl.text,
@@ -604,7 +818,11 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
     );
   }
 
-  void _showEditContact(BuildContext context, WidgetRef ref, CompanyProfile company) {
+  void _showEditContact(
+    BuildContext context,
+    WidgetRef ref,
+    CompanyProfile company,
+  ) {
     final personCtrl = TextEditingController(text: company.contactPersonName);
     final emailCtrl = TextEditingController(text: company.contactEmail);
     final phoneCtrl = TextEditingController(text: company.contactPhone);
@@ -619,7 +837,9 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -634,7 +854,12 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Contact Information', style: AppText.heading3.copyWith(color: AppColors.text2)),
+                      Text(
+                        'Contact Information',
+                        style: AppText.heading3.copyWith(
+                          color: AppColors.text2,
+                        ),
+                      ),
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx),
                         child: Container(
@@ -643,7 +868,11 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             color: AppColors.bg,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.close_rounded, size: 20.r, color: AppColors.text2),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 20.r,
+                            color: AppColors.text2,
+                          ),
                         ),
                       ),
                     ],
@@ -655,18 +884,23 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      UJobTextField(label: context.l10n.contactPersonName, hint: context.l10n.egJaneSmith, controller: personCtrl, errorText: personError),
+                      UJobTextField(
+                        label: context.l10n.contactPersonName,
+                        hint: context.l10n.egJaneSmith,
+                        controller: personCtrl,
+                        errorText: personError,
+                      ),
                       SizedBox(height: 16.h),
                       UJobTextField(
-                        label: context.l10n.emailLabel, 
-                        hint: context.l10n.egHracmecom, 
+                        label: context.l10n.emailLabel,
+                        hint: context.l10n.egHracmecom,
                         controller: emailCtrl,
                         errorText: emailError,
                       ),
                       SizedBox(height: 16.h),
                       UJobTextField(
-                        label: context.l10n.phone, 
-                        hint: context.l10n.eg7911123456, 
+                        label: context.l10n.phone,
+                        hint: context.l10n.eg7911123456,
                         controller: phoneCtrl,
                         errorText: phoneError,
                         keyboardType: TextInputType.phone,
@@ -684,12 +918,18 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             Container(
                               padding: EdgeInsets.all(8.r),
                               decoration: BoxDecoration(
-                                color: showContact ? AppColors.primaryLight : AppColors.muted.withValues(alpha: 0.1),
+                                color: showContact
+                                    ? AppColors.primaryLight
+                                    : AppColors.muted.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: HugeIcon(
-                                icon: showContact ? HugeIcons.strokeRoundedView : HugeIcons.strokeRoundedViewOffSlash,
-                                color: showContact ? AppColors.primary : AppColors.muted2,
+                                icon: showContact
+                                    ? HugeIcons.strokeRoundedView
+                                    : HugeIcons.strokeRoundedViewOffSlash,
+                                color: showContact
+                                    ? AppColors.primary
+                                    : AppColors.muted2,
                                 size: 20.r,
                               ),
                             ),
@@ -698,11 +938,21 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Show contact info', style: AppText.bodyMd.copyWith(color: AppColors.text2, fontWeight: FontWeight.w600)),
+                                  Text(
+                                    'Show contact info',
+                                    style: AppText.bodyMd.copyWith(
+                                      color: AppColors.text2,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                   SizedBox(height: 4.h),
                                   Text(
-                                    showContact ? 'Visible to job seekers' : 'Hidden from public page', 
-                                    style: AppText.caption.copyWith(color: AppColors.muted)
+                                    showContact
+                                        ? 'Visible to job seekers'
+                                        : 'Hidden from public page',
+                                    style: AppText.caption.copyWith(
+                                      color: AppColors.muted,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -710,7 +960,8 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             Switch(
                               value: showContact,
                               activeColor: AppColors.primary,
-                              onChanged: (val) => setState(() => showContact = val),
+                              onChanged: (val) =>
+                                  setState(() => showContact = val),
                             ),
                           ],
                         ),
@@ -724,25 +975,42 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             emailError = null;
                             phoneError = null;
                           });
-                          
+
                           bool hasError = false;
                           if (personCtrl.text.trim().isEmpty) {
-                            setState(() => personError = 'Contact Person Name is required');
+                            setState(
+                              () => personError =
+                                  'Contact Person Name is required',
+                            );
                             hasError = true;
                           }
-                          if (emailCtrl.text.isNotEmpty && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(emailCtrl.text)) {
-                            setState(() => emailError = 'Please enter a valid email address');
+                          if (emailCtrl.text.isNotEmpty &&
+                              !RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(emailCtrl.text)) {
+                            setState(
+                              () => emailError =
+                                  'Please enter a valid email address',
+                            );
                             hasError = true;
                           }
-                          
-                          if (phoneCtrl.text.isNotEmpty && !RegExp(r'^\+?[0-9\s\-\(\)]{7,}$').hasMatch(phoneCtrl.text)) {
-                            setState(() => phoneError = 'Please enter a valid phone number');
+
+                          if (phoneCtrl.text.isNotEmpty &&
+                              !RegExp(
+                                r'^\+?[0-9\s\-\(\)]{7,}$',
+                              ).hasMatch(phoneCtrl.text)) {
+                            setState(
+                              () => phoneError =
+                                  'Please enter a valid phone number',
+                            );
                             hasError = true;
                           }
-                          
+
                           if (hasError) return;
-                          
-                          ref.read(companyProfileProvider.notifier).state = company.copyWith(
+
+                          ref
+                              .read(companyProfileProvider.notifier)
+                              .state = company.copyWith(
                             contactPersonName: personCtrl.text,
                             contactEmail: emailCtrl.text,
                             contactPhone: phoneCtrl.text,
@@ -762,19 +1030,25 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
     );
   }
 
-  void _showEditSocialLinks(BuildContext context, WidgetRef ref, CompanyProfile company) {
+  void _showEditSocialLinks(
+    BuildContext context,
+    WidgetRef ref,
+    CompanyProfile company,
+  ) {
     final linkedinCtrl = TextEditingController(text: company.linkedInUrl);
     final fbCtrl = TextEditingController(text: company.facebookUrl);
     String? linkedinError;
     String? fbError;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -789,7 +1063,12 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Social Links (Optional)', style: AppText.heading3.copyWith(color: AppColors.text2)),
+                      Text(
+                        'Social Links (Optional)',
+                        style: AppText.heading3.copyWith(
+                          color: AppColors.text2,
+                        ),
+                      ),
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx),
                         child: Container(
@@ -798,7 +1077,11 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             color: AppColors.bg,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.close_rounded, size: 20.r, color: AppColors.text2),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 20.r,
+                            color: AppColors.text2,
+                          ),
                         ),
                       ),
                     ],
@@ -811,15 +1094,15 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       UJobTextField(
-                        label: context.l10n.linkedin, 
-                        hint: context.l10n.egHttpslinkedincomcompanyacme, 
+                        label: context.l10n.linkedin,
+                        hint: context.l10n.egHttpslinkedincomcompanyacme,
                         controller: linkedinCtrl,
                         errorText: linkedinError,
                       ),
                       SizedBox(height: 16.h),
                       UJobTextField(
-                        label: context.l10n.facebook, 
-                        hint: context.l10n.egHttpsfacebookcomacme, 
+                        label: context.l10n.facebook,
+                        hint: context.l10n.egHttpsfacebookcomacme,
                         controller: fbCtrl,
                         errorText: fbError,
                       ),
@@ -831,21 +1114,33 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             linkedinError = null;
                             fbError = null;
                           });
-                          
+
                           bool hasError = false;
-                          if (linkedinCtrl.text.isNotEmpty && !linkedinCtrl.text.startsWith('http://') && !linkedinCtrl.text.startsWith('https://')) {
-                            setState(() => linkedinError = 'URL must start with http:// or https://');
+                          if (linkedinCtrl.text.isNotEmpty &&
+                              !linkedinCtrl.text.startsWith('http://') &&
+                              !linkedinCtrl.text.startsWith('https://')) {
+                            setState(
+                              () => linkedinError =
+                                  'URL must start with http:// or https://',
+                            );
                             hasError = true;
                           }
-                          
-                          if (fbCtrl.text.isNotEmpty && !fbCtrl.text.startsWith('http://') && !fbCtrl.text.startsWith('https://')) {
-                            setState(() => fbError = 'URL must start with http:// or https://');
+
+                          if (fbCtrl.text.isNotEmpty &&
+                              !fbCtrl.text.startsWith('http://') &&
+                              !fbCtrl.text.startsWith('https://')) {
+                            setState(
+                              () => fbError =
+                                  'URL must start with http:// or https://',
+                            );
                             hasError = true;
                           }
-                          
+
                           if (hasError) return;
 
-                          ref.read(companyProfileProvider.notifier).state = company.copyWith(
+                          ref
+                              .read(companyProfileProvider.notifier)
+                              .state = company.copyWith(
                             linkedInUrl: linkedinCtrl.text,
                             facebookUrl: fbCtrl.text,
                           );
@@ -868,7 +1163,12 @@ class CompanyProfileHeader extends StatelessWidget {
   final CompanyProfile company;
   final double completeness;
   final VoidCallback onEditLogo;
-  const CompanyProfileHeader({super.key, required this.company, required this.completeness, required this.onEditLogo});
+  const CompanyProfileHeader({
+    super.key,
+    required this.company,
+    required this.completeness,
+    required this.onEditLogo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -876,13 +1176,18 @@ class CompanyProfileHeader extends StatelessWidget {
 
     // Construct the subtitle (Industry · Size)
     List<String> subtitleParts = [];
-    if (company.industry != null && company.industry!.isNotEmpty) subtitleParts.add(company.industry!);
-    if (company.size != null && company.size!.isNotEmpty) subtitleParts.add(company.size!);
+    if (company.industry != null && company.industry!.isNotEmpty)
+      subtitleParts.add(company.industry!);
+    if (company.size != null && company.size!.isNotEmpty)
+      subtitleParts.add(company.size!);
     final subtitle = subtitleParts.join(' · ');
 
     // Construct location
     String location = '';
-    if (company.city != null && company.city!.isNotEmpty && company.country != null && company.country!.isNotEmpty) {
+    if (company.city != null &&
+        company.city!.isNotEmpty &&
+        company.country != null &&
+        company.country!.isNotEmpty) {
       location = '${company.city}, ${company.country}';
     } else if (company.city != null && company.city!.isNotEmpty) {
       location = company.city!;
@@ -892,10 +1197,13 @@ class CompanyProfileHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: AppColors.authGradient,
+      decoration: const BoxDecoration(gradient: AppColors.authGradient),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        MediaQuery.of(context).padding.top + 24.h,
+        20.w,
+        32.h,
       ),
-      padding: EdgeInsets.fromLTRB(20.w, MediaQuery.of(context).padding.top + 24.h, 20.w, 32.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -915,13 +1223,20 @@ class CompanyProfileHeader extends StatelessWidget {
                     ),
                     clipBehavior: Clip.hardEdge,
                     child: company.logo != null && company.logo!.isNotEmpty
-                        ? (company.logo!.startsWith('http') 
-                            ? Image.network(company.logo!, fit: BoxFit.cover)
-                            : Image.file(File(company.logo!), fit: BoxFit.cover))
+                        ? (company.logo!.startsWith('http')
+                              ? Image.network(company.logo!, fit: BoxFit.cover)
+                              : Image.file(
+                                  File(company.logo!),
+                                  fit: BoxFit.cover,
+                                ))
                         : Center(
                             child: Text(
-                              company.name.isNotEmpty ? company.name[0].toUpperCase() : 'A',
-                              style: AppText.heading1.copyWith(color: AppColors.primary),
+                              company.name.isNotEmpty
+                                  ? company.name[0].toUpperCase()
+                                  : 'A',
+                              style: AppText.heading1.copyWith(
+                                color: AppColors.primary,
+                              ),
                             ),
                           ),
                   ),
@@ -938,7 +1253,11 @@ class CompanyProfileHeader extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Center(
-                          child: HugeIcon(icon: HugeIcons.strokeRoundedCamera01, size: 14.r, color: AppColors.primary),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedCamera01,
+                            size: 14.r,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ),
@@ -957,7 +1276,9 @@ class CompanyProfileHeader extends StatelessWidget {
                         Flexible(
                           child: Text(
                             company.name,
-                            style: AppText.heading2.copyWith(color: AppColors.white),
+                            style: AppText.heading2.copyWith(
+                              color: AppColors.white,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -976,30 +1297,40 @@ class CompanyProfileHeader extends StatelessWidget {
                     if (subtitle.isNotEmpty)
                       Text(
                         subtitle,
-                        style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
+                        style: AppText.caption.copyWith(
+                          color: AppColors.white.withValues(alpha: 0.8),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       )
                     else
                       Text(
                         'Industry & size not set',
-                        style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.5), fontStyle: FontStyle.italic),
+                        style: AppText.caption.copyWith(
+                          color: AppColors.white.withValues(alpha: 0.5),
+                          fontStyle: FontStyle.italic,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    
+
                     SizedBox(height: 2.h),
                     if (location.isNotEmpty)
                       Text(
                         location,
-                        style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
+                        style: AppText.caption.copyWith(
+                          color: AppColors.white.withValues(alpha: 0.8),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       )
                     else
                       Text(
                         'Location not set',
-                        style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.5), fontStyle: FontStyle.italic),
+                        style: AppText.caption.copyWith(
+                          color: AppColors.white.withValues(alpha: 0.5),
+                          fontStyle: FontStyle.italic,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1061,7 +1392,9 @@ class CompanyProfileHeader extends StatelessWidget {
                   SizedBox(height: 12.h),
                   Text(
                     'Complete your profile to unlock all features',
-                    style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
+                    style: AppText.caption.copyWith(
+                      color: AppColors.white.withValues(alpha: 0.8),
+                    ),
                   ),
                 ],
               ],
@@ -1104,7 +1437,9 @@ class _SectionCardState extends State<_SectionCard> {
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: _isExpanded ? 0.08 : 0.02),
+            color: AppColors.primary.withValues(
+              alpha: _isExpanded ? 0.08 : 0.02,
+            ),
             blurRadius: _isExpanded ? 24 : 10,
             offset: Offset(0, _isExpanded ? 8 : 4),
           ),
@@ -1119,11 +1454,18 @@ class _SectionCardState extends State<_SectionCard> {
                 _isExpanded = !_isExpanded;
               });
             },
-            borderRadius: _isExpanded 
-                ? BorderRadius.vertical(top: Radius.circular(AppRadius.xl.topLeft.x))
+            borderRadius: _isExpanded
+                ? BorderRadius.vertical(
+                    top: Radius.circular(AppRadius.xl.topLeft.x),
+                  )
                 : AppRadius.xl,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20.r, 20.r, 20.r, _isExpanded ? 0 : 20.r),
+              padding: EdgeInsets.fromLTRB(
+                20.r,
+                20.r,
+                20.r,
+                _isExpanded ? 0 : 20.r,
+              ),
               child: Row(
                 children: [
                   Container(
@@ -1132,7 +1474,11 @@ class _SectionCardState extends State<_SectionCard> {
                       color: AppColors.primaryLight,
                       borderRadius: AppRadius.md,
                     ),
-                    child: HugeIcon(icon: widget.icon, color: AppColors.primary, size: 20.r),
+                    child: HugeIcon(
+                      icon: widget.icon,
+                      color: AppColors.primary,
+                      size: 20.r,
+                    ),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
@@ -1140,12 +1486,21 @@ class _SectionCardState extends State<_SectionCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(widget.title, style: AppText.bodyBold.copyWith(color: AppColors.text2)),
-                        if (!_isExpanded && widget.subtitle != null && widget.subtitle!.isNotEmpty) ...[
+                        Text(
+                          widget.title,
+                          style: AppText.bodyBold.copyWith(
+                            color: AppColors.text2,
+                          ),
+                        ),
+                        if (!_isExpanded &&
+                            widget.subtitle != null &&
+                            widget.subtitle!.isNotEmpty) ...[
                           SizedBox(height: 2.h),
                           Text(
                             widget.subtitle!,
-                            style: AppText.caption.copyWith(color: AppColors.muted),
+                            style: AppText.caption.copyWith(
+                              color: AppColors.muted,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1153,7 +1508,10 @@ class _SectionCardState extends State<_SectionCard> {
                           SizedBox(height: 2.h),
                           Text(
                             'Not set',
-                            style: AppText.caption.copyWith(color: AppColors.muted2, fontStyle: FontStyle.italic),
+                            style: AppText.caption.copyWith(
+                              color: AppColors.muted2,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ],
                       ],
@@ -1161,10 +1519,23 @@ class _SectionCardState extends State<_SectionCard> {
                   ),
                   TextButton.icon(
                     onPressed: widget.onEdit,
-                    icon: HugeIcon(icon: HugeIcons.strokeRoundedEdit02, color: AppColors.primary, size: 14.r),
-                    label: Text('Edit', style: AppText.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedEdit02,
+                      color: AppColors.primary,
+                      size: 14.r,
+                    ),
+                    label: Text(
+                      'Edit',
+                      style: AppText.caption.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 4.h,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -1189,7 +1560,9 @@ class _SectionCardState extends State<_SectionCard> {
               padding: EdgeInsets.fromLTRB(20.r, 0, 20.r, 20.r),
               child: widget.child,
             ),
-            crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: _isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 300),
           ),
         ],
@@ -1214,7 +1587,10 @@ class _DetailRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 120.w,
-            child: Text(label, style: AppText.bodyMd.copyWith(color: AppColors.muted)),
+            child: Text(
+              label,
+              style: AppText.bodyMd.copyWith(color: AppColors.muted),
+            ),
           ),
           Expanded(
             child: Text(

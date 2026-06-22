@@ -46,9 +46,7 @@ class Step3Benefits extends ConsumerWidget {
             children: [
               Text(
                 '${state.benefits.length}',
-                style: AppText.heading3.copyWith(
-                  color: AppColors.primary,
-                ),
+                style: AppText.heading3.copyWith(color: AppColors.primary),
               ),
               Text(
                 ' benefits selected',
@@ -57,12 +55,13 @@ class Step3Benefits extends ConsumerWidget {
             ],
           ),
           SizedBox(height: 16.h),
-          
+
           UJobMultiChipGroup<String>(
             options: availableBenefits,
             selectedValues: state.benefits,
             labelBuilder: (val) => val,
-            onChanged: (values) => notifier.updateField(state.copyWith(benefits: values)),
+            onChanged: (values) =>
+                notifier.updateField(state.copyWith(benefits: values)),
           ),
           SizedBox(height: 60.h), // Padding for bottom action bar
         ],

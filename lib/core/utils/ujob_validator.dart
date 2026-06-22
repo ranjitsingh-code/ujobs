@@ -24,7 +24,9 @@ class UJobValidator {
     }
 
     if (isEmail) {
-      if (!RegExp(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?").hasMatch(val.toLowerCase())) {
+      if (!RegExp(
+        r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?",
+      ).hasMatch(val.toLowerCase())) {
         return l10n.errorInvalidEmail;
       }
     }
@@ -36,9 +38,12 @@ class UJobValidator {
     }
 
     if (isPhoneOrEmail) {
-      final isEmailMatch = RegExp(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?").hasMatch(val.toLowerCase());
-      final isPhoneMatch = RegExp(r"^[+]*(0|[1-9][0-9]*)$").hasMatch(val) && val.length >= 8;
-      
+      final isEmailMatch = RegExp(
+        r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?",
+      ).hasMatch(val.toLowerCase());
+      final isPhoneMatch =
+          RegExp(r"^[+]*(0|[1-9][0-9]*)$").hasMatch(val) && val.length >= 8;
+
       if (!isEmailMatch && !isPhoneMatch) {
         return l10n.errorInvalidPhoneOrEmail;
       }
@@ -46,7 +51,9 @@ class UJobValidator {
 
     if (isPassword) {
       // 6+ chars, 1 number, 1 uppercase, 1 lowercase, 1 special char
-      if (!RegExp(r"^(?=.*[0-9])(?=.*[!@#$%^&*()_+=,.<>/?;:'\x22\x5B\x5D\x7B\x7D\x7C\x5C\x2D\x7E])(?=.*[a-z])(?=.*[A-Z]).{6,}$").hasMatch(val)) {
+      if (!RegExp(
+        r"^(?=.*[0-9])(?=.*[!@#$%^&*()_+=,.<>/?;:'\x22\x5B\x5D\x7B\x7D\x7C\x5C\x2D\x7E])(?=.*[a-z])(?=.*[A-Z]).{6,}$",
+      ).hasMatch(val)) {
         return l10n.errorInvalidPassword;
       }
     }

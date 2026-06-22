@@ -21,15 +21,17 @@ class SeekerDashboardScreen extends ConsumerWidget {
     final dashboardAsync = ref.watch(seekerDashboardProvider);
     final l10n = context.l10n;
 
-    final String greeting = 'Good morning'; // Static for now, can be dynamic based on time
+    final String greeting =
+        'Good morning'; // Static for now, can be dynamic based on time
     final String name = auth.when(
       data: (u) => u != null ? u.firstName : 'Seeker',
       loading: () => '...',
       error: (_, _) => 'Seeker',
     );
-    
+
     final String initials = auth.when(
-      data: (u) => u != null ? '${u.firstName[0]}${u.lastName[0]}'.toUpperCase() : 'AJ',
+      data: (u) =>
+          u != null ? '${u.firstName[0]}${u.lastName[0]}'.toUpperCase() : 'AJ',
       loading: () => '..',
       error: (_, _) => 'AJ',
     );
@@ -60,9 +62,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: 16.h),
-                    
 
-                    
                     _SectionHeader(
                       title: 'Latest Jobs',
                       actionLabel: 'See all',
@@ -72,7 +72,8 @@ class SeekerDashboardScreen extends ConsumerWidget {
                     if (data.recommendedJobs.isEmpty)
                       const _EmptyState(
                         title: 'No recent jobs found',
-                        subtitle: 'Check back later or adjust your profile preferences.',
+                        subtitle:
+                            'Check back later or adjust your profile preferences.',
                         icon: HugeIcons.strokeRoundedSearchMinus,
                       )
                     else
@@ -170,11 +171,26 @@ class _DashboardHeader extends StatelessWidget {
                   SizedBox(height: 24.h),
                   Row(
                     children: [
-                      _StatCard(title: '${dashboard.applicationsCount}', subtitle: 'Applied', isSelected: false, onTap: () {}),
+                      _StatCard(
+                        title: '${dashboard.applicationsCount}',
+                        subtitle: 'Applied',
+                        isSelected: false,
+                        onTap: () {},
+                      ),
                       SizedBox(width: 12.w),
-                      _StatCard(title: '47', subtitle: 'Matches', isSelected: false, onTap: () {}),
+                      _StatCard(
+                        title: '47',
+                        subtitle: 'Matches',
+                        isSelected: false,
+                        onTap: () {},
+                      ),
                       SizedBox(width: 12.w),
-                      _StatCard(title: '12', subtitle: 'Saved', isSelected: false, onTap: () {}),
+                      _StatCard(
+                        title: '12',
+                        subtitle: 'Saved',
+                        isSelected: false,
+                        onTap: () {},
+                      ),
                     ],
                   ),
                   SizedBox(height: 24.h), // extra space for overlap
@@ -183,8 +199,7 @@ class _DashboardHeader extends StatelessWidget {
             ),
           ),
         ),
-        
-              ],
+      ],
     );
   }
 }
@@ -210,10 +225,14 @@ class _StatCard extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 16.h),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.surface : AppColors.surface.withValues(alpha: 0.15),
+            color: isSelected
+                ? AppColors.surface
+                : AppColors.surface.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
-              color: isSelected ? Colors.transparent : AppColors.surface.withValues(alpha: 0.2),
+              color: isSelected
+                  ? Colors.transparent
+                  : AppColors.surface.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -229,7 +248,9 @@ class _StatCard extends StatelessWidget {
               Text(
                 subtitle,
                 style: AppText.small.copyWith(
-                  color: isSelected ? AppColors.muted : AppColors.surface.withValues(alpha: 0.8),
+                  color: isSelected
+                      ? AppColors.muted
+                      : AppColors.surface.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -262,7 +283,10 @@ class _SectionHeader extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: AppText.heading2.copyWith(color: AppColors.text2)),
+            Text(
+              title,
+              style: AppText.heading2.copyWith(color: AppColors.text2),
+            ),
             if (subtitle != null) ...[
               SizedBox(height: 4.h),
               Row(
@@ -276,7 +300,10 @@ class _SectionHeader extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 6.w),
-                  Text(subtitle!, style: AppText.small.copyWith(color: AppColors.muted)),
+                  Text(
+                    subtitle!,
+                    style: AppText.small.copyWith(color: AppColors.muted),
+                  ),
                 ],
               ),
             ],
@@ -299,7 +326,7 @@ class _EmptyState extends StatelessWidget {
   final String title;
   final String subtitle;
   final dynamic icon;
-  
+
   const _EmptyState({
     required this.title,
     required this.subtitle,
@@ -320,11 +347,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          HugeIcon(
-            icon: icon,
-            color: AppColors.muted2,
-            size: 48.r,
-          ),
+          HugeIcon(icon: icon, color: AppColors.muted2, size: 48.r),
           SizedBox(height: 16.h),
           Text(
             title,

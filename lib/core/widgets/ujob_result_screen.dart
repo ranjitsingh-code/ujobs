@@ -29,27 +29,27 @@ class UJobResultScreen extends StatelessWidget {
 
   static List<List<dynamic>> _iconForType(ResultType t) => switch (t) {
     ResultType.success => HugeIcons.strokeRoundedCheckmarkCircle02,
-    ResultType.error   => HugeIcons.strokeRoundedCancelCircle,
+    ResultType.error => HugeIcons.strokeRoundedCancelCircle,
     ResultType.warning => HugeIcons.strokeRoundedAlert02,
   };
 
   static const _bgMap = {
     ResultType.success: AppColors.successBg,
-    ResultType.error:   AppColors.errorBg,
+    ResultType.error: AppColors.errorBg,
     ResultType.warning: AppColors.warningBg,
   };
 
   static const _fgMap = {
     ResultType.success: AppColors.success,
-    ResultType.error:   AppColors.error,
+    ResultType.error: AppColors.error,
     ResultType.warning: AppColors.warning,
   };
 
   @override
   Widget build(BuildContext context) {
-    final icon  = _iconForType(type);
-    final bg    = _bgMap[type]!;
-    final fg    = _fgMap[type]!;
+    final icon = _iconForType(type);
+    final bg = _bgMap[type]!;
+    final fg = _fgMap[type]!;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -88,11 +88,7 @@ class UJobResultScreen extends StatelessWidget {
               const Spacer(),
 
               if (buttonLabel != null)
-                UJobButton(
-                  label: buttonLabel!,
-                  onTap: onTap,
-                  color: fg,
-                ),
+                UJobButton(label: buttonLabel!, onTap: onTap, color: fg),
 
               if (secondaryLabel != null) ...[
                 SizedBox(height: 12.h),

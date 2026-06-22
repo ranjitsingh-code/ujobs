@@ -30,7 +30,9 @@ class UJobChipGroup<T> extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surface,
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.1)
+                  : AppColors.surface,
               borderRadius: BorderRadius.circular(20.r),
               border: Border.all(
                 color: isSelected ? AppColors.primary : AppColors.borderLight,

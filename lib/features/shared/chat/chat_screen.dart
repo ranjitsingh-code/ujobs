@@ -60,7 +60,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   String? _stagedFileType;
   String? _stagedFilePath;
   String? _stagedFileName;
-  
+
   late bool _isClosed;
 
   @override
@@ -69,8 +69,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _isClosed = widget.isClosed;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        ref.read(conversationsProvider.notifier).markAsRead(widget.conversationId);
-        ref.read(seekerConversationsProvider.notifier).markAsRead(widget.conversationId);
+        ref
+            .read(conversationsProvider.notifier)
+            .markAsRead(widget.conversationId);
+        ref
+            .read(seekerConversationsProvider.notifier)
+            .markAsRead(widget.conversationId);
       }
     });
   }
@@ -88,14 +92,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     setState(() => _sending = true);
     try {
       if (_stagedFilePath != null) {
-        ref.read(chatMessagesProvider(widget.conversationId).notifier).sendAttachment(
-          type: _stagedFileType!,
-          url: _stagedFilePath!,
-          name: _stagedFileName!,
-          body: text,
-        );
+        ref
+            .read(chatMessagesProvider(widget.conversationId).notifier)
+            .sendAttachment(
+              type: _stagedFileType!,
+              url: _stagedFilePath!,
+              name: _stagedFileName!,
+              body: text,
+            );
       } else {
-        ref.read(chatMessagesProvider(widget.conversationId).notifier).send(text);
+        ref
+            .read(chatMessagesProvider(widget.conversationId).notifier)
+            .send(text);
       }
       _msgCtrl.clear();
       setState(() {
@@ -135,7 +143,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 alignment: Alignment.centerRight,
                 child: IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.text, size: 24.r),
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    color: AppColors.text,
+                    size: 24.r,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -148,8 +160,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               SizedBox(height: 16.h),
               Text(widget.otherName, style: AppText.heading3),
               SizedBox(height: 4.h),
-              Text('Active now', style: AppText.body.copyWith(color: AppColors.success)),
-              
+              Text(
+                'Active now',
+                style: AppText.body.copyWith(color: AppColors.success),
+              ),
+
               SizedBox(height: 16.h),
               Container(
                 padding: EdgeInsets.all(16.r),
@@ -162,12 +177,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     if (widget.jobTitle != null) ...[
                       Row(
                         children: [
-                          HugeIcon(icon: HugeIcons.strokeRoundedBriefcase02, size: 16.r, color: AppColors.primary),
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedBriefcase02,
+                            size: 16.r,
+                            color: AppColors.primary,
+                          ),
                           SizedBox(width: 12.w),
                           Expanded(
                             child: Text(
                               'Applied for: ${widget.jobTitle}',
-                              style: AppText.bodyBold.copyWith(color: AppColors.primary),
+                              style: AppText.bodyBold.copyWith(
+                                color: AppColors.primary,
+                              ),
                             ),
                           ),
                         ],
@@ -176,26 +197,50 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ],
                     Row(
                       children: [
-                        HugeIcon(icon: HugeIcons.strokeRoundedMail01, size: 16.r, color: AppColors.muted),
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedMail01,
+                          size: 16.r,
+                          color: AppColors.muted,
+                        ),
                         SizedBox(width: 12.w),
-                        Expanded(child: Text('${widget.otherName.toLowerCase().replaceAll(' ', '.')}@example.com', style: AppText.body)),
+                        Expanded(
+                          child: Text(
+                            '${widget.otherName.toLowerCase().replaceAll(' ', '.')}@example.com',
+                            style: AppText.body,
+                          ),
+                        ),
                       ],
                     ),
                     SizedBox(height: 12.h),
                     Row(
                       children: [
-                        HugeIcon(icon: HugeIcons.strokeRoundedCall02, size: 16.r, color: AppColors.muted),
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedCall02,
+                          size: 16.r,
+                          color: AppColors.muted,
+                        ),
                         SizedBox(width: 12.w),
-                        Expanded(child: Text('+1 (555) 019-2834', style: AppText.body)),
+                        Expanded(
+                          child: Text('+1 (555) 019-2834', style: AppText.body),
+                        ),
                       ],
                     ),
                     if (widget.otherLocation != null) ...[
                       SizedBox(height: 12.h),
                       Row(
                         children: [
-                          HugeIcon(icon: HugeIcons.strokeRoundedLocation01, size: 16.r, color: AppColors.muted),
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedLocation01,
+                            size: 16.r,
+                            color: AppColors.muted,
+                          ),
                           SizedBox(width: 12.w),
-                          Expanded(child: Text(widget.otherLocation!, style: AppText.body)),
+                          Expanded(
+                            child: Text(
+                              widget.otherLocation!,
+                              style: AppText.body,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -203,12 +248,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       SizedBox(height: 12.h),
                       Row(
                         children: [
-                          HugeIcon(icon: HugeIcons.strokeRoundedInformationCircle, size: 16.r, color: AppColors.muted),
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedInformationCircle,
+                            size: 16.r,
+                            color: AppColors.muted,
+                          ),
                           SizedBox(width: 12.w),
                           Expanded(
                             child: Text(
                               'Status: ${widget.applicationStatus}',
-                              style: AppText.body.copyWith(color: AppColors.primary),
+                              style: AppText.body.copyWith(
+                                color: AppColors.primary,
+                              ),
                             ),
                           ),
                         ],
@@ -222,16 +273,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               if (!_isClosed)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: HugeIcon(icon: HugeIcons.strokeRoundedLockPassword, color: AppColors.text, size: 24.r),
+                  leading: HugeIcon(
+                    icon: HugeIcons.strokeRoundedLockPassword,
+                    color: AppColors.text,
+                    size: 24.r,
+                  ),
                   title: Text('Close Chat', style: AppText.bodyBold),
                   onTap: () {
                     Navigator.pop(context); // Close bottom sheet
                     showDialog(
                       context: context,
                       builder: (context) => UJobAlertDialog(
-                        icon: HugeIcon(icon: HugeIcons.strokeRoundedLockPassword, color: AppColors.error, size: 28.r),
+                        icon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedLockPassword,
+                          color: AppColors.error,
+                          size: 28.r,
+                        ),
                         title: 'Close Chat',
-                        description: 'Are you sure you want to close this chat? You will not be able to send or receive messages until you reopen it.',
+                        description:
+                            'Are you sure you want to close this chat? You will not be able to send or receive messages until you reopen it.',
                         confirmText: 'Close Chat',
                         onConfirm: () {
                           setState(() {
@@ -245,16 +305,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.error, size: 24.r),
-                title: Text('Block User', style: AppText.bodyBold.copyWith(color: AppColors.error)),
+                leading: HugeIcon(
+                  icon: HugeIcons.strokeRoundedCancel01,
+                  color: AppColors.error,
+                  size: 24.r,
+                ),
+                title: Text(
+                  'Block User',
+                  style: AppText.bodyBold.copyWith(color: AppColors.error),
+                ),
                 onTap: () {
                   Navigator.pop(context); // Close bottom sheet
                   showDialog(
                     context: context,
                     builder: (context) => UJobAlertDialog(
-                      icon: HugeIcon(icon: HugeIcons.strokeRoundedUserBlock01, color: AppColors.error, size: 28.r),
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedUserBlock01,
+                        color: AppColors.error,
+                        size: 28.r,
+                      ),
                       title: 'Block User',
-                      description: 'Are you sure you want to block this user? They will no longer be able to message you or apply to your jobs.',
+                      description:
+                          'Are you sure you want to block this user? They will no longer be able to message you or apply to your jobs.',
                       confirmText: 'Block User',
                       onConfirm: () {
                         // Implement block user logic here
@@ -286,7 +358,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => ApplicantDetailScreen(applicantId: widget.otherId),
+                  builder: (_) =>
+                      ApplicantDetailScreen(applicantId: widget.otherId),
                 ),
               );
             } else {
@@ -295,56 +368,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           },
           borderRadius: BorderRadius.circular(8.r),
           child: Row(
-              children: [
-                SizedBox(width: 8.w),
-                Stack(
-                  children: [
-                    UJobAvatar(
-                      imageUrl: widget.otherAvatar,
-                      initials: widget.otherInitials ?? widget.otherName[0],
-                      size: 36.r,
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 10.r,
-                        height: 10.r,
-                        decoration: BoxDecoration(
-                          color: AppColors.success,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.surface,
-                            width: 1.5.r,
-                          ),
+            children: [
+              SizedBox(width: 8.w),
+              Stack(
+                children: [
+                  UJobAvatar(
+                    imageUrl: widget.otherAvatar,
+                    initials: widget.otherInitials ?? widget.otherName[0],
+                    size: 36.r,
+                  ),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 10.r,
+                      height: 10.r,
+                      decoration: BoxDecoration(
+                        color: AppColors.success,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.surface,
+                          width: 1.5.r,
                         ),
                       ),
                     ),
+                  ),
+                ],
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.otherName,
+                      style: AppText.titleSm,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      l10n.activeNow,
+                      style: AppText.caption.copyWith(color: AppColors.muted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        widget.otherName,
-                        style: AppText.titleSm,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        l10n.activeNow,
-                        style: AppText.caption.copyWith(color: AppColors.muted),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
+          ),
         ),
         rightWidget: IconButton(
           icon: HugeIcon(
@@ -488,9 +561,9 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMine = message.isMine;
     final time = DateFormat('HH:mm').format(message.sentAt);
-    
+
     Widget contentWidget;
-    
+
     if (message.attachmentType == 'image' && message.attachmentUrl != null) {
       final isNetwork = message.attachmentUrl!.startsWith('http');
       contentWidget = Column(
@@ -512,7 +585,8 @@ class _MessageBubble extends StatelessWidget {
                               ? CachedNetworkImage(
                                   imageUrl: message.attachmentUrl!,
                                   fit: BoxFit.contain,
-                                  placeholder: (context, url) => const CircularProgressIndicator(),
+                                  placeholder: (context, url) =>
+                                      const CircularProgressIndicator(),
                                 )
                               : Image.file(
                                   File(message.attachmentUrl!),
@@ -546,35 +620,43 @@ class _MessageBubble extends StatelessWidget {
             },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.r),
-              child: isNetwork 
-                ? CachedNetworkImage(
-                    imageUrl: message.attachmentUrl!,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
+              child: isNetwork
+                  ? CachedNetworkImage(
+                      imageUrl: message.attachmentUrl!,
                       width: double.infinity,
-                      height: 200.h,
-                      color: AppColors.borderLight,
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                    errorWidget: (context, url, error) => Container(
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        width: double.infinity,
+                        height: 200.h,
+                        color: AppColors.borderLight,
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        width: double.infinity,
+                        height: 200.h,
+                        color: AppColors.borderLight,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedAlert01,
+                          color: AppColors.error,
+                          size: 24.r,
+                        ),
+                      ),
+                    )
+                  : Image.file(
+                      File(message.attachmentUrl!),
                       width: double.infinity,
-                      height: 200.h,
-                      color: AppColors.borderLight,
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedAlert01, color: AppColors.error, size: 24.r),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: double.infinity,
+                        height: 200.h,
+                        color: AppColors.borderLight,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedAlert01,
+                          color: AppColors.error,
+                          size: 24.r,
+                        ),
+                      ),
                     ),
-                  )
-                : Image.file(
-                    File(message.attachmentUrl!),
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: double.infinity,
-                      height: 200.h,
-                      color: AppColors.borderLight,
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedAlert01, color: AppColors.error, size: 24.r),
-                    ),
-                  ),
             ),
           ),
           if (message.body.isNotEmpty) ...[
@@ -586,10 +668,11 @@ class _MessageBubble extends StatelessWidget {
                 height: 1.4,
               ),
             ),
-          ]
+          ],
         ],
       );
-    } else if (message.attachmentType == 'pdf' && message.attachmentUrl != null) {
+    } else if (message.attachmentType == 'pdf' &&
+        message.attachmentUrl != null) {
       final isNetwork = message.attachmentUrl!.startsWith('http');
       contentWidget = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,7 +681,9 @@ class _MessageBubble extends StatelessWidget {
             width: double.infinity,
             padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
-              color: isMine ? AppColors.white.withValues(alpha: 0.2) : AppColors.bg,
+              color: isMine
+                  ? AppColors.white.withValues(alpha: 0.2)
+                  : AppColors.bg,
               borderRadius: BorderRadius.circular(12.r),
               border: isMine ? null : Border.all(color: AppColors.borderLight),
             ),
@@ -636,7 +721,9 @@ class _MessageBubble extends StatelessWidget {
                           Text(
                             'PDF Document',
                             style: AppText.small.copyWith(
-                              color: isMine ? AppColors.white.withValues(alpha: 0.8) : AppColors.muted2,
+                              color: isMine
+                                  ? AppColors.white.withValues(alpha: 0.8)
+                                  : AppColors.muted2,
                             ),
                           ),
                         ],
@@ -655,30 +742,46 @@ class _MessageBubble extends StatelessWidget {
                         useSafeArea: true,
                         backgroundColor: AppColors.bg,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(24.r),
+                          ),
                         ),
                         builder: (context) => ClipRRect(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(24.r),
+                          ),
                           child: Column(
                             children: [
                               Container(
-                                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w,
+                                  vertical: 12.h,
+                                ),
                                 decoration: const BoxDecoration(
                                   color: AppColors.surface,
-                                  border: Border(bottom: BorderSide(color: AppColors.borderLight)),
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: AppColors.borderLight,
+                                    ),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        message.attachmentName ?? 'Document Preview',
+                                        message.attachmentName ??
+                                            'Document Preview',
                                         style: AppText.heading3,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     IconButton(
-                                      icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 24.r, color: AppColors.text),
+                                      icon: HugeIcon(
+                                        icon: HugeIcons.strokeRoundedCancel01,
+                                        size: 24.r,
+                                        color: AppColors.text,
+                                      ),
                                       onPressed: () => Navigator.pop(context),
                                     ),
                                   ],
@@ -697,17 +800,34 @@ class _MessageBubble extends StatelessWidget {
                     },
                     borderRadius: BorderRadius.circular(100.r),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 6.h,
+                      ),
                       decoration: BoxDecoration(
-                        color: isMine ? AppColors.white.withValues(alpha: 0.15) : AppColors.primary.withValues(alpha: 0.1),
+                        color: isMine
+                            ? AppColors.white.withValues(alpha: 0.15)
+                            : AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(100.r),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          HugeIcon(icon: HugeIcons.strokeRoundedEye, size: 14.r, color: isMine ? AppColors.white : AppColors.primary),
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedEye,
+                            size: 14.r,
+                            color: isMine ? AppColors.white : AppColors.primary,
+                          ),
                           SizedBox(width: 4.w),
-                          Text('Preview', style: AppText.small.copyWith(color: isMine ? AppColors.white : AppColors.primary, fontWeight: FontWeight.bold)),
+                          Text(
+                            'Preview',
+                            style: AppText.small.copyWith(
+                              color: isMine
+                                  ? AppColors.white
+                                  : AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -725,7 +845,7 @@ class _MessageBubble extends StatelessWidget {
                 height: 1.4,
               ),
             ),
-          ]
+          ],
         ],
       );
     } else {
@@ -944,7 +1064,11 @@ class _InputBar extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.muted, size: 20.r),
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
+                        color: AppColors.muted,
+                        size: 20.r,
+                      ),
                       onPressed: onRemoveStagedFile,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -994,7 +1118,10 @@ class _InputBar extends StatelessWidget {
                     height: 42.r,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppColors.primaryDark, AppColors.primaryAccent],
+                        colors: [
+                          AppColors.primaryDark,
+                          AppColors.primaryAccent,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),

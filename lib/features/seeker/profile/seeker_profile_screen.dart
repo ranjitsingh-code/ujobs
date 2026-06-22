@@ -26,7 +26,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   final _lastNameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   bool _showNumber = false;
-  
+
   // Location
   final _countryCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
@@ -91,14 +91,20 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
               Container(
                 padding: EdgeInsets.fromLTRB(24.w, 20.h, 16.w, 16.h),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: AppColors.borderLight)),
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.borderLight),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(title, style: AppText.heading2),
                     IconButton(
-                      icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.muted, size: 24.r),
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
+                        color: AppColors.muted,
+                        size: 24.r,
+                      ),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
@@ -123,17 +129,36 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
           children: [
             Row(
               children: [
-                Expanded(child: UJobTextField(label: 'First Name', hint: 'John', controller: _firstNameCtrl)),
+                Expanded(
+                  child: UJobTextField(
+                    label: 'First Name',
+                    hint: 'John',
+                    controller: _firstNameCtrl,
+                  ),
+                ),
                 SizedBox(width: 12.w),
-                Expanded(child: UJobTextField(label: 'Last Name', hint: 'Doe', controller: _lastNameCtrl)),
+                Expanded(
+                  child: UJobTextField(
+                    label: 'Last Name',
+                    hint: 'Doe',
+                    controller: _lastNameCtrl,
+                  ),
+                ),
               ],
             ),
             SizedBox(height: 16.h),
-            UJobTextField(label: 'Phone Number', hint: '+1 234 567 890', controller: _phoneCtrl, keyboardType: TextInputType.phone),
+            UJobTextField(
+              label: 'Phone Number',
+              hint: '+1 234 567 890',
+              controller: _phoneCtrl,
+              keyboardType: TextInputType.phone,
+            ),
             _CheckboxTile(
               label: 'Show my number to employers',
               value: _showNumber,
-              onChanged: (v) { if (v != null) setState(() => _showNumber = v); },
+              onChanged: (v) {
+                if (v != null) setState(() => _showNumber = v);
+              },
             ),
             SizedBox(height: 32.h),
             UJobButton(
@@ -161,23 +186,49 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
           children: [
             Row(
               children: [
-                Expanded(child: UJobTextField(label: 'Country', hint: 'United States', controller: _countryCtrl)),
+                Expanded(
+                  child: UJobTextField(
+                    label: 'Country',
+                    hint: 'United States',
+                    controller: _countryCtrl,
+                  ),
+                ),
                 SizedBox(width: 12.w),
-                Expanded(child: UJobTextField(label: 'City', hint: 'San Francisco', controller: _cityCtrl)),
+                Expanded(
+                  child: UJobTextField(
+                    label: 'City',
+                    hint: 'San Francisco',
+                    controller: _cityCtrl,
+                  ),
+                ),
               ],
             ),
             SizedBox(height: 16.h),
             Row(
               children: [
-                Expanded(child: UJobTextField(label: 'Address', hint: '123 Tech Lane', controller: _addressCtrl)),
+                Expanded(
+                  child: UJobTextField(
+                    label: 'Address',
+                    hint: '123 Tech Lane',
+                    controller: _addressCtrl,
+                  ),
+                ),
                 SizedBox(width: 12.w),
-                Expanded(child: UJobTextField(label: 'Zip/Post Code', hint: '94105', controller: _zipCtrl)),
+                Expanded(
+                  child: UJobTextField(
+                    label: 'Zip/Post Code',
+                    hint: '94105',
+                    controller: _zipCtrl,
+                  ),
+                ),
               ],
             ),
             _CheckboxTile(
               label: "Yes, I'm willing to relocate",
               value: _willingToRelocate,
-              onChanged: (v) { if (v != null) setState(() => _willingToRelocate = v); },
+              onChanged: (v) {
+                if (v != null) setState(() => _willingToRelocate = v);
+              },
             ),
             SizedBox(height: 32.h),
             UJobButton(
@@ -203,9 +254,16 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            UJobTextField(label: 'Professional Headline', hint: 'e.g. Senior Flutter Developer', controller: _headlineCtrl),
+            UJobTextField(
+              label: 'Professional Headline',
+              hint: 'e.g. Senior Flutter Developer',
+              controller: _headlineCtrl,
+            ),
             SizedBox(height: 16.h),
-            Text('About / Summary', style: AppText.bodyBold.copyWith(color: AppColors.text)),
+            Text(
+              'About / Summary',
+              style: AppText.bodyBold.copyWith(color: AppColors.text),
+            ),
             SizedBox(height: 8.h),
             UJobRichTextField(
               label: 'About',
@@ -214,7 +272,11 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
               onSave: (v) => setState(() => _about = v),
             ),
             SizedBox(height: 16.h),
-            UJobTextField(label: 'Skills', hint: 'Type and press enter...', controller: _skillsCtrl),
+            UJobTextField(
+              label: 'Skills',
+              hint: 'Type and press enter...',
+              controller: _skillsCtrl,
+            ),
             SizedBox(height: 16.h),
             Row(
               children: [
@@ -223,8 +285,10 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                     label: 'Experience (Years)',
                     value: _expYears ?? '0',
                     items: List.generate(10, (i) => i.toString()),
-                    onChanged: (v) { if (v != null) setState(() => _expYears = v); },
-                    ),
+                    onChanged: (v) {
+                      if (v != null) setState(() => _expYears = v);
+                    },
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
@@ -232,8 +296,10 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                     label: 'Months',
                     value: _expMonths ?? '0',
                     items: List.generate(11, (i) => i.toString()),
-                    onChanged: (v) { if (v != null) setState(() => _expMonths = v); },
-                    ),
+                    onChanged: (v) {
+                      if (v != null) setState(() => _expMonths = v);
+                    },
+                  ),
                 ),
               ],
             ),
@@ -244,9 +310,16 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                   child: UJobDropdown(
                     label: 'Expected Salary',
                     value: _expectedSalary ?? '\$30k-\$50k',
-                    items: const ['\$30k-\$50k', '\$50k-\$80k', '\$80k-\$120k', '\$120k+'],
-                    onChanged: (v) { if (v != null) setState(() => _expectedSalary = v); },
-                    ),
+                    items: const [
+                      '\$30k-\$50k',
+                      '\$50k-\$80k',
+                      '\$80k-\$120k',
+                      '\$120k+',
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _expectedSalary = v);
+                    },
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
@@ -254,8 +327,10 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                     label: 'Currency',
                     value: _currency ?? 'USD',
                     items: const ['USD', 'EUR', 'GBP'],
-                    onChanged: (v) { if (v != null) setState(() => _currency = v); },
-                    ),
+                    onChanged: (v) {
+                      if (v != null) setState(() => _currency = v);
+                    },
+                  ),
                 ),
               ],
             ),
@@ -263,16 +338,30 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
             UJobDropdown(
               label: 'Availability',
               value: _availability ?? 'Immediately',
-              items: const ['Immediately', '1 Week', '2 Weeks', '1 Month', 'More than 1 Month'],
-              onChanged: (v) { if (v != null) setState(() => _availability = v); },
-              ),
+              items: const [
+                'Immediately',
+                '1 Week',
+                '2 Weeks',
+                '1 Month',
+                'More than 1 Month',
+              ],
+              onChanged: (v) {
+                if (v != null) setState(() => _availability = v);
+              },
+            ),
             SizedBox(height: 16.h),
             UJobDropdown(
               label: 'Profile Visibility',
               value: _profileVisibility ?? 'Public',
-              items: const ['Public', 'Private', 'Only to Employers I Apply To'],
-              onChanged: (v) { if (v != null) setState(() => _profileVisibility = v); },
-              ),
+              items: const [
+                'Public',
+                'Private',
+                'Only to Employers I Apply To',
+              ],
+              onChanged: (v) {
+                if (v != null) setState(() => _profileVisibility = v);
+              },
+            ),
             SizedBox(height: 32.h),
             UJobButton(
               label: 'Save Changes',
@@ -303,15 +392,25 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
               decoration: BoxDecoration(
                 color: AppColors.background,
                 borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: AppColors.borderLight, style: BorderStyle.solid),
+                border: Border.all(
+                  color: AppColors.borderLight,
+                  style: BorderStyle.solid,
+                ),
               ),
               child: Column(
                 children: [
-                  HugeIcon(icon: HugeIcons.strokeRoundedCloudUpload, color: AppColors.seekPrimary, size: 40.r),
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedCloudUpload,
+                    color: AppColors.seekPrimary,
+                    size: 40.r,
+                  ),
                   SizedBox(height: 12.h),
                   Text('Upload your latest resume', style: AppText.bodyBold),
                   SizedBox(height: 4.h),
-                  Text('PDF, DOC, DOCX (Max 5MB)', style: AppText.small.copyWith(color: AppColors.muted)),
+                  Text(
+                    'PDF, DOC, DOCX (Max 5MB)',
+                    style: AppText.small.copyWith(color: AppColors.muted),
+                  ),
                   SizedBox(height: 16.h),
                   UJobButton(
                     label: 'Browse File',
@@ -360,43 +459,91 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                 children: [
                   _SectionCard(
                     title: 'Personal Information',
-                    subtitle: [fullName, _phoneCtrl.text].where((e) => e.isNotEmpty).join(' · '),
+                    subtitle: [
+                      fullName,
+                      _phoneCtrl.text,
+                    ].where((e) => e.isNotEmpty).join(' · '),
                     icon: HugeIcons.strokeRoundedUser,
                     onEdit: _showEditPersonalInfo,
                     child: Column(
                       children: [
-                        _DetailRow(label: 'First Name', value: _firstNameCtrl.text),
-                        _DetailRow(label: 'Last Name', value: _lastNameCtrl.text),
+                        _DetailRow(
+                          label: 'First Name',
+                          value: _firstNameCtrl.text,
+                        ),
+                        _DetailRow(
+                          label: 'Last Name',
+                          value: _lastNameCtrl.text,
+                        ),
                         _DetailRow(label: 'Phone', value: _phoneCtrl.text),
-                        _DetailRow(label: 'Phone Visibility', value: _showNumber ? 'Visible to employers' : 'Hidden'),
+                        _DetailRow(
+                          label: 'Phone Visibility',
+                          value: _showNumber
+                              ? 'Visible to employers'
+                              : 'Hidden',
+                        ),
                       ],
                     ),
                   ),
                   SizedBox(height: 16.h),
                   _SectionCard(
                     title: 'Professional Info',
-                    subtitle: [_headlineCtrl.text, _expYears != null ? '$_expYears years exp' : null].whereType<String>().where((e) => e.isNotEmpty).join(' · '),
+                    subtitle:
+                        [
+                              _headlineCtrl.text,
+                              _expYears != null ? '$_expYears years exp' : null,
+                            ]
+                            .whereType<String>()
+                            .where((e) => e.isNotEmpty)
+                            .join(' · '),
                     icon: HugeIcons.strokeRoundedBriefcase01,
                     onEdit: _showEditProfessionalInfo,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _DetailRow(label: 'Headline', value: _headlineCtrl.text),
+                        _DetailRow(
+                          label: 'Headline',
+                          value: _headlineCtrl.text,
+                        ),
                         _DetailRow(label: 'Skills', value: _skillsCtrl.text),
-                        _DetailRow(label: 'Experience', value: (_expYears != null && _expMonths != null) ? '$_expYears yrs $_expMonths mos' : null),
-                        _DetailRow(label: 'Expected Salary', value: (_expectedSalary != null && _currency != null) ? '$_expectedSalary $_currency' : null),
+                        _DetailRow(
+                          label: 'Experience',
+                          value: (_expYears != null && _expMonths != null)
+                              ? '$_expYears yrs $_expMonths mos'
+                              : null,
+                        ),
+                        _DetailRow(
+                          label: 'Expected Salary',
+                          value: (_expectedSalary != null && _currency != null)
+                              ? '$_expectedSalary $_currency'
+                              : null,
+                        ),
                         _DetailRow(label: 'Availability', value: _availability),
-                        _DetailRow(label: 'Visibility', value: _profileVisibility),
+                        _DetailRow(
+                          label: 'Visibility',
+                          value: _profileVisibility,
+                        ),
                         SizedBox(height: 8.h),
-                        Text('About Me', style: AppText.bodyMd.copyWith(color: AppColors.muted)),
+                        Text(
+                          'About Me',
+                          style: AppText.bodyMd.copyWith(
+                            color: AppColors.muted,
+                          ),
+                        ),
                         SizedBox(height: 4.h),
                         Text(
-                          _about.isNotEmpty ? getPlainTextFromQuillJson(_about) : 'Not set',
+                          _about.isNotEmpty
+                              ? getPlainTextFromQuillJson(_about)
+                              : 'Not set',
                           maxLines: 4,
                           overflow: TextOverflow.ellipsis,
                           style: AppText.bodyMd.copyWith(
-                            color: _about.isNotEmpty ? AppColors.text2 : AppColors.muted2,
-                            fontStyle: _about.isNotEmpty ? FontStyle.normal : FontStyle.italic,
+                            color: _about.isNotEmpty
+                                ? AppColors.text2
+                                : AppColors.muted2,
+                            fontStyle: _about.isNotEmpty
+                                ? FontStyle.normal
+                                : FontStyle.italic,
                           ),
                         ),
                       ],
@@ -405,7 +552,10 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                   SizedBox(height: 16.h),
                   _SectionCard(
                     title: 'Location & Relocation',
-                    subtitle: [_cityCtrl.text, _countryCtrl.text].where((e) => e.isNotEmpty).join(' · '),
+                    subtitle: [
+                      _cityCtrl.text,
+                      _countryCtrl.text,
+                    ].where((e) => e.isNotEmpty).join(' · '),
                     icon: HugeIcons.strokeRoundedLocation01,
                     onEdit: _showEditLocation,
                     child: Column(
@@ -413,8 +563,16 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                         _DetailRow(label: 'Country', value: _countryCtrl.text),
                         _DetailRow(label: 'City', value: _cityCtrl.text),
                         _DetailRow(label: 'Address', value: _addressCtrl.text),
-                        _DetailRow(label: 'Zip/Post Code', value: _zipCtrl.text),
-                        _DetailRow(label: 'Relocation', value: _willingToRelocate ? 'Willing to relocate' : 'Not willing to relocate'),
+                        _DetailRow(
+                          label: 'Zip/Post Code',
+                          value: _zipCtrl.text,
+                        ),
+                        _DetailRow(
+                          label: 'Relocation',
+                          value: _willingToRelocate
+                              ? 'Willing to relocate'
+                              : 'Not willing to relocate',
+                        ),
                       ],
                     ),
                   ),
@@ -426,7 +584,10 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                     onEdit: _showEditResume,
                     child: Column(
                       children: [
-                        _DetailRow(label: 'Current Resume', value: 'Resume.pdf (2.4 MB)'),
+                        _DetailRow(
+                          label: 'Current Resume',
+                          value: 'Resume.pdf (2.4 MB)',
+                        ),
                       ],
                     ),
                   ),
@@ -467,13 +628,15 @@ class _SeekerProfileHeader extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.seekPrimary,
-            AppColors.seekSecondary,
-          ],
+          colors: [AppColors.seekPrimary, AppColors.seekSecondary],
         ),
       ),
-      padding: EdgeInsets.fromLTRB(20.w, MediaQuery.of(context).padding.top + 24.h, 20.w, 32.h),
+      padding: EdgeInsets.fromLTRB(
+        20.w,
+        MediaQuery.of(context).padding.top + 24.h,
+        20.w,
+        32.h,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -495,7 +658,9 @@ class _SeekerProfileHeader extends StatelessWidget {
                     child: Center(
                       child: Text(
                         name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                        style: AppText.heading1.copyWith(color: AppColors.seekPrimary),
+                        style: AppText.heading1.copyWith(
+                          color: AppColors.seekPrimary,
+                        ),
                       ),
                     ),
                   ),
@@ -512,7 +677,11 @@ class _SeekerProfileHeader extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Center(
-                          child: HugeIcon(icon: HugeIcons.strokeRoundedCamera01, size: 14.r, color: AppColors.seekPrimary),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedCamera01,
+                            size: 14.r,
+                            color: AppColors.seekPrimary,
+                          ),
                         ),
                       ),
                     ),
@@ -531,7 +700,9 @@ class _SeekerProfileHeader extends StatelessWidget {
                         Flexible(
                           child: Text(
                             name,
-                            style: AppText.heading2.copyWith(color: AppColors.white),
+                            style: AppText.heading2.copyWith(
+                              color: AppColors.white,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -549,14 +720,18 @@ class _SeekerProfileHeader extends StatelessWidget {
                     SizedBox(height: 4.h),
                     Text(
                       headline.isNotEmpty ? headline : 'Add a headline',
-                      style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
+                      style: AppText.caption.copyWith(
+                        color: AppColors.white.withValues(alpha: 0.8),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 2.h),
                     Text(
                       email,
-                      style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
+                      style: AppText.caption.copyWith(
+                        color: AppColors.white.withValues(alpha: 0.8),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -586,7 +761,9 @@ class _SeekerProfileHeader extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surface.withValues(alpha: 0.15),
               borderRadius: AppRadius.lg,
-              border: Border.all(color: AppColors.surface.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: AppColors.surface.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -618,7 +795,9 @@ class _SeekerProfileHeader extends StatelessWidget {
                   SizedBox(height: 12.h),
                   Text(
                     'Complete your profile to stand out to employers',
-                    style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
+                    style: AppText.caption.copyWith(
+                      color: AppColors.white.withValues(alpha: 0.8),
+                    ),
                   ),
                 ],
               ],
@@ -661,7 +840,9 @@ class _SectionCardState extends State<_SectionCard> {
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: AppColors.seekPrimary.withValues(alpha: _isExpanded ? 0.08 : 0.02),
+            color: AppColors.seekPrimary.withValues(
+              alpha: _isExpanded ? 0.08 : 0.02,
+            ),
             blurRadius: _isExpanded ? 24 : 10,
             offset: Offset(0, _isExpanded ? 8 : 4),
           ),
@@ -676,11 +857,18 @@ class _SectionCardState extends State<_SectionCard> {
                 _isExpanded = !_isExpanded;
               });
             },
-            borderRadius: _isExpanded 
-                ? BorderRadius.vertical(top: Radius.circular(AppRadius.xl.topLeft.x))
+            borderRadius: _isExpanded
+                ? BorderRadius.vertical(
+                    top: Radius.circular(AppRadius.xl.topLeft.x),
+                  )
                 : AppRadius.xl,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(20.r, 20.r, 20.r, _isExpanded ? 0 : 20.r),
+              padding: EdgeInsets.fromLTRB(
+                20.r,
+                20.r,
+                20.r,
+                _isExpanded ? 0 : 20.r,
+              ),
               child: Row(
                 children: [
                   Container(
@@ -689,7 +877,11 @@ class _SectionCardState extends State<_SectionCard> {
                       color: AppColors.seekPrimary.withValues(alpha: 0.1),
                       borderRadius: AppRadius.md,
                     ),
-                    child: HugeIcon(icon: widget.icon, color: AppColors.seekPrimary, size: 20.r),
+                    child: HugeIcon(
+                      icon: widget.icon,
+                      color: AppColors.seekPrimary,
+                      size: 20.r,
+                    ),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
@@ -697,12 +889,21 @@ class _SectionCardState extends State<_SectionCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(widget.title, style: AppText.bodyBold.copyWith(color: AppColors.text2)),
-                        if (!_isExpanded && widget.subtitle != null && widget.subtitle!.isNotEmpty) ...[
+                        Text(
+                          widget.title,
+                          style: AppText.bodyBold.copyWith(
+                            color: AppColors.text2,
+                          ),
+                        ),
+                        if (!_isExpanded &&
+                            widget.subtitle != null &&
+                            widget.subtitle!.isNotEmpty) ...[
                           SizedBox(height: 2.h),
                           Text(
                             widget.subtitle!,
-                            style: AppText.caption.copyWith(color: AppColors.muted),
+                            style: AppText.caption.copyWith(
+                              color: AppColors.muted,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -710,7 +911,10 @@ class _SectionCardState extends State<_SectionCard> {
                           SizedBox(height: 2.h),
                           Text(
                             'Not set',
-                            style: AppText.caption.copyWith(color: AppColors.muted2, fontStyle: FontStyle.italic),
+                            style: AppText.caption.copyWith(
+                              color: AppColors.muted2,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ],
                       ],
@@ -718,10 +922,23 @@ class _SectionCardState extends State<_SectionCard> {
                   ),
                   TextButton.icon(
                     onPressed: widget.onEdit,
-                    icon: HugeIcon(icon: HugeIcons.strokeRoundedEdit02, color: AppColors.seekPrimary, size: 14.r),
-                    label: Text('Edit', style: AppText.caption.copyWith(color: AppColors.seekPrimary, fontWeight: FontWeight.w600)),
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedEdit02,
+                      color: AppColors.seekPrimary,
+                      size: 14.r,
+                    ),
+                    label: Text(
+                      'Edit',
+                      style: AppText.caption.copyWith(
+                        color: AppColors.seekPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 4.h,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -746,7 +963,9 @@ class _SectionCardState extends State<_SectionCard> {
               padding: EdgeInsets.fromLTRB(20.r, 0, 20.r, 20.r),
               child: widget.child,
             ),
-            crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: _isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 300),
           ),
         ],
@@ -771,7 +990,10 @@ class _DetailRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 120.w,
-            child: Text(label, style: AppText.bodyMd.copyWith(color: AppColors.muted)),
+            child: Text(
+              label,
+              style: AppText.bodyMd.copyWith(color: AppColors.muted),
+            ),
           ),
           Expanded(
             child: Text(
@@ -814,12 +1036,17 @@ class _CheckboxTile extends StatelessWidget {
                 if (v != null) onChanged(v);
               },
               activeColor: AppColors.seekPrimary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4.r),
+              ),
             ),
           ),
           SizedBox(width: 12.w),
           Expanded(
-            child: Text(label, style: AppText.body.copyWith(color: AppColors.text)),
+            child: Text(
+              label,
+              style: AppText.body.copyWith(color: AppColors.text),
+            ),
           ),
         ],
       ),

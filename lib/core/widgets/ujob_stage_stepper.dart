@@ -18,14 +18,18 @@ class UJobStageStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int currentIndex = _stages.indexWhere((s) => s.toLowerCase() == currentStage.toLowerCase());
-    
+    int currentIndex = _stages.indexWhere(
+      (s) => s.toLowerCase() == currentStage.toLowerCase(),
+    );
+
     // Fallbacks
-    if (currentStage.toLowerCase() == 'hired') currentIndex = _stages.length; // all completed
+    if (currentStage.toLowerCase() == 'hired')
+      currentIndex = _stages.length; // all completed
     // If rejected, we don't advance the index, so it stays where it was, but we need to know the 'previous' stage.
     // For simplicity, let's assume if rejected, it just marks the last active stage as rejected.
     // However, the model doesn't store the "rejected at" stage. If it's -1, we'll just put it at 0.
-    if (currentIndex == -1 && currentStage.toLowerCase() == 'rejected') currentIndex = 0;
+    if (currentIndex == -1 && currentStage.toLowerCase() == 'rejected')
+      currentIndex = 0;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -64,7 +68,8 @@ class UJobStageStepper extends StatelessWidget {
                 }
 
                 return SizedBox(
-                  width: 76.w, // Fixed width to keep alignment symmetrical and allow text wrapping
+                  width: 76
+                      .w, // Fixed width to keep alignment symmetrical and allow text wrapping
                   child: Column(
                     children: [
                       Container(
@@ -74,22 +79,33 @@ class UJobStageStepper extends StatelessWidget {
                           color: circleColor,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: (isCompleted || isCurrent) ? circleColor : AppColors.borderLight,
+                            color: (isCompleted || isCurrent)
+                                ? circleColor
+                                : AppColors.borderLight,
                             width: 2,
                           ),
                         ),
                         child: Center(
                           child: isCompleted
-                              ? HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, color: contentColor, size: 16.r)
+                              ? HugeIcon(
+                                  icon:
+                                      HugeIcons.strokeRoundedCheckmarkCircle02,
+                                  color: contentColor,
+                                  size: 16.r,
+                                )
                               : isRejected && isCurrent
-                                  ? HugeIcon(icon: HugeIcons.strokeRoundedCancelCircle, color: contentColor, size: 16.r)
-                                  : Text(
-                                      '${index + 1}',
-                                      style: AppText.caption.copyWith(
-                                        color: contentColor,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                              ? HugeIcon(
+                                  icon: HugeIcons.strokeRoundedCancelCircle,
+                                  color: contentColor,
+                                  size: 16.r,
+                                )
+                              : Text(
+                                  '${index + 1}',
+                                  style: AppText.caption.copyWith(
+                                    color: contentColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
                       SizedBox(height: 8.h),
@@ -97,8 +113,12 @@ class UJobStageStepper extends StatelessWidget {
                         _stages[index],
                         textAlign: TextAlign.center,
                         style: AppText.small.copyWith(
-                          color: (isCompleted || isCurrent) ? AppColors.primary : AppColors.muted,
-                          fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                          color: (isCompleted || isCurrent)
+                              ? AppColors.primary
+                              : AppColors.muted,
+                          fontWeight: isCurrent
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                           fontSize: 11.sp, // slightly smaller to fit well
                         ),
                       ),
@@ -111,8 +131,14 @@ class UJobStageStepper extends StatelessWidget {
                 return Expanded(
                   child: Container(
                     height: 2.h,
-                    margin: EdgeInsets.only(top: 16.r, left: 4.w, right: 4.w), // 16.r aligns with center of 32.r circle
-                    color: (isCompleted) ? AppColors.primary : AppColors.borderLight,
+                    margin: EdgeInsets.only(
+                      top: 16.r,
+                      left: 4.w,
+                      right: 4.w,
+                    ), // 16.r aligns with center of 32.r circle
+                    color: (isCompleted)
+                        ? AppColors.primary
+                        : AppColors.borderLight,
                   ),
                 );
               }

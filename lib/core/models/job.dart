@@ -105,15 +105,23 @@ class Job {
       ]),
       responsibilities: json['responsibilities'] as String?,
       requiredSkills: json['required_skills'] as String?,
-      preferredSkills: (json['preferred_skills'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
-      benefits: (json['benefits'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      preferredSkills: (json['preferred_skills'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
+      benefits: (json['benefits'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
       education: json['education'] as String?,
       openings: json['openings']?.toString(),
       applyVia: json['apply_via'] as String?,
       resumeRequirement: json['resume_requirement'] as String?,
       coverLetterRequirement: json['cover_letter_requirement'] as String?,
-      languages: (json['languages'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
-      certifications: (json['certifications'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      languages: (json['languages'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
+      certifications: (json['certifications'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
       ageMin: json['age_min']?.toString(),
       ageMax: json['age_max']?.toString(),
       screeningQuestions: (json['screening_questions'] as List<dynamic>?)
@@ -218,7 +226,8 @@ class Job {
       openings: openings ?? this.openings,
       applyVia: applyVia ?? this.applyVia,
       resumeRequirement: resumeRequirement ?? this.resumeRequirement,
-      coverLetterRequirement: coverLetterRequirement ?? this.coverLetterRequirement,
+      coverLetterRequirement:
+          coverLetterRequirement ?? this.coverLetterRequirement,
       languages: languages ?? this.languages,
       certifications: certifications ?? this.certifications,
       ageMin: ageMin ?? this.ageMin,

@@ -10,45 +10,51 @@ class DioClient {
   late final Dio dio;
 
   DioClient(SecureStorage storage) {
-    dio = Dio(BaseOptions(
-      baseUrl: _base,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {'Content-Type': 'application/json'},
-    ));
+    dio = Dio(
+      BaseOptions(
+        baseUrl: _base,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
 
-    dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await storage.getAccessToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        handler.next(options);
-      },
-      onError: (error, handler) async {
-        if (error.response?.statusCode == 401) {
-          final refreshed = await _refreshToken(storage);
-          if (refreshed) {
-            final token = await storage.getAccessToken();
-            error.requestOptions.headers['Authorization'] = 'Bearer $token';
-            try {
-              final retry = await dio.fetch(error.requestOptions);
-              return handler.resolve(retry);
-            } catch (_) {}
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await storage.getAccessToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
           }
-          // Refresh failed — clear tokens so app redirects to login
-          await storage.clearAll();
-        }
-        handler.next(error);
-      },
-    ));
+          handler.next(options);
+        },
+        onError: (error, handler) async {
+          if (error.response?.statusCode == 401) {
+            final refreshed = await _refreshToken(storage);
+            if (refreshed) {
+              final token = await storage.getAccessToken();
+              error.requestOptions.headers['Authorization'] = 'Bearer $token';
+              try {
+                final retry = await dio.fetch(error.requestOptions);
+                return handler.resolve(retry);
+              } catch (_) {}
+            }
+            // Refresh failed — clear tokens so app redirects to login
+            await storage.clearAll();
+          }
+          handler.next(error);
+        },
+      ),
+    );
 
     if (kDebugMode) {
-      dio.interceptors.add(PrettyDioLogger(
-        requestHeader: false,
-        requestBody: true,
-        responseBody: true,
-      ));
+      dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: false,
+          requestBody: true,
+          responseBody: true,
+        ),
+      );
     }
   }
 

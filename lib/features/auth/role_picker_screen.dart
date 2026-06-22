@@ -51,10 +51,12 @@ class _RolePickerScreenState extends State<RolePickerScreen>
   void initState() {
     super.initState();
 
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
     // MAIN ENTRANCE ANIMATION CONTROLLER
     _enterCtrl = AnimationController(
@@ -62,31 +64,54 @@ class _RolePickerScreenState extends State<RolePickerScreen>
       duration: const Duration(milliseconds: 1100),
     );
 
-    CurvedAnimation interval(double startMs, double endMs) =>
-        CurvedAnimation(
-          parent: _enterCtrl,
-          curve: Interval(
-            startMs / _totalMs,
-            endMs / _totalMs,
-            curve: Curves.easeOutCubic, // smoother deceleration
-          ),
-        );
+    CurvedAnimation interval(double startMs, double endMs) => CurvedAnimation(
+      parent: _enterCtrl,
+      curve: Interval(
+        startMs / _totalMs,
+        endMs / _totalMs,
+        curve: Curves.easeOutCubic, // smoother deceleration
+      ),
+    );
 
     // 1. Header (100ms → 500ms)
-    _headerFade = Tween<double>(begin: 0.0, end: 1.0).animate(interval(100, 500));
-    _headerSlide = Tween<double>(begin: -20.0, end: 0.0).animate(interval(100, 500));
+    _headerFade = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(interval(100, 500));
+    _headerSlide = Tween<double>(
+      begin: -20.0,
+      end: 0.0,
+    ).animate(interval(100, 500));
 
     // 2. Job Seeker Card Z-Axis Entry (300ms → 750ms)
-    _seekerFade = Tween<double>(begin: 0.0, end: 1.0).animate(interval(300, 750));
-    _seekerSlide = Tween<double>(begin: 30.0, end: 0.0).animate(interval(300, 750));
+    _seekerFade = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(interval(300, 750));
+    _seekerSlide = Tween<double>(
+      begin: 30.0,
+      end: 0.0,
+    ).animate(interval(300, 750));
 
     // 3. Employer Card Z-Axis Entry (400ms → 850ms)
-    _employerFade = Tween<double>(begin: 0.0, end: 1.0).animate(interval(400, 850));
-    _employerSlide = Tween<double>(begin: 30.0, end: 0.0).animate(interval(400, 850));
+    _employerFade = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(interval(400, 850));
+    _employerSlide = Tween<double>(
+      begin: 30.0,
+      end: 0.0,
+    ).animate(interval(400, 850));
 
     // 4. Bottom Text & Button (600ms → 1100ms)
-    _bottomFade = Tween<double>(begin: 0.0, end: 1.0).animate(interval(600, 1100));
-    _bottomSlide = Tween<double>(begin: 40.0, end: 0.0).animate(interval(600, 1100));
+    _bottomFade = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(interval(600, 1100));
+    _bottomSlide = Tween<double>(
+      begin: 40.0,
+      end: 0.0,
+    ).animate(interval(600, 1100));
 
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) _enterCtrl.forward();
@@ -116,7 +141,9 @@ class _RolePickerScreenState extends State<RolePickerScreen>
             children: [
               // ── 1. The Blue Gradient Background & Ambient Ring ──
               Positioned(
-                top: 0, left: 0, right: 0,
+                top: 0,
+                left: 0,
+                right: 0,
                 height: screenHeight * 0.44,
                 child: const _BlueBackgroundWithRing(),
               ),
@@ -137,25 +164,35 @@ class _RolePickerScreenState extends State<RolePickerScreen>
                               child: Transform.translate(
                                 offset: Offset(0, _headerSlide.value),
                                 child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 24.w,
+                                  ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
-                                          UJobLogo(variant: LogoVariant.color, height: 88.r),
+                                          UJobLogo(
+                                            variant: LogoVariant.color,
+                                            height: 88.r,
+                                          ),
                                         ],
                                       ),
                                       SizedBox(height: 24.h),
                                       Text(
                                         l10n.rolePickerTagline,
-                                        style: AppText.heroTitle.copyWith(color: AppColors.surface),
+                                        style: AppText.heroTitle.copyWith(
+                                          color: AppColors.surface,
+                                        ),
                                       ),
                                       SizedBox(height: 12.h),
                                       Text(
                                         l10n.rolePickerSubtitle,
                                         style: AppText.body.copyWith(
-                                          color: AppColors.surface.withValues(alpha: 0.9),
+                                          color: AppColors.surface.withValues(
+                                            alpha: 0.9,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -175,7 +212,8 @@ class _RolePickerScreenState extends State<RolePickerScreen>
                                       child: Transform.translate(
                                         offset: Offset(-_seekerSlide.value, 0),
                                         child: _InteractiveRoleCard(
-                                          icon: HugeIcons.strokeRoundedJobSearch,
+                                          icon:
+                                              HugeIcons.strokeRoundedJobSearch,
                                           iconBgColor: AppColors.primaryAccent,
                                           title: l10n.jobSeekerTab,
                                           subtitle: l10n.roleJobSeekerSub,
@@ -191,7 +229,8 @@ class _RolePickerScreenState extends State<RolePickerScreen>
                                       child: Transform.translate(
                                         offset: Offset(_employerSlide.value, 0),
                                         child: _InteractiveRoleCard(
-                                          icon: HugeIcons.strokeRoundedBuilding04,
+                                          icon:
+                                              HugeIcons.strokeRoundedBuilding04,
                                           iconBgColor: AppColors.primaryDark,
                                           title: l10n.employerTab,
                                           subtitle: l10n.roleEmployerSub,
@@ -233,7 +272,8 @@ class _BlueBackgroundWithRing extends StatefulWidget {
   const _BlueBackgroundWithRing();
 
   @override
-  State<_BlueBackgroundWithRing> createState() => _BlueBackgroundWithRingState();
+  State<_BlueBackgroundWithRing> createState() =>
+      _BlueBackgroundWithRingState();
 }
 
 class _BlueBackgroundWithRingState extends State<_BlueBackgroundWithRing>
@@ -289,7 +329,9 @@ class _BlueBackgroundWithRingState extends State<_BlueBackgroundWithRing>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.surface.withValues(alpha: 0.06), // Very subtle
+                    color: AppColors.surface.withValues(
+                      alpha: 0.06,
+                    ), // Very subtle
                     width: 2.0,
                   ),
                 ),
@@ -336,9 +378,10 @@ class _InteractiveRoleCardState extends State<_InteractiveRoleCard>
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _tapCtrl, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _tapCtrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -348,7 +391,7 @@ class _InteractiveRoleCardState extends State<_InteractiveRoleCard>
   }
 
   void _onTapDown(TapDownDetails details) => _tapCtrl.forward();
-  
+
   void _onTapUp(TapUpDetails details) {
     _tapCtrl.reverse();
     if (widget.onTap != null) {
@@ -378,8 +421,10 @@ class _InteractiveRoleCardState extends State<_InteractiveRoleCard>
                 border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.text.withValues(alpha:
-                      _tapCtrl.isAnimating || _tapCtrl.isCompleted ? 0.02 : 0.08
+                    color: AppColors.text.withValues(
+                      alpha: _tapCtrl.isAnimating || _tapCtrl.isCompleted
+                          ? 0.02
+                          : 0.08,
                     ),
                     blurRadius: _tapCtrl.isAnimating ? 4 : 20,
                     offset: Offset(0, _tapCtrl.isAnimating ? 2 : 8),
@@ -416,7 +461,9 @@ class _InteractiveRoleCardState extends State<_InteractiveRoleCard>
                   // Subtitle
                   Text(
                     widget.subtitle,
-                    style: AppText.cardSubtitle.copyWith(color: AppColors.muted),
+                    style: AppText.cardSubtitle.copyWith(
+                      color: AppColors.muted,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -456,11 +503,7 @@ class _BottomSection extends StatelessWidget {
             style: AppText.body.copyWith(color: AppColors.muted),
           ),
           SizedBox(height: 16.h),
-          UJobButton(
-            label: l10n.signIn,
-            onTap: onSignIn,
-            outlined: true,
-          ),
+          UJobButton(label: l10n.signIn, onTap: onSignIn, outlined: true),
         ],
       ),
     );

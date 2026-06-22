@@ -28,15 +28,14 @@ class Step5Screening extends ConsumerWidget {
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(14.r),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Screening Questions (optional)',
-                  style: AppText.heading3,
-                ),
+                Text('Screening Questions (optional)', style: AppText.heading3),
                 SizedBox(height: 6.h),
                 Text(
                   'Add questions that applicants must answer when applying. All questions are mandatory by default.',
@@ -72,9 +71,13 @@ class Step5Screening extends ConsumerWidget {
                         ),
                         GestureDetector(
                           onTap: () {
-                            final list = List<ScreeningQuestion>.from(state.screeningQuestions);
+                            final list = List<ScreeningQuestion>.from(
+                              state.screeningQuestions,
+                            );
                             list.removeAt(index);
-                            notifier.updateField(state.copyWith(screeningQuestions: list));
+                            notifier.updateField(
+                              state.copyWith(screeningQuestions: list),
+                            );
                           },
                           child: HugeIcon(
                             icon: HugeIcons.strokeRoundedDelete02,
@@ -88,11 +91,18 @@ class Step5Screening extends ConsumerWidget {
                     UJobTextField(
                       label: '',
                       hint: context.l10n.egDoYouKnowSwift,
-                      controller: TextEditingController(text: q.text)..selection = TextSelection.collapsed(offset: q.text.length),
+                      controller: TextEditingController(text: q.text)
+                        ..selection = TextSelection.collapsed(
+                          offset: q.text.length,
+                        ),
                       onChanged: (val) {
-                        final list = List<ScreeningQuestion>.from(state.screeningQuestions);
+                        final list = List<ScreeningQuestion>.from(
+                          state.screeningQuestions,
+                        );
                         list[index] = q.copyWith(text: val);
-                        notifier.updateField(state.copyWith(screeningQuestions: list));
+                        notifier.updateField(
+                          state.copyWith(screeningQuestions: list),
+                        );
                       },
                     ),
                     SizedBox(height: 12.h),
@@ -106,7 +116,9 @@ class Step5Screening extends ConsumerWidget {
                         SizedBox(width: 8.w),
                         Text(
                           'Required — applicants must answer',
-                          style: AppText.small.copyWith(color: AppColors.muted2),
+                          style: AppText.small.copyWith(
+                            color: AppColors.muted2,
+                          ),
                         ),
                       ],
                     ),
@@ -115,7 +127,7 @@ class Step5Screening extends ConsumerWidget {
               );
             },
           ),
-          
+
           if (state.screeningQuestions.isEmpty)
             Center(
               child: Padding(
@@ -133,12 +145,13 @@ class Step5Screening extends ConsumerWidget {
             outlined: true,
             color: AppColors.primary,
             onTap: () {
-              final list = List<ScreeningQuestion>.from(state.screeningQuestions)
-                ..add(const ScreeningQuestion(text: ''));
+              final list = List<ScreeningQuestion>.from(
+                state.screeningQuestions,
+              )..add(const ScreeningQuestion(text: ''));
               notifier.updateField(state.copyWith(screeningQuestions: list));
             },
           ),
-          
+
           SizedBox(height: 60.h),
         ],
       ),

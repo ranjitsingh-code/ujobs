@@ -51,9 +51,15 @@ class UJobRecentJobItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppText.label.copyWith(fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    style: AppText.label.copyWith(fontWeight: FontWeight.w700),
+                  ),
                   SizedBox(height: 4.h),
-                  Text(postedDate, style: AppText.small.copyWith(color: AppColors.muted)),
+                  Text(
+                    postedDate,
+                    style: AppText.small.copyWith(color: AppColors.muted),
+                  ),
                 ],
               ),
             ),
@@ -62,9 +68,15 @@ class UJobRecentJobItem extends StatelessWidget {
               children: [
                 Text(
                   applicantCount,
-                  style: AppText.label.copyWith(fontWeight: FontWeight.w700, color: AppColors.primary),
+                  style: AppText.label.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
                 ),
-                Text('Apps', style: AppText.overline.copyWith(color: AppColors.muted)),
+                Text(
+                  'Apps',
+                  style: AppText.overline.copyWith(color: AppColors.muted),
+                ),
               ],
             ),
           ],

@@ -72,7 +72,10 @@ class _UJobTagInputState extends State<UJobTagInput> {
                   runSpacing: 8.h,
                   children: widget.tags.map((tag) {
                     return Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 6.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryLight,
                         borderRadius: BorderRadius.circular(8.r),
@@ -82,7 +85,9 @@ class _UJobTagInputState extends State<UJobTagInput> {
                         children: [
                           Text(
                             tag,
-                            style: AppText.small.copyWith(color: AppColors.primary),
+                            style: AppText.small.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
                           SizedBox(width: 6.w),
                           GestureDetector(
@@ -105,7 +110,9 @@ class _UJobTagInputState extends State<UJobTagInput> {
                 style: AppText.bodyMedium.copyWith(color: AppColors.text),
                 decoration: InputDecoration(
                   hintText: widget.hint,
-                  hintStyle: AppText.bodyMedium.copyWith(color: AppColors.muted2),
+                  hintStyle: AppText.bodyMedium.copyWith(
+                    color: AppColors.muted2,
+                  ),
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,

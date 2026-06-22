@@ -66,7 +66,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 
   return GoRouter(
-      navigatorKey: _rootNavigatorKey,
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: _routerNotifier,
     redirect: (context, state) {
@@ -107,15 +107,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && loc.startsWith('/employer') && role != 'employer') {
         return '/seeker';
       }
-      if (isLoggedIn && loc.startsWith('/seeker') && role != 'job_seeker' && role != 'seeker') {
+      if (isLoggedIn &&
+          loc.startsWith('/seeker') &&
+          role != 'job_seeker' &&
+          role != 'seeker') {
         return '/employer';
       }
 
       return null;
     },
     routes: [
-      GoRoute(path: '/', pageBuilder: (_, _) => _fadeTransition(const SplashScreen())),
-      GoRoute(path: '/onboarding', pageBuilder: (_, _) => _fadeTransition(const OnboardingScreen())),
+      GoRoute(
+        path: '/',
+        pageBuilder: (_, _) => _fadeTransition(const SplashScreen()),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        pageBuilder: (_, _) => _fadeTransition(const OnboardingScreen()),
+      ),
       GoRoute(
         path: '/role-picker',
         builder: (context, _) => RolePickerScreen(
@@ -126,7 +135,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/login',
-        pageBuilder: (_, state) => _fadeTransition(LoginScreen(initialRole: state.extra as String? ?? 'seeker')),
+        pageBuilder: (_, state) => _fadeTransition(
+          LoginScreen(initialRole: state.extra as String? ?? 'seeker'),
+        ),
       ),
       GoRoute(
         path: '/suspended',
@@ -176,11 +187,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/employer',
-            pageBuilder: (_, _) => const NoTransitionPage(child: EmployerDashboardScreen()),
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: EmployerDashboardScreen()),
           ),
           GoRoute(
             path: '/employer/jobs',
-            pageBuilder: (_, state) => NoTransitionPage(child: MyJobsScreen(initialIndex: (state.extra as int?) ?? 0)),
+            pageBuilder: (_, state) => NoTransitionPage(
+              child: MyJobsScreen(initialIndex: (state.extra as int?) ?? 0),
+            ),
           ),
           GoRoute(
             path: '/employer/jobs/:id',
@@ -205,15 +219,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/employer/applicants',
-            pageBuilder: (_, state) => NoTransitionPage(child: ApplicantsScreen(initialIndex: (state.extra as int?) ?? 0)),
+            pageBuilder: (_, state) => NoTransitionPage(
+              child: ApplicantsScreen(initialIndex: (state.extra as int?) ?? 0),
+            ),
           ),
           GoRoute(
             path: '/employer/messages',
-            pageBuilder: (_, _) => const NoTransitionPage(child: EmployerMessagesScreen()),
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: EmployerMessagesScreen()),
           ),
           GoRoute(
             path: '/employer/profile',
-            pageBuilder: (_, _) => const NoTransitionPage(child: CompanyProfileScreen()),
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: CompanyProfileScreen()),
           ),
           GoRoute(
             path: '/employer/notifications',
@@ -232,11 +250,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/seeker',
-            pageBuilder: (_, _) => const NoTransitionPage(child: SeekerDashboardScreen()),
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: SeekerDashboardScreen()),
           ),
           GoRoute(
             path: '/seeker/jobs',
-            pageBuilder: (_, _) => const NoTransitionPage(child: FindJobsScreen()),
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: FindJobsScreen()),
           ),
           GoRoute(
             path: '/seeker/jobs/:id',
@@ -258,15 +278,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/seeker/applied',
-            pageBuilder: (_, _) => const NoTransitionPage(child: MyApplicationsScreen()),
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: MyApplicationsScreen()),
           ),
           GoRoute(
             path: '/seeker/messages',
-            pageBuilder: (_, _) => const NoTransitionPage(child: SeekerMessagesScreen()),
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: SeekerMessagesScreen()),
           ),
           GoRoute(
             path: '/seeker/profile',
-            pageBuilder: (_, _) => const NoTransitionPage(child: SeekerProfileScreen()),
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: SeekerProfileScreen()),
           ),
           GoRoute(
             path: '/seeker/notifications',

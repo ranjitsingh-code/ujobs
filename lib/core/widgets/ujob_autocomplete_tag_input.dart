@@ -21,7 +21,8 @@ class UJobAutocompleteTagInput extends StatefulWidget {
   });
 
   @override
-  State<UJobAutocompleteTagInput> createState() => _UJobAutocompleteTagInputState();
+  State<UJobAutocompleteTagInput> createState() =>
+      _UJobAutocompleteTagInputState();
 }
 
 class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
@@ -70,7 +71,10 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
           decoration: InputDecoration(
             filled: true,
             fillColor: AppColors.surface,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 14.h,
+            ),
             border: OutlineInputBorder(
               borderRadius: AppRadius.md,
               borderSide: BorderSide(color: AppColors.borderLight),
@@ -94,7 +98,10 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                   runSpacing: 8.h,
                   children: widget.tags.map((tag) {
                     return Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 6.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryLight,
                         borderRadius: BorderRadius.circular(8.r),
@@ -104,7 +111,9 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                         children: [
                           Text(
                             tag,
-                            style: AppText.small.copyWith(color: AppColors.primary),
+                            style: AppText.small.copyWith(
+                              color: AppColors.primary,
+                            ),
                           ),
                           SizedBox(width: 6.w),
                           GestureDetector(
@@ -132,18 +141,22 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                       if (query.isEmpty) {
                         return const Iterable<String>.empty();
                       }
-                      
+
                       final matches = widget.suggestions
                           .where((item) => item.toLowerCase().contains(query))
                           .toList();
 
                       // If no exact match exists in suggestions, we'll append a "custom" option
-                      final exactMatch = matches.any((item) => item.toLowerCase() == query);
+                      final exactMatch = matches.any(
+                        (item) => item.toLowerCase() == query,
+                      );
                       if (!exactMatch && query.trim().isNotEmpty) {
                         // We use a special prefix to identify the custom option
-                        matches.add('__ADD_CUSTOM__${textEditingValue.text.trim()}');
+                        matches.add(
+                          '__ADD_CUSTOM__${textEditingValue.text.trim()}',
+                        );
                       }
-                      
+
                       return matches;
                     },
                     onSelected: (String selection) {
@@ -153,30 +166,35 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                         _addTag(selection);
                       }
                     },
-                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                      return TextField(
-                        controller: controller,
-                        focusNode: focusNode,
-                        style: AppText.bodyMedium.copyWith(color: AppColors.text),
-                        decoration: InputDecoration(
-                          hintText: widget.hint,
-                          hintStyle: AppText.bodyMedium.copyWith(color: AppColors.muted2),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          focusedErrorBorder: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        onSubmitted: (value) {
-                           if(value.trim().isNotEmpty) {
-                             _addTag(value);
-                           }
+                    fieldViewBuilder:
+                        (context, controller, focusNode, onFieldSubmitted) {
+                          return TextField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            style: AppText.bodyMedium.copyWith(
+                              color: AppColors.text,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: widget.hint,
+                              hintStyle: AppText.bodyMedium.copyWith(
+                                color: AppColors.muted2,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              focusedErrorBorder: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            onSubmitted: (value) {
+                              if (value.trim().isNotEmpty) {
+                                _addTag(value);
+                              }
+                            },
+                            textInputAction: TextInputAction.done,
+                          );
                         },
-                        textInputAction: TextInputAction.done,
-                      );
-                    },
                     optionsViewBuilder: (context, onSelected, options) {
                       return Align(
                         alignment: Alignment.topLeft,
@@ -197,33 +215,59 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                               padding: EdgeInsets.zero,
                               shrinkWrap: true,
                               itemCount: options.length,
-                              separatorBuilder: (context, index) => Divider(height: 1, color: AppColors.borderLight),
+                              separatorBuilder: (context, index) => Divider(
+                                height: 1,
+                                color: AppColors.borderLight,
+                              ),
                               itemBuilder: (context, index) {
                                 final option = options.elementAt(index);
-                                final isCustom = option.startsWith('__ADD_CUSTOM__');
-                                
+                                final isCustom = option.startsWith(
+                                  '__ADD_CUSTOM__',
+                                );
+
                                 if (isCustom) {
-                                  final customText = option.replaceFirst('__ADD_CUSTOM__', '');
+                                  final customText = option.replaceFirst(
+                                    '__ADD_CUSTOM__',
+                                    '',
+                                  );
                                   return InkWell(
                                     onTap: () => onSelected(option),
                                     child: Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 16.w,
+                                        vertical: 12.h,
+                                      ),
                                       child: Row(
                                         children: [
-                                          HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: AppColors.primary, size: 18.r),
+                                          HugeIcon(
+                                            icon: HugeIcons.strokeRoundedAdd01,
+                                            color: AppColors.primary,
+                                            size: 18.r,
+                                          ),
                                           SizedBox(width: 8.w),
-                                          Text('Add "$customText"', style: AppText.bodyMedium.copyWith(color: AppColors.primary)),
+                                          Text(
+                                            'Add "$customText"',
+                                            style: AppText.bodyMedium.copyWith(
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
                                   );
                                 }
-                                
+
                                 return InkWell(
                                   onTap: () => onSelected(option),
                                   child: Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                                    child: Text(option, style: AppText.bodyMedium),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 16.w,
+                                      vertical: 12.h,
+                                    ),
+                                    child: Text(
+                                      option,
+                                      style: AppText.bodyMedium,
+                                    ),
                                   ),
                                 );
                               },
@@ -233,7 +277,7 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                       );
                     },
                   );
-                }
+                },
               ),
             ],
           ),

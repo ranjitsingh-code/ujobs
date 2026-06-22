@@ -21,78 +21,99 @@ class Step4Application extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('How should candidates apply?', style: AppText.label.copyWith(color: AppColors.muted)),
+          Text(
+            'How should candidates apply?',
+            style: AppText.label.copyWith(color: AppColors.muted),
+          ),
           SizedBox(height: 8.h),
           UJobRadioCard<String>(
             title: 'Apply via Job Portal',
             subtitle: 'Candidates apply directly through the platform',
             value: 'Job Portal',
             groupValue: state.applyVia,
-            onChanged: (val) => notifier.updateField(state.copyWith(applyVia: val)),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(applyVia: val)),
           ),
           UJobRadioCard<String>(
             title: 'Apply via Email',
             subtitle: 'Candidates send their CV to your email address',
             value: 'Email',
             groupValue: state.applyVia,
-            onChanged: (val) => notifier.updateField(state.copyWith(applyVia: val)),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(applyVia: val)),
           ),
           UJobRadioCard<String>(
             title: 'External Website',
             subtitle: 'Redirect candidates to your careers page',
             value: 'External Website',
             groupValue: state.applyVia,
-            onChanged: (val) => notifier.updateField(state.copyWith(applyVia: val)),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(applyVia: val)),
           ),
           SizedBox(height: 24.h),
 
-          Text('Resume / CV Requirement', style: AppText.label.copyWith(color: AppColors.muted)),
+          Text(
+            'Resume / CV Requirement',
+            style: AppText.label.copyWith(color: AppColors.muted),
+          ),
           SizedBox(height: 8.h),
           UJobRadioCard<String>(
             title: 'Required',
             subtitle: 'Candidates must attach a CV',
             value: 'Required',
             groupValue: state.resumeRequirement,
-            onChanged: (val) => notifier.updateField(state.copyWith(resumeRequirement: val)),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(resumeRequirement: val)),
           ),
           UJobRadioCard<String>(
             title: 'Optional',
             subtitle: 'CV is encouraged but not mandatory',
             value: 'Optional',
             groupValue: state.resumeRequirement,
-            onChanged: (val) => notifier.updateField(state.copyWith(resumeRequirement: val)),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(resumeRequirement: val)),
           ),
           UJobRadioCard<String>(
             title: 'Not Required',
             subtitle: 'No CV needed',
             value: 'Not Required',
             groupValue: state.resumeRequirement,
-            onChanged: (val) => notifier.updateField(state.copyWith(resumeRequirement: val)),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(resumeRequirement: val)),
           ),
           SizedBox(height: 24.h),
 
-          Text('Cover Letter', style: AppText.label.copyWith(color: AppColors.muted)),
+          Text(
+            'Cover Letter',
+            style: AppText.label.copyWith(color: AppColors.muted),
+          ),
           SizedBox(height: 8.h),
           UJobRadioCard<String>(
             title: 'Optional',
             subtitle: 'Candidates may include a cover letter',
             value: 'Optional',
             groupValue: state.coverLetterRequirement,
-            onChanged: (val) => notifier.updateField(state.copyWith(coverLetterRequirement: val)),
+            onChanged: (val) => notifier.updateField(
+              state.copyWith(coverLetterRequirement: val),
+            ),
           ),
           UJobRadioCard<String>(
             title: 'Required',
             subtitle: 'Candidates must write a cover letter',
             value: 'Required',
             groupValue: state.coverLetterRequirement,
-            onChanged: (val) => notifier.updateField(state.copyWith(coverLetterRequirement: val)),
+            onChanged: (val) => notifier.updateField(
+              state.copyWith(coverLetterRequirement: val),
+            ),
           ),
           UJobRadioCard<String>(
             title: 'Disabled',
             subtitle: 'Cover letter is hidden from the form',
             value: 'Disabled',
             groupValue: state.coverLetterRequirement,
-            onChanged: (val) => notifier.updateField(state.copyWith(coverLetterRequirement: val)),
+            onChanged: (val) => notifier.updateField(
+              state.copyWith(coverLetterRequirement: val),
+            ),
           ),
           SizedBox(height: 24.h),
 
@@ -100,7 +121,8 @@ class Step4Application extends ConsumerWidget {
             label: context.l10n.applicationDeadline,
             hint: context.l10n.selectADate,
             value: state.deadline,
-            onChanged: (val) => notifier.updateField(state.copyWith(deadline: val)),
+            onChanged: (val) =>
+                notifier.updateField(state.copyWith(deadline: val)),
           ),
           SizedBox(height: 60.h),
         ],

@@ -14,17 +14,24 @@ class UJobError extends StatelessWidget {
   Widget build(BuildContext context) => Center(
     child: Padding(
       padding: const EdgeInsets.all(32),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        HugeIcon(icon: HugeIcons.strokeRoundedWifiOff01, size: 56, color: AppColors.grey400),
-        const SizedBox(height: 16),
-        Text(
-          message,
-          style: AppText.body.copyWith(color: AppColors.grey600),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 24),
-        UJobButton(label: 'Try Again', onTap: onRetry),
-      ]),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedWifiOff01,
+            size: 56,
+            color: AppColors.grey400,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: AppText.body.copyWith(color: AppColors.grey600),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          UJobButton(label: 'Try Again', onTap: onRetry),
+        ],
+      ),
     ),
   );
 }

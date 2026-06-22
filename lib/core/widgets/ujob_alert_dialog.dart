@@ -59,10 +59,7 @@ class UJobAlertDialog extends StatelessWidget {
               style: AppText.bodyMedium.copyWith(color: AppColors.muted),
               textAlign: TextAlign.center,
             ),
-            if (child != null) ...[
-              SizedBox(height: 20.h),
-              child!,
-            ],
+            if (child != null) ...[SizedBox(height: 20.h), child!],
             SizedBox(height: 28.h),
             Row(
               children: [

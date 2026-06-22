@@ -77,7 +77,7 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
     });
     // Simulate API success
     await Future.delayed(const Duration(milliseconds: 1500));
-    
+
     if (mounted) {
       setState(() => _loading = false);
       context.go('/otp');
@@ -104,7 +104,9 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: GestureDetector(
-                  onTap: () => context.canPop() ? context.pop() : context.go('/role-picker'),
+                  onTap: () => context.canPop()
+                      ? context.pop()
+                      : context.go('/role-picker'),
                   child: Container(
                     width: 36.r,
                     height: 36.r,
@@ -198,7 +200,10 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
                       termsLabel: l10n.terms,
                       privacyLabel: l10n.privacyPolicyWithPeriod,
                     ),
-                    if (_error != null) ...[SizedBox(height: 16.h), _ErrorBox(_error!)],
+                    if (_error != null) ...[
+                      SizedBox(height: 16.h),
+                      _ErrorBox(_error!),
+                    ],
                     SizedBox(height: 24.h),
                     UJobButton(
                       label: l10n.createAccount,

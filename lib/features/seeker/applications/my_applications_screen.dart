@@ -16,10 +16,12 @@ class MyApplicationsScreen extends ConsumerStatefulWidget {
   const MyApplicationsScreen({super.key});
 
   @override
-  ConsumerState<MyApplicationsScreen> createState() => _MyApplicationsScreenState();
+  ConsumerState<MyApplicationsScreen> createState() =>
+      _MyApplicationsScreenState();
 }
 
-class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> with SingleTickerProviderStateMixin {
+class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -41,10 +43,7 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> wit
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: UJobAppBar(
-        title: 'My Applications',
-        showBack: false,
-      ),
+      appBar: UJobAppBar(title: 'My Applications', showBack: false),
       body: appsAsync.when(
         loading: () => const UJobLoading(),
         error: (err, stack) => UJobError(
@@ -57,11 +56,18 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> wit
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  HugeIcon(icon: HugeIcons.strokeRoundedBriefcase01, color: AppColors.muted, size: 64.r),
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedBriefcase01,
+                    color: AppColors.muted,
+                    size: 64.r,
+                  ),
                   SizedBox(height: 16.h),
                   Text('No Applications Yet', style: AppText.heading2),
                   SizedBox(height: 8.h),
-                  Text('Start applying to jobs to see them here.', style: AppText.body.copyWith(color: AppColors.muted)),
+                  Text(
+                    'Start applying to jobs to see them here.',
+                    style: AppText.body.copyWith(color: AppColors.muted),
+                  ),
                 ],
               ),
             );
@@ -93,9 +99,18 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> wit
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _ApplicationList(applications: applications, filter: 'Active'),
-                    _ApplicationList(applications: applications, filter: 'Interview'),
-                    _ApplicationList(applications: applications, filter: 'Archived'),
+                    _ApplicationList(
+                      applications: applications,
+                      filter: 'Active',
+                    ),
+                    _ApplicationList(
+                      applications: applications,
+                      filter: 'Interview',
+                    ),
+                    _ApplicationList(
+                      applications: applications,
+                      filter: 'Archived',
+                    ),
                   ],
                 ),
               ),
@@ -116,11 +131,14 @@ class _ApplicationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Fake filtering for visual completeness
-    final filtered = applications; 
+    final filtered = applications;
 
     if (filtered.isEmpty) {
       return Center(
-        child: Text('No applications in this category.', style: AppText.body.copyWith(color: AppColors.muted)),
+        child: Text(
+          'No applications in this category.',
+          style: AppText.body.copyWith(color: AppColors.muted),
+        ),
       );
     }
 

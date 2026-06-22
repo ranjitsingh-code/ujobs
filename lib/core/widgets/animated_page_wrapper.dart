@@ -8,7 +8,8 @@ class AnimatedPageWrapper extends StatefulWidget {
   State<AnimatedPageWrapper> createState() => _AnimatedPageWrapperState();
 }
 
-class _AnimatedPageWrapperState extends State<AnimatedPageWrapper> with SingleTickerProviderStateMixin {
+class _AnimatedPageWrapperState extends State<AnimatedPageWrapper>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
@@ -21,18 +22,12 @@ class _AnimatedPageWrapperState extends State<AnimatedPageWrapper> with SingleTi
       duration: const Duration(milliseconds: 400),
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.05),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward();
   }
@@ -47,10 +42,7 @@ class _AnimatedPageWrapperState extends State<AnimatedPageWrapper> with SingleTi
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: widget.child,
-      ),
+      child: SlideTransition(position: _slideAnimation, child: widget.child),
     );
   }
 }

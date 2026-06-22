@@ -48,7 +48,7 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
   Future<void> _submit() async {
     setState(() => _submitting = true);
     try {
-await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 1));
       setState(() => _submitted = true);
     } catch (_) {
       // Mock success for testing purposes as backend may not be ready
@@ -64,7 +64,8 @@ await Future.delayed(const Duration(seconds: 1));
       return UJobResultScreen(
         type: ResultType.success,
         title: 'Application Submitted!',
-        subtitle: 'Your application has been sent. We\'ll notify you when the employer responds.',
+        subtitle:
+            'Your application has been sent. We\'ll notify you when the employer responds.',
         buttonLabel: 'Back to Job',
         onTap: () {
           Navigator.pop(context, true); // Pop true to update state
@@ -73,7 +74,8 @@ await Future.delayed(const Duration(seconds: 1));
     }
 
     final jobAsync = ref.watch(seekerJobDetailProvider(widget.jobId));
-    final hasQuestions = jobAsync.valueOrNull?.screeningQuestions?.isNotEmpty ?? false;
+    final hasQuestions =
+        jobAsync.valueOrNull?.screeningQuestions?.isNotEmpty ?? false;
     final totalSteps = hasQuestions ? 2 : 1;
 
     return Scaffold(
@@ -88,34 +90,36 @@ await Future.delayed(const Duration(seconds: 1));
           ),
         ),
       ),
-      body: Column(children: [
-        _StepIndicator(current: _step, total: totalSteps),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: AppSpacing.pagePad,
-            child: _step == 0
-                ? _StepCoverLetter(controller: _coverCtrl)
-                : _StepScreeningQuestions(
-                    questions: jobAsync.valueOrNull?.screeningQuestions ?? [],
-                    answers: _questionAnswers,
-                    onAnswerChanged: (index, value) {
-                      setState(() {
-                        _questionAnswers[index] = value;
-                      });
-                    },
-                  ),
+      body: Column(
+        children: [
+          _StepIndicator(current: _step, total: totalSteps),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: AppSpacing.pagePad,
+              child: _step == 0
+                  ? _StepCoverLetter(controller: _coverCtrl)
+                  : _StepScreeningQuestions(
+                      questions: jobAsync.valueOrNull?.screeningQuestions ?? [],
+                      answers: _questionAnswers,
+                      onAnswerChanged: (index, value) {
+                        setState(() {
+                          _questionAnswers[index] = value;
+                        });
+                      },
+                    ),
+            ),
           ),
-        ),
-        _BottomBar(
-          step: _step,
-          totalSteps: totalSteps,
-          submitting: _submitting,
-          onBack: _step > 0 ? () => setState(() => _step--) : null,
-          onNext: _step < totalSteps - 1
-              ? () => setState(() => _step++)
-              : _submit,
-        ),
-      ]),
+          _BottomBar(
+            step: _step,
+            totalSteps: totalSteps,
+            submitting: _submitting,
+            onBack: _step > 0 ? () => setState(() => _step--) : null,
+            onNext: _step < totalSteps - 1
+                ? () => setState(() => _step++)
+                : _submit,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -127,16 +131,16 @@ class _StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        children: List.generate(total, (i) {
-          return Expanded(
-            child: Container(
-              height: 3.h,
-              margin: EdgeInsets.only(right: i < total - 1 ? 2.w : 0),
-              color: i <= current ? AppColors.primary : AppColors.borderLight,
-            ),
-          );
-        }),
+    children: List.generate(total, (i) {
+      return Expanded(
+        child: Container(
+          height: 3.h,
+          margin: EdgeInsets.only(right: i < total - 1 ? 2.w : 0),
+          color: i <= current ? AppColors.primary : AppColors.borderLight,
+        ),
       );
+    }),
+  );
 }
 
 class _StepCoverLetter extends StatelessWidget {
@@ -144,23 +148,26 @@ class _StepCoverLetter extends StatelessWidget {
   const _StepCoverLetter({required this.controller});
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SizedBox(height: 8.h),
-        Text('Cover Letter', style: AppText.heading2),
-        SizedBox(height: 8.h),
-        Text(
-          'Optional — introduce yourself and explain why you\'re a great fit.',
-          style: AppText.body.copyWith(color: AppColors.muted),
-        ),
-        SizedBox(height: 24.h),
-        UJobTextField(
-          label: context.l10n.coverLetterTitle,
-          hint: "Hi, I'm excited to apply for this role because...",
-          controller: controller,
-          maxLines: 8,
-          keyboardType: TextInputType.multiline,
-        ),
-      ]);
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(height: 8.h),
+      Text('Cover Letter', style: AppText.heading2),
+      SizedBox(height: 8.h),
+      Text(
+        'Optional — introduce yourself and explain why you\'re a great fit.',
+        style: AppText.body.copyWith(color: AppColors.muted),
+      ),
+      SizedBox(height: 24.h),
+      UJobTextField(
+        label: context.l10n.coverLetterTitle,
+        hint: "Hi, I'm excited to apply for this role because...",
+        controller: controller,
+        maxLines: 8,
+        keyboardType: TextInputType.multiline,
+      ),
+    ],
+  );
 }
 
 class _StepScreeningQuestions extends StatefulWidget {
@@ -175,7 +182,8 @@ class _StepScreeningQuestions extends StatefulWidget {
   });
 
   @override
-  State<_StepScreeningQuestions> createState() => _StepScreeningQuestionsState();
+  State<_StepScreeningQuestions> createState() =>
+      _StepScreeningQuestionsState();
 }
 
 class _StepScreeningQuestionsState extends State<_StepScreeningQuestions> {
@@ -199,36 +207,39 @@ class _StepScreeningQuestionsState extends State<_StepScreeningQuestions> {
   }
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SizedBox(height: 8.h),
-        Text('Screening Questions', style: AppText.heading2),
-        SizedBox(height: 8.h),
-        Text(
-          'Please answer the following questions required by the employer.',
-          style: AppText.body.copyWith(color: AppColors.muted),
-        ),
-        SizedBox(height: 24.h),
-        ...List.generate(widget.questions.length, (index) {
-          final q = widget.questions[index];
-          return Padding(
-            padding: EdgeInsets.only(bottom: 20.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(q['question'] ?? 'Question', style: AppText.titleSm),
-                SizedBox(height: 12.h),
-                UJobTextField(
-                  label: '',
-                  hint: context.l10n.yourAnswer,
-                  maxLines: 3,
-                  controller: _controllers[index],
-                  onChanged: (val) => widget.onAnswerChanged(index, val),
-                ),
-              ],
-            ),
-          );
-        }),
-      ]);
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(height: 8.h),
+      Text('Screening Questions', style: AppText.heading2),
+      SizedBox(height: 8.h),
+      Text(
+        'Please answer the following questions required by the employer.',
+        style: AppText.body.copyWith(color: AppColors.muted),
+      ),
+      SizedBox(height: 24.h),
+      ...List.generate(widget.questions.length, (index) {
+        final q = widget.questions[index];
+        return Padding(
+          padding: EdgeInsets.only(bottom: 20.h),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(q['question'] ?? 'Question', style: AppText.titleSm),
+              SizedBox(height: 12.h),
+              UJobTextField(
+                label: '',
+                hint: context.l10n.yourAnswer,
+                maxLines: 3,
+                controller: _controllers[index],
+                onChanged: (val) => widget.onAnswerChanged(index, val),
+              ),
+            ],
+          ),
+        );
+      }),
+    ],
+  );
 }
 
 class _BottomBar extends StatelessWidget {
@@ -248,31 +259,37 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.borderLight)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Row(children: [
-            if (onBack != null) ...[
-              Expanded(
-                child: UJobButton(label: context.l10n.back, onTap: onBack, outlined: true),
-              ),
-              SizedBox(width: 12.w),
-            ],
+    padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
+    decoration: const BoxDecoration(
+      color: AppColors.surface,
+      border: Border(top: BorderSide(color: AppColors.borderLight)),
+    ),
+    child: SafeArea(
+      top: false,
+      child: Row(
+        children: [
+          if (onBack != null) ...[
             Expanded(
-              flex: 2,
               child: UJobButton(
-                label: step < totalSteps - 1
-                    ? 'Next: Questions'
-                    : 'Submit Application',
-                onTap: submitting ? null : onNext,
-                isLoading: submitting,
+                label: context.l10n.back,
+                onTap: onBack,
+                outlined: true,
               ),
             ),
-          ]),
-        ),
-      );
+            SizedBox(width: 12.w),
+          ],
+          Expanded(
+            flex: 2,
+            child: UJobButton(
+              label: step < totalSteps - 1
+                  ? 'Next: Questions'
+                  : 'Submit Application',
+              onTap: submitting ? null : onNext,
+              isLoading: submitting,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

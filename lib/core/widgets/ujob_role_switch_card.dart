@@ -42,11 +42,7 @@ class UJobRoleSwitchCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8.r),
                 boxShadow: AppShadow.card(),
               ),
-              child: HugeIcon(
-                icon: icon,
-                size: 24.r,
-                color: AppColors.primary,
-              ),
+              child: HugeIcon(icon: icon, size: 24.r, color: AppColors.primary),
             ),
             SizedBox(width: 16.w),
             Expanded(

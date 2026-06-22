@@ -58,7 +58,7 @@ class _UJobPillTabBarState extends State<UJobPillTabBar> {
       if (!mounted || index < 0 || index >= _keys.length) return;
       final context = _keys[index].currentContext;
       if (context == null) return;
-      
+
       if (!_scrollController.hasClients) return;
 
       if (animate) {
@@ -97,29 +97,20 @@ class _UJobPillTabBarState extends State<UJobPillTabBar> {
           borderRadius: AppRadius.pill,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            padding: EdgeInsets.symmetric(
-              horizontal: 14.w,
-              vertical: 9.h,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 9.h),
             alignment: widget.isExpanded ? Alignment.center : null,
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.surface,
+              color: isSelected ? AppColors.primary : AppColors.surface,
               borderRadius: AppRadius.pill,
               border: Border.all(
-                color: isSelected
-                    ? AppColors.primary
-                    : AppColors.border,
+                color: isSelected ? AppColors.primary : AppColors.border,
               ),
               boxShadow: isSelected ? AppShadow.card() : null,
             ),
             child: Text(
               label,
               style: AppText.label.copyWith(
-                color: isSelected
-                    ? AppColors.surface
-                    : AppColors.muted,
+                color: isSelected ? AppColors.surface : AppColors.muted,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -132,7 +123,10 @@ class _UJobPillTabBarState extends State<UJobPillTabBar> {
     return SizedBox(
       width: double.infinity,
       child: widget.isExpanded
-          ? Padding(padding: widget.padding, child: Row(children: rowChildren))
+          ? Padding(
+              padding: widget.padding,
+              child: Row(children: rowChildren),
+            )
           : SingleChildScrollView(
               controller: _scrollController,
               scrollDirection: Axis.horizontal,
