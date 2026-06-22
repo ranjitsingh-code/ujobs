@@ -11,6 +11,7 @@ import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_job_card.dart';
 import '../../../core/widgets/ujob_pill_tab_bar.dart';
+import '../../../core/models/application.dart';
 import 'seeker_application_provider.dart';
 
 class MyApplicationsScreen extends ConsumerStatefulWidget {
@@ -143,7 +144,7 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
 }
 
 class _ApplicationList extends StatelessWidget {
-  final List<dynamic> applications;
+  final List<Application> applications;
   final String filter;
 
   const _ApplicationList({required this.applications, required this.filter});
