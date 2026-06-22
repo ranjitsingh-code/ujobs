@@ -1,6 +1,7 @@
 import 'job.dart';
 
 enum ApplicationStatus {
+  saved,
   applied,
   shortlisted,
   interviewing,
@@ -49,6 +50,8 @@ class Application {
         return ApplicationStatus.hired;
       case 'rejected':
         return ApplicationStatus.rejected;
+      case 'saved':
+        return ApplicationStatus.saved;
       default:
         return ApplicationStatus.applied;
     }

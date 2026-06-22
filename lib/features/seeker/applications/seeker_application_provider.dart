@@ -32,6 +32,13 @@ final seekerApplicationsProvider =
             status: ApplicationStatus.rejected,
             createdAt: DateTime.now().subtract(const Duration(days: 5)),
           ),
+        if (jobs.length > 3)
+          Application(
+            id: 4,
+            job: jobs[3],
+            status: ApplicationStatus.saved,
+            createdAt: DateTime.now().subtract(const Duration(days: 7)),
+          ),
       ];
 
       return mockApps;

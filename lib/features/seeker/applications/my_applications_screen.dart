@@ -27,6 +27,7 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
 
   static const _filters = [
     'All',
+    'Saved',
     'Applied',
     'Shortlisted',
     'Interview',
