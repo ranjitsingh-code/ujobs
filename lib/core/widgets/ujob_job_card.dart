@@ -107,18 +107,41 @@ class UJobJobCard extends StatelessWidget {
                 ),
                 SizedBox(height: 16.h),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      job.salaryMax != null 
-                        ? '${job.salaryMin} - ${job.salaryMax}' 
-                        : (job.salaryMin ?? 'Negotiable'),
-                      style: AppText.bodySemiBold.copyWith(color: AppColors.empPrimary),
-                    ),
+                    if (job.location != null && job.location!.isNotEmpty) ...[
+                      HugeIcon(icon: HugeIcons.strokeRoundedLocation01, color: AppColors.muted, size: 14.r),
+                      SizedBox(width: 4.w),
+                      Flexible(
+                        child: Text(
+                          job.location!,
+                          style: AppText.bodySmall.copyWith(color: AppColors.muted),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                    if (job.salaryMin != null) ...[
+                      if (job.location != null && job.location!.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                          child: Container(width: 3.r, height: 3.r, decoration: const BoxDecoration(color: AppColors.muted2, shape: BoxShape.circle)),
+                        ),
+                      Flexible(
+                        child: Text(
+                          job.salaryMax != null 
+                            ? '${job.salaryMin} - ${job.salaryMax}' 
+                            : job.salaryMin!,
+                          style: AppText.bodySemiBold.copyWith(color: AppColors.seekPrimaryDark),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                    const Spacer(),
                     if (job.createdAt != null)
                       Text(
                         timeago.format(job.createdAt!),
-                        style: AppText.bodySmall.copyWith(color: AppColors.muted),
+                        style: AppText.bodySmall.copyWith(color: AppColors.muted2),
                       ),
                   ],
                 ),
