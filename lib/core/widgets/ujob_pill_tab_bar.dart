@@ -8,6 +8,7 @@ class UJobPillTabBar extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
   final EdgeInsetsGeometry padding;
+  final bool isExpanded;
 
   const UJobPillTabBar({
     super.key,
@@ -15,6 +16,7 @@ class UJobPillTabBar extends StatefulWidget {
     required this.selectedIndex,
     required this.onTabSelected,
     this.padding = EdgeInsets.zero,
+    this.isExpanded = false,
   });
 
   @override
@@ -78,62 +80,66 @@ class _UJobPillTabBarState extends State<UJobPillTabBar> {
 
   @override
   Widget build(BuildContext context) {
+    final rowChildren = widget.tabs.asMap().entries.map((entry) {
+      final index = entry.key;
+      final label = entry.value;
+      final isSelected = widget.selectedIndex == index;
+      final child = Padding(
+        key: _keys[index],
+        padding: EdgeInsetsDirectional.only(
+          end: index == widget.tabs.length - 1 ? 0 : 8.w,
+        ),
+        child: InkWell(
+          onTap: () {
+            widget.onTabSelected(index);
+            _revealTab(index);
+          },
+          borderRadius: AppRadius.pill,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: EdgeInsets.symmetric(
+              horizontal: 14.w,
+              vertical: 9.h,
+            ),
+            alignment: widget.isExpanded ? Alignment.center : null,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.surface,
+              borderRadius: AppRadius.pill,
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.border,
+              ),
+              boxShadow: isSelected ? AppShadow.card() : null,
+            ),
+            child: Text(
+              label,
+              style: AppText.label.copyWith(
+                color: isSelected
+                    ? AppColors.surface
+                    : AppColors.muted,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      );
+      return widget.isExpanded ? Expanded(child: child) : child;
+    }).toList();
+
     return SizedBox(
       width: double.infinity,
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: widget.padding,
-        child: Row(
-          children: widget.tabs.asMap().entries.map((entry) {
-            final index = entry.key;
-            final label = entry.value;
-            final isSelected = widget.selectedIndex == index;
-            return Padding(
-              key: _keys[index],
-              padding: EdgeInsetsDirectional.only(
-                end: index == widget.tabs.length - 1 ? 0 : 8.w,
-              ),
-              child: InkWell(
-                onTap: () {
-                  widget.onTabSelected(index);
-                  _revealTab(index);
-                },
-                borderRadius: AppRadius.pill,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 14.w,
-                    vertical: 9.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.surface,
-                    borderRadius: AppRadius.pill,
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.border,
-                    ),
-                    boxShadow: isSelected ? AppShadow.card() : null,
-                  ),
-                  child: Text(
-                    label,
-                    style: AppText.label.copyWith(
-                      color: isSelected
-                          ? AppColors.surface
-                          : AppColors.muted,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
+      child: widget.isExpanded
+          ? Padding(padding: widget.padding, child: Row(children: rowChildren))
+          : SingleChildScrollView(
+              controller: _scrollController,
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: widget.padding,
+              child: Row(children: rowChildren),
+            ),
     );
   }
 }

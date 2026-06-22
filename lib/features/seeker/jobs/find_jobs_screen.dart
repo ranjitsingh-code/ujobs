@@ -67,6 +67,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
             child: UJobPillTabBar(
               tabs: const ['For you', 'All jobs'],
+              isExpanded: true,
               selectedIndex: _tabIndex,
               onTabSelected: (v) {
                 setState(() => _tabIndex = v);
@@ -202,16 +203,13 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Find Your Next Job', style: AppText.heading2),
-                              SizedBox(height: 4.h),
-                              Text('${jobs.length} positions available', style: AppText.bodyMedium.copyWith(color: AppColors.muted)),
+                              Text('${jobs.length} positions available', style: AppText.heading3),
                             ],
                           ),
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('Sort:', style: AppText.bodySmall.copyWith(color: AppColors.muted)),
                             DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: _sortBy,
