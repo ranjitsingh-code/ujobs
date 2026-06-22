@@ -4,6 +4,8 @@ import '../../employer/jobs/employer_job_provider.dart';
 
 class JobFilter {
   final String? search;
+  final String? location;
+  final String? company;
   final String? category;
   final List<String> employmentTypes;
   final List<String> workplaces;
@@ -14,6 +16,8 @@ class JobFilter {
 
   JobFilter({
     this.search,
+    this.location,
+    this.company,
     this.category,
     this.employmentTypes = const [],
     this.workplaces = const [],
@@ -25,6 +29,8 @@ class JobFilter {
 
   JobFilter copyWith({
     String? search,
+    String? location,
+    String? company,
     String? category,
     List<String>? employmentTypes,
     List<String>? workplaces,
@@ -35,6 +41,8 @@ class JobFilter {
   }) {
     return JobFilter(
       search: search ?? this.search,
+      location: location ?? this.location,
+      company: company ?? this.company,
       category: category ?? this.category,
       employmentTypes: employmentTypes ?? this.employmentTypes,
       workplaces: workplaces ?? this.workplaces,
@@ -51,6 +59,8 @@ class JobFilter {
       other is JobFilter &&
           runtimeType == other.runtimeType &&
           search == other.search &&
+          location == other.location &&
+          company == other.company &&
           category == other.category &&
           datePosted == other.datePosted &&
           experienceLevel == other.experienceLevel &&
@@ -62,6 +72,8 @@ class JobFilter {
   @override
   int get hashCode =>
       search.hashCode ^
+      location.hashCode ^
+      company.hashCode ^
       category.hashCode ^
       employmentTypes.join(',').hashCode ^
       workplaces.join(',').hashCode ^
@@ -86,6 +98,24 @@ final seekerJobsProvider = FutureProvider<List<Job>>((ref) async {
                 filter.search!.toLowerCase(),
               ) ??
               false)) {
+        return false;
+      }
+    }
+
+    if (filter.location != null && filter.location!.isNotEmpty) {
+      if (!(job.location?.toLowerCase().contains(
+            filter.location!.toLowerCase(),
+          ) ??
+          false)) {
+        return false;
+      }
+    }
+
+    if (filter.company != null && filter.company!.isNotEmpty) {
+      if (!(job.company?.name.toLowerCase().contains(
+            filter.company!.toLowerCase(),
+          ) ??
+          false)) {
         return false;
       }
     }

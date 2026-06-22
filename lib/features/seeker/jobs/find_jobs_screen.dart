@@ -377,6 +377,8 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
     super.initState();
     final filter = ref.read(activeJobFilterProvider);
     _keywordsCtrl.text = filter.search ?? '';
+    _locationCtrl.text = filter.location ?? '';
+    _companyCtrl.text = filter.company ?? '';
     _category = filter.category ?? 'All Categories';
     _datePosted = filter.datePosted ?? 'Any time';
     _experienceLevel = filter.experienceLevel ?? 'Any level';
@@ -603,6 +605,10 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                   search: _keywordsCtrl.text.isEmpty
                       ? null
                       : _keywordsCtrl.text,
+                  location: _locationCtrl.text.isEmpty
+                      ? null
+                      : _locationCtrl.text,
+                  company: _companyCtrl.text.isEmpty ? null : _companyCtrl.text,
                   category: _category == 'All Categories' ? null : _category,
                   datePosted: _datePosted == 'Any time' ? null : _datePosted,
                   employmentTypes: _employmentTypes,
