@@ -311,9 +311,9 @@ class _FilterSheetState extends State<_FilterSheet> {
               border: Border(bottom: BorderSide(color: AppColors.borderLight)),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Filters', style: AppText.heading2),
+                const Spacer(),
                 TextButton(
                   onPressed: () {
                     // Reset
@@ -330,6 +330,14 @@ class _FilterSheetState extends State<_FilterSheet> {
                     });
                   },
                   child: Text('Reset', style: AppText.bodyBold.copyWith(color: AppColors.muted)),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    color: AppColors.text,
+                    size: 24.r,
+                  ),
                 ),
               ],
             ),
