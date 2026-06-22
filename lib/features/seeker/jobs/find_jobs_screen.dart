@@ -202,9 +202,13 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
       data: (jobs) {
         if (jobs.isEmpty) {
           return Center(
-            child: Text(
-              l10n.noMatchingJobsFound,
-              style: AppText.body.copyWith(color: AppColors.muted),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: _EmptyState(
+                title: l10n.noMatchingJobsFound,
+                subtitle: 'Try adjusting your filters or search terms.',
+                icon: HugeIcons.strokeRoundedSearchMinus,
+              ),
             ),
           );
         }
@@ -260,9 +264,13 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
             data: (jobs) {
               if (jobs.isEmpty) {
                 return Center(
-                  child: Text(
-                    l10n.noMatchingJobsFound,
-                    style: AppText.body.copyWith(color: AppColors.muted),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: _EmptyState(
+                      title: l10n.noMatchingJobsFound,
+                      subtitle: 'Try adjusting your filters or search terms.',
+                      icon: HugeIcons.strokeRoundedSearchMinus,
+                    ),
                   ),
                 );
               }
@@ -701,5 +709,49 @@ class _UJobTabsDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
     return true;
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final dynamic icon;
+
+  const _EmptyState({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 48.h, horizontal: 24.w),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24.r),
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          HugeIcon(icon: icon, color: AppColors.muted2, size: 48.r),
+          SizedBox(height: 16.h),
+          Text(
+            title,
+            style: AppText.heading3.copyWith(color: AppColors.text2),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            subtitle,
+            style: AppText.body.copyWith(color: AppColors.muted),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 }
