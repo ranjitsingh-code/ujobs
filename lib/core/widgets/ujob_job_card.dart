@@ -57,11 +57,12 @@ class UJobJobCard extends StatelessWidget {
                       Container(
                         width: 48.r,
                         height: 48.r,
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: AppColors.borderLight,
+                          color: AppColors.seekSurface,
                           borderRadius: AppRadius.md,
                         ),
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedBuilding04, color: AppColors.muted, size: 24.r),
+                        child: HugeIcon(icon: HugeIcons.strokeRoundedBuilding03, color: AppColors.seekPrimary, size: 24.r),
                       ),
                     SizedBox(width: 12.w),
                     Expanded(
@@ -85,9 +86,12 @@ class UJobJobCard extends StatelessWidget {
                     if (onSaveTap != null)
                       IconButton(
                         onPressed: onSaveTap,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                         icon: HugeIcon(
                           icon: job.isSaved ? HugeIcons.strokeRoundedBookmark01 : HugeIcons.strokeRoundedBookmark02,
-                          color: job.isSaved ? AppColors.seekPrimary : AppColors.muted,
+                          color: job.isSaved ? AppColors.seekPrimary : AppColors.muted2,
                           size: 24.r,
                         ),
                       ),
