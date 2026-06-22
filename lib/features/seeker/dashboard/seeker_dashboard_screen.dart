@@ -76,6 +76,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                       )
                     else
                       ListView.separated(
+                        padding: EdgeInsets.zero,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: data.recommendedJobs.length,
