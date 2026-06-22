@@ -100,17 +100,35 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
         if (jobs.isEmpty) {
           return Center(child: Text(l10n.noMatchingJobsFound, style: AppText.body.copyWith(color: AppColors.muted)));
         }
-        return ListView.separated(
-          padding: AppSpacing.pagePad,
-          itemCount: jobs.length,
-          separatorBuilder: (_, __) => SizedBox(height: 12.h),
-          itemBuilder: (context, index) {
-            final job = jobs[index];
-            return UJobJobCard(
-              job: job,
-              onTap: () => context.push('/seeker/jobs/${job.id}'),
-            );
-          },
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 12.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Find Your Next Job', style: AppText.h2),
+                  SizedBox(height: 4.h),
+                  Text('${jobs.length} positions matched to your profile', style: AppText.bodyMedium.copyWith(color: AppColors.muted)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                itemCount: jobs.length,
+                separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                itemBuilder: (context, index) {
+                  final job = jobs[index];
+                  return UJobJobCard(
+                    job: job,
+                    onTap: () => context.push('/seeker/jobs/${job.id}'),
+                  );
+                },
+              ),
+            ),
+          ],
         );
       },
     );
@@ -175,18 +193,29 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
               return Column(
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                    padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('${jobs.length} jobs found', style: AppText.bodyBold.copyWith(color: AppColors.muted2)),
-                        Row(
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Find Your Next Job', style: AppText.h2),
+                              SizedBox(height: 4.h),
+                              Text('${jobs.length} positions available', style: AppText.bodyMedium.copyWith(color: AppColors.muted)),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('Sort by: ', style: AppText.bodySmall.copyWith(color: AppColors.muted)),
-                            SizedBox(width: 4.w),
+                            Text('Sort:', style: AppText.bodySmall.copyWith(color: AppColors.muted)),
                             DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: _sortBy,
+                                isDense: true,
                                 icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, color: AppColors.muted, size: 16.r),
                                 style: AppText.bodySemiBold.copyWith(color: AppColors.seekPrimaryDark),
                                 dropdownColor: AppColors.surface,
