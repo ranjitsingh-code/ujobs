@@ -51,7 +51,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final jobsAsync = ref.watch(seekerJobsProvider(JobFilter()));
+    final jobsAsync = ref.watch(seekerJobsProvider);
     final l10n = context.l10n;
 
     return Scaffold(
@@ -107,7 +107,12 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                               size: 20.r,
                             ),
                           ),
-                          onChanged: (_) {},
+                          onChanged: (v) =>
+                              ref
+                                  .read(activeJobFilterProvider.notifier)
+                                  .state = ref
+                                  .read(activeJobFilterProvider)
+                                  .copyWith(search: v),
                         ),
                       ),
                       if (_tabIndex == 1) ...[
@@ -192,7 +197,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
       loading: () => const UJobLoading(count: 3),
       error: (err, stack) => UJobError(
         message: l10n.error,
-        onRetry: () => ref.refresh(seekerJobsProvider(JobFilter())),
+        onRetry: () => ref.refresh(seekerJobsProvider),
       ),
       data: (jobs) {
         if (jobs.isEmpty) {
@@ -250,7 +255,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
             loading: () => const UJobLoading(count: 3),
             error: (err, stack) => UJobError(
               message: l10n.error,
-              onRetry: () => ref.refresh(seekerJobsProvider(JobFilter())),
+              onRetry: () => ref.refresh(seekerJobsProvider),
             ),
             data: (jobs) {
               if (jobs.isEmpty) {
@@ -336,24 +341,36 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
   }
 }
 
-class _FilterSheet extends StatefulWidget {
+class _FilterSheet extends ConsumerStatefulWidget {
   const _FilterSheet();
 
   @override
-  State<_FilterSheet> createState() => _FilterSheetState();
+  ConsumerState<_FilterSheet> createState() => _FilterSheetState();
 }
 
-class _FilterSheetState extends State<_FilterSheet> {
+class _FilterSheetState extends ConsumerState<_FilterSheet> {
   final _keywordsCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
   final _companyCtrl = TextEditingController();
-
   String _datePosted = 'Any time';
-  List<String> _employmentTypes = ['Full-time'];
-  List<String> _workplaces = ['On-site'];
+  List<String> _employmentTypes = [];
+  List<String> _workplaces = [];
   String _experienceLevel = 'Any level';
   String _minSalary = 'Any salary';
   String _category = 'All Categories';
+
+  @override
+  void initState() {
+    super.initState();
+    final filter = ref.read(activeJobFilterProvider);
+    _keywordsCtrl.text = filter.search ?? '';
+    _category = filter.category ?? 'All Categories';
+    _datePosted = filter.datePosted ?? 'Any time';
+    _experienceLevel = filter.experienceLevel ?? 'Any level';
+    _minSalary = filter.minSalary ?? 'Any salary';
+    _employmentTypes = List.from(filter.employmentTypes);
+    _workplaces = List.from(filter.workplaces);
+  }
 
   @override
   void dispose() {
@@ -399,17 +416,25 @@ class _FilterSheetState extends State<_FilterSheet> {
                     });
                   },
                   style: TextButton.styleFrom(
-                    backgroundColor: AppColors.borderLight.withValues(alpha: 0.5),
+                    backgroundColor: AppColors.borderLight.withValues(
+                      alpha: 0.5,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: Text(
                     'Reset',
-                    style: AppText.bodyBold.copyWith(color: AppColors.text, fontSize: 13.sp),
+                    style: AppText.bodyBold.copyWith(
+                      color: AppColors.text,
+                      fontSize: 13.sp,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -573,7 +598,7 @@ class _FilterSheetState extends State<_FilterSheet> {
   }
 }
 
-class _SortSheet extends StatelessWidget {
+class _SortSheet extends ConsumerWidget {
   final String currentValue;
   final List<String> options;
   final ValueChanged<String> onSelected;
@@ -585,7 +610,7 @@ class _SortSheet extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20.w,

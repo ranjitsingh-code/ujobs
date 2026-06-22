@@ -104,7 +104,9 @@ class UJobJobCard extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     job.location!,
-                                    style: AppText.bodyMedium.copyWith(color: AppColors.muted2),
+                                    style: AppText.bodyMedium.copyWith(
+                                      color: AppColors.muted2,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
