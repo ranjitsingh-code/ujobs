@@ -28,9 +28,9 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
   final TextEditingController _searchController = TextEditingController();
   late final PageController _pageCtrl;
   int _tabIndex = 0;
-  String _sortBy = 'Most recent';
+  String _sortBy = 'Most relevant';
   final List<String> _sortOptions = [
-    'Most recent',
+    'Most relevant',
     'Newest/latest',
     'Salary: High to low',
     'Salary: Low to high'
