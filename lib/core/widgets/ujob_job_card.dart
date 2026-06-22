@@ -159,11 +159,7 @@ class UJobJobCard extends StatelessWidget {
                                 ],
                               ],
                             ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'View details →',
-                            style: AppText.bodyBold.copyWith(color: AppColors.seekPrimary),
-                          ),
+
                         ],
                       ),
                     ),

@@ -60,72 +60,90 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
         title: l10n.findJobs,
         showBack: false,
       ),
-      body: Column(
-        children: [
-          Container(
-            color: AppColors.surface,
-            padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
-            child: Row(
-              children: [
-                Expanded(
-                  child: UJobTextField(
-                    label: '',
-                    hint: 'Search jobs, skills...',
-                    controller: _searchController,
-                    prefix: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
+      body: DefaultTabController(
+        length: 2,
+        initialIndex: _tabIndex,
+        child: NestedScrollView(
+          physics: const BouncingScrollPhysics(),
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                backgroundColor: AppColors.surface,
+                pinned: true,
+                floating: true,
+                elevation: innerBoxIsScrolled ? 2 : 0,
+                forceElevated: innerBoxIsScrolled,
+                toolbarHeight: 80.h,
+                titleSpacing: 0,
+                title: Padding(
+                  padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: UJobTextField(
+                          label: '',
+                          hint: 'Search jobs, skills...',
+                          controller: _searchController,
+                          prefix: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
+                          ),
+                        ),
+                      ),
+                      if (_tabIndex == 1) ...[
+                        SizedBox(width: 12.w),
+                        Container(
+                          height: 52.h,
+                          width: 52.h,
+                          margin: EdgeInsets.only(top: 8.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.seekPrimary,
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
+                          child: IconButton(
+                            icon: HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, color: AppColors.surface, size: 24.r),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                backgroundColor: Colors.transparent,
+                                isScrollControlled: true,
+                                builder: (context) => const _FilterSheet(),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                bottom: PreferredSize(
+                  preferredSize: Size.fromHeight(48.h),
+                  child: Container(
+                    color: AppColors.surface,
+                    padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 12.h),
+                    child: UJobPillTabBar(
+                      tabs: const ['For you', 'All jobs'],
+                      isExpanded: true,
+                      selectedIndex: _tabIndex,
+                      onTabSelected: (v) {
+                        setState(() => _tabIndex = v);
+                        _pageCtrl.animateToPage(v, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                      },
                     ),
                   ),
                 ),
-                SizedBox(width: 12.w),
-                Container(
-                  height: 52.h,
-                  width: 52.h,
-                  margin: EdgeInsets.only(top: 8.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.seekPrimary,
-                    borderRadius: BorderRadius.circular(16.r),
-                  ),
-                  child: IconButton(
-                    icon: HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, color: AppColors.surface, size: 24.r),
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        backgroundColor: Colors.transparent,
-                        isScrollControlled: true,
-                        builder: (context) => const _FilterSheet(),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ];
+          },
+          body: PageView(
+            controller: _pageCtrl,
+            onPageChanged: (v) => setState(() => _tabIndex = v),
+            children: [
+              _buildForYouTab(jobsAsync, l10n),
+              _buildAllJobsTab(jobsAsync, l10n),
+            ],
           ),
-          Container(
-            color: AppColors.surface,
-            padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 12.h),
-            child: UJobPillTabBar(
-              tabs: const ['For you', 'All jobs'],
-              isExpanded: true,
-              selectedIndex: _tabIndex,
-              onTabSelected: (v) {
-                setState(() => _tabIndex = v);
-                _pageCtrl.animateToPage(v, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-              },
-            ),
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pageCtrl,
-              onPageChanged: (v) => setState(() => _tabIndex = v),
-              children: [
-                _buildForYouTab(jobsAsync, l10n),
-                _buildAllJobsTab(jobsAsync, l10n),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
