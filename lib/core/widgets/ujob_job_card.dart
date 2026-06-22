@@ -140,7 +140,8 @@ class UJobJobCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (job.createdAt != null)
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
                                   timeago.format(job.createdAt!),
