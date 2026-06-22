@@ -68,7 +68,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                       actionLabel: 'See all',
                       onActionTap: () => context.go('/seeker/jobs'),
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 8.h),
                     if (data.recommendedJobs.isEmpty)
                       const _EmptyState(
                         title: 'No recent jobs found',
