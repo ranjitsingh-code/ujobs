@@ -217,18 +217,29 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text('${jobs.length} positions', style: AppText.bodyBold),
-                        DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _sortBy,
-                            isDense: true,
-                            icon: Padding(
-                              padding: EdgeInsets.only(left: 4.w),
-                              child: HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, color: AppColors.muted, size: 18.r),
-                            ),
-                            style: AppText.bodyMedium.copyWith(color: AppColors.seekPrimaryDark),
-                            dropdownColor: AppColors.surface,
-                            items: _sortOptions.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                            onChanged: (v) => setState(() => _sortBy = v!),
+                        GestureDetector(
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              backgroundColor: AppColors.surface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+                              ),
+                              builder: (ctx) => _SortSheet(
+                                currentValue: _sortBy,
+                                options: _sortOptions,
+                                onSelected: (val) {
+                                  setState(() => _sortBy = val);
+                                },
+                              ),
+                            );
+                          },
+                          child: Row(
+                            children: [
+                              Text(_sortBy, style: AppText.bodyMedium.copyWith(color: AppColors.seekPrimaryDark)),
+                              SizedBox(width: 4.w),
+                              HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, color: AppColors.seekPrimaryDark, size: 18.r),
+                            ],
                           ),
                         ),
                       ],
@@ -426,6 +437,62 @@ class _FilterSheetState extends State<_FilterSheet> {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SortSheet extends StatelessWidget {
+  final String currentValue;
+  final List<String> options;
+  final ValueChanged<String> onSelected;
+
+  const _SortSheet({
+    required this.currentValue,
+    required this.options,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, MediaQuery.of(context).padding.bottom + 24.h),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Sort By', style: AppText.heading3),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.text, size: 24.r),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          ...options.map((option) {
+            final isSelected = option == currentValue;
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                option,
+                style: AppText.body.copyWith(
+                  color: isSelected ? AppColors.seekPrimary : AppColors.text,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+              trailing: isSelected
+                  ? HugeIcon(icon: HugeIcons.strokeRoundedTick02, color: AppColors.seekPrimary, size: 20.r)
+                  : null,
+              onTap: () {
+                onSelected(option);
+                Navigator.pop(context);
+              },
+            );
+          }),
         ],
       ),
     );
