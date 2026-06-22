@@ -11,7 +11,7 @@ import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_dropdown.dart';
-import '../../../core/widgets/ujob_rich_text_editor.dart';
+import '../../../core/widgets/ujob_rich_text_field.dart';
 
 class SeekerProfileScreen extends ConsumerStatefulWidget {
   const SeekerProfileScreen({super.key});
@@ -147,10 +147,11 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
               SizedBox(height: 16.h),
               Text('About / Summary', style: AppText.bodyBold.copyWith(color: AppColors.text)),
               SizedBox(height: 8.h),
-              UJobRichTextEditor(
-                title: 'About',
+              UJobRichTextField(
+                label: 'About',
+                hint: 'Write a short bio about yourself...',
                 initialValue: _about,
-                onSave: (v) => _about = v,
+                onSave: (v) => setState(() => _about = v),
               ),
               SizedBox(height: 16.h),
               UJobTextField(label: 'Skills', hint: 'Type and press enter...', controller: _skillsCtrl),

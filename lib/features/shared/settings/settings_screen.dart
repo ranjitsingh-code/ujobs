@@ -523,7 +523,7 @@ class _ToggleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final role = Consumer(builder: (context, ref, child) => Text(ref.watch(activeRoleProvider), style: const TextStyle(fontSize: 0)));
+    
     final primaryColor = AppColors.primary; // Or seeker primary if needed
 
     return Container(
