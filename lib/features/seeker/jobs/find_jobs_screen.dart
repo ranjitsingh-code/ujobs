@@ -56,10 +56,6 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: UJobAppBar(
-        title: l10n.findJobs,
-        showBack: false,
-      ),
       body: DefaultTabController(
         length: 2,
         initialIndex: _tabIndex,
@@ -68,6 +64,21 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverAppBar(
+                backgroundColor: AppColors.surface,
+                pinned: true,
+                floating: false,
+                elevation: 0,
+                centerTitle: true,
+                title: Text(
+                  l10n.findJobs,
+                  style: AppText.bodyBold.copyWith(
+                    color: AppColors.text,
+                    fontSize: 18.sp,
+                  ),
+                ),
+              ),
+              SliverAppBar(
+                primary: false,
                 backgroundColor: AppColors.surface,
                 pinned: false,
                 floating: true,
@@ -119,6 +130,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                 ),
               ),
               SliverAppBar(
+                primary: false,
                 backgroundColor: AppColors.surface,
                 pinned: true,
                 floating: false,
