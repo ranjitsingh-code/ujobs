@@ -279,8 +279,8 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                           style: AppText.bodyBold,
                         ),
                         GestureDetector(
-                          onTap: () {
-                            showModalBottomSheet(
+                          onTap: () async {
+                            final val = await showModalBottomSheet<String>(
                               context: context,
                               backgroundColor: AppColors.surface,
                               shape: RoundedRectangleBorder(
@@ -291,16 +291,16 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                               builder: (ctx) => _SortSheet(
                                 currentValue: _sortBy,
                                 options: _sortOptions,
-                                onSelected: (val) {
-                                  setState(() => _sortBy = val);
-                                  ref
-                                      .read(activeJobFilterProvider.notifier)
-                                      .state = ref
-                                      .read(activeJobFilterProvider)
-                                      .copyWith(sortBy: val);
-                                },
                               ),
                             );
+                            if (val != null && mounted) {
+                              setState(() => _sortBy = val);
+                              ref
+                                  .read(activeJobFilterProvider.notifier)
+                                  .state = ref
+                                  .read(activeJobFilterProvider)
+                                  .copyWith(sortBy: val);
+                            }
                           },
                           child: Row(
                             children: [
@@ -593,7 +593,19 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
               color: AppColors.seekPrimary,
               onTap: () {
                 Navigator.pop(context);
-                // Apply filter logic
+                ref.read(activeJobFilterProvider.notifier).state = JobFilter(
+                  search: _keywordsCtrl.text.isEmpty
+                      ? null
+                      : _keywordsCtrl.text,
+                  category: _category == 'All Categories' ? null : _category,
+                  datePosted: _datePosted == 'Any time' ? null : _datePosted,
+                  employmentTypes: _employmentTypes,
+                  workplaces: _workplaces,
+                  experienceLevel: _experienceLevel == 'Any level'
+                      ? null
+                      : _experienceLevel,
+                  minSalary: _minSalary == 'Any salary' ? null : _minSalary,
+                );
               },
             ),
           ),
@@ -606,13 +618,8 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
 class _SortSheet extends ConsumerWidget {
   final String currentValue;
   final List<String> options;
-  final ValueChanged<String> onSelected;
 
-  const _SortSheet({
-    required this.currentValue,
-    required this.options,
-    required this.onSelected,
-  });
+  const _SortSheet({required this.currentValue, required this.options});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -661,8 +668,7 @@ class _SortSheet extends ConsumerWidget {
                     )
                   : null,
               onTap: () {
-                onSelected(option);
-                Navigator.pop(context);
+                Navigator.pop(context, option);
               },
             );
           }),
