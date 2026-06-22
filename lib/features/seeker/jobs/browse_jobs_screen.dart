@@ -56,7 +56,10 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
                           decoration: InputDecoration(
                             hintText: 'Search jobs, skills...',
                             hintStyle: AppText.body.copyWith(color: AppColors.muted),
-                            prefixIcon: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 24.r),
+                            prefixIcon: Padding(
+                              padding: EdgeInsets.all(14.w),
+                              child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 24.r),
+                            ),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                           ),
@@ -72,8 +75,11 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: IconButton(
-                        icon: HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, color: AppColors.surface),
-                        onPressed: () {},
+                        icon: HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, color: AppColors.surface, size: 24.r),
+                        onPressed: () {
+                          // Show filter bottom sheet
+                          _showFilterSheet(context);
+                        },
                       ),
                     ),
                   ],
@@ -140,6 +146,103 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+  void _showFilterSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 24.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Filter Jobs', style: AppText.heading2),
+                    IconButton(
+                      icon: HugeIcon(icon: HugeIcons.strokeRoundedCancel01, color: AppColors.muted),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24.h),
+                Text('Job Type', style: AppText.bodyBold),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 12.w,
+                  runSpacing: 12.h,
+                  children: [
+                    _FilterChip(label: 'Full-time', isSelected: true),
+                    _FilterChip(label: 'Part-time', isSelected: false),
+                    _FilterChip(label: 'Contract', isSelected: false),
+                    _FilterChip(label: 'Freelance', isSelected: false),
+                  ],
+                ),
+                SizedBox(height: 24.h),
+                Text('Workplace Mode', style: AppText.bodyBold),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 12.w,
+                  runSpacing: 12.h,
+                  children: [
+                    _FilterChip(label: 'On-site', isSelected: true),
+                    _FilterChip(label: 'Remote', isSelected: false),
+                    _FilterChip(label: 'Hybrid', isSelected: false),
+                  ],
+                ),
+                SizedBox(height: 32.h),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54.h,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.seekPrimary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                    ),
+                    child: Text('Apply Filters', style: AppText.bodyBold.copyWith(color: AppColors.surface)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  const _FilterChip({required this.label, required this.isSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.seekPrimary.withValues(alpha: 0.1) : AppColors.background,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: isSelected ? AppColors.seekPrimary : AppColors.borderLight),
+      ),
+      child: Text(
+        label,
+        style: AppText.bodyMedium.copyWith(color: isSelected ? AppColors.seekPrimary : AppColors.text),
       ),
     );
   }

@@ -21,100 +21,111 @@ class UJobJobCard extends StatelessWidget {
     super.key,
   });
 
+
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: EdgeInsets.only(bottom: 16.h),
-      child: InkWell(
-        onTap: onTap,
+      child: Material(
+        color: AppColors.surface,
         borderRadius: AppRadius.xl,
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (showCompany && job.company?.logo != null)
-                    UJobImage(
-                      path: job.company!.logo!,
-                      width: 48.r,
-                      height: 48.r,
-                      fit: BoxFit.cover,
-                      borderRadius: AppRadius.md,
-                    )
-                  else if (showCompany)
-                    Container(
-                      width: 48.r,
-                      height: 48.r,
-                      decoration: BoxDecoration(
-                        color: AppColors.borderLight,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadius.xl,
+          child: Container(
+            padding: EdgeInsets.all(14.r),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+              borderRadius: AppRadius.xl,
+              boxShadow: AppShadow.card(),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (showCompany && job.company?.logo != null)
+                      UJobImage(
+                        path: job.company!.logo!,
+                        width: 48.r,
+                        height: 48.r,
+                        fit: BoxFit.cover,
                         borderRadius: AppRadius.md,
-                      ),
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedBuilding04, color: AppColors.muted, size: 20.r),
-                    ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          job.title,
-                          style: AppText.h3.copyWith(fontSize: 16.sp),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      )
+                    else if (showCompany)
+                      Container(
+                        width: 48.r,
+                        height: 48.r,
+                        decoration: BoxDecoration(
+                          color: AppColors.borderLight,
+                          borderRadius: AppRadius.md,
                         ),
-                        if (showCompany && job.company != null)
+                        child: HugeIcon(icon: HugeIcons.strokeRoundedBuilding04, color: AppColors.muted, size: 24.r),
+                      ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            job.company!.name,
-                            style: AppText.bodyMedium.copyWith(color: AppColors.muted),
+                            job.title,
+                            style: AppText.h3.copyWith(fontSize: 16.sp),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                      ],
-                    ),
-                  ),
-                  if (onSaveTap != null)
-                    IconButton(
-                      onPressed: onSaveTap,
-                      icon: HugeIcon(
-                        icon: job.isSaved ? HugeIcons.strokeRoundedBookmark01 : HugeIcons.strokeRoundedBookmark02,
-                        color: job.isSaved ? AppColors.seekPrimary : AppColors.muted,
-                        size: 24.r,
+                          if (showCompany && job.company != null)
+                            Text(
+                              job.company!.name,
+                              style: AppText.bodyMedium.copyWith(color: AppColors.muted),
+                            ),
+                        ],
                       ),
                     ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  _Badge(label: job.employmentType.replaceAll('_', ' ').toUpperCase()),
-                  SizedBox(width: 8.w),
-                  _Badge(label: job.workplaceType.toUpperCase()),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    job.salaryMax != null 
-                      ? '${job.salaryMin} - ${job.salaryMax}' 
-                      : (job.salaryMin ?? 'Negotiable'),
-                    style: AppText.bodySemiBold.copyWith(color: AppColors.empPrimary),
-                  ),
-                  if (job.createdAt != null)
+                    if (onSaveTap != null)
+                      IconButton(
+                        onPressed: onSaveTap,
+                        icon: HugeIcon(
+                          icon: job.isSaved ? HugeIcons.strokeRoundedBookmark01 : HugeIcons.strokeRoundedBookmark02,
+                          color: job.isSaved ? AppColors.seekPrimary : AppColors.muted,
+                          size: 24.r,
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  children: [
+                    _Badge(label: job.employmentType.replaceAll('_', ' ').toUpperCase()),
+                    SizedBox(width: 8.w),
+                    _Badge(label: job.workplaceType.toUpperCase()),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Text(
-                      timeago.format(job.createdAt!),
-                      style: AppText.bodySmall.copyWith(color: AppColors.muted),
+                      job.salaryMax != null 
+                        ? '${job.salaryMin} - ${job.salaryMax}' 
+                        : (job.salaryMin ?? 'Negotiable'),
+                      style: AppText.bodySemiBold.copyWith(color: AppColors.empPrimary),
                     ),
-                ],
-              ),
-            ],
+                    if (job.createdAt != null)
+                      Text(
+                        timeago.format(job.createdAt!),
+                        style: AppText.bodySmall.copyWith(color: AppColors.muted),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
 }
 
 class _Badge extends StatelessWidget {
