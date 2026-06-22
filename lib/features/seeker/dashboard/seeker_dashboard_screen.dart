@@ -10,6 +10,7 @@ import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_job_card.dart';
+import '../../shared/chat/conversation_provider.dart';
 import 'seeker_dashboard_provider.dart';
 
 class SeekerDashboardScreen extends ConsumerWidget {
@@ -19,6 +20,8 @@ class SeekerDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final dashboardAsync = ref.watch(seekerDashboardProvider);
+    final convAsync = ref.watch(seekerConversationsProvider);
+    final needsReply = convAsync.valueOrNull?.where((c) => c.unreadCount > 0).toList() ?? [];
     final l10n = context.l10n;
 
     final String greeting =
@@ -63,14 +66,17 @@ class SeekerDashboardScreen extends ConsumerWidget {
                   children: [
                     // Banner
                     _ProfileSetupPrompt(
-                      onSetup: () => context.push('/seeker/profile'),
+                      onSetup: () => context.go('/seeker/profile'),
                     ),
 
                     // Messages
-                    _MessagesToReply(
-                      onViewAll: () => context.push('/seeker/messages'),
-                    ),
-                    SizedBox(height: 32.h),
+                    if (needsReply.isNotEmpty) ...[
+                      _MessagesToReply(
+                        conversations: needsReply,
+                        onViewAll: () => context.go('/seeker/messages'),
+                      ),
+                      SizedBox(height: 32.h),
+                    ],
 
                     _SectionHeader(
                       title: 'Latest Jobs',
@@ -499,9 +505,13 @@ class _ProfileSetupPrompt extends StatelessWidget {
 }
 
 class _MessagesToReply extends StatelessWidget {
+  final List<Conversation> conversations;
   final VoidCallback onViewAll;
 
-  const _MessagesToReply({required this.onViewAll});
+  const _MessagesToReply({
+    required this.conversations,
+    required this.onViewAll,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -519,18 +529,12 @@ class _MessagesToReply extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            itemCount: 4, // Mock count
+            itemCount: conversations.length,
             separatorBuilder: (_, _) => SizedBox(width: 16.w),
             itemBuilder: (context, index) {
+              final conversation = conversations[index];
               return _MessageAvatar(
-                name: [
-                  'TechCorp',
-                  'DesignCo',
-                  'InnovateInc',
-                  'StartupX',
-                ][index],
-                count: index == 0 ? 2 : 1,
-                hasUnread: true,
+                conversation: conversation,
               );
             },
           ),
@@ -541,65 +545,94 @@ class _MessagesToReply extends StatelessWidget {
 }
 
 class _MessageAvatar extends StatelessWidget {
-  final String name;
-  final int count;
-  final bool hasUnread;
+  final Conversation conversation;
 
   const _MessageAvatar({
-    required this.name,
-    required this.count,
-    required this.hasUnread,
+    required this.conversation,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Stack(
+    final initials = conversation.otherInitials ??
+        (conversation.otherName.isNotEmpty ? conversation.otherName[0] : '?');
+
+    return Semantics(
+      button: true,
+      label: conversation.unreadCount > 0
+          ? '${conversation.otherName}, ${conversation.unreadCount} unread messages'
+          : '${conversation.otherName}, awaiting reply',
+      child: InkWell(
+        onTap: () {
+          if (conversation.id.startsWith('demo-')) {
+            context.go('/seeker/messages');
+            return;
+          }
+          context.push(
+            '/conversations/${conversation.id}',
+            extra: {
+              'name': conversation.otherName,
+              'initials': conversation.otherInitials,
+              'avatar': conversation.otherAvatar,
+            },
+          );
+        },
+        borderRadius: BorderRadius.circular(28.r),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            CircleAvatar(
-              radius: 28.r,
-              backgroundColor: AppColors.borderLight,
-              child: Text(
-                name.substring(0, 1),
-                style: AppText.bodyBold.copyWith(color: AppColors.text2),
-              ),
-            ),
-            if (hasUnread)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  padding: EdgeInsets.all(4.r),
-                  decoration: const BoxDecoration(
-                    color: AppColors.error,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    count.toString(),
-                    style: AppText.caption.copyWith(
-                      color: AppColors.surface,
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.bold,
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 28.r,
+                  backgroundColor: AppColors.borderLight,
+                  backgroundImage: conversation.otherAvatar != null
+                      ? NetworkImage(conversation.otherAvatar!)
+                      : null,
+                  child: conversation.otherAvatar == null
+                      ? Text(
+                          initials,
+                          style: AppText.bodyBold.copyWith(
+                            color: AppColors.text2,
+                          ),
+                        )
+                      : null,
+                ),
+                if (conversation.unreadCount > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: EdgeInsets.all(4.r),
+                      decoration: const BoxDecoration(
+                        color: AppColors.error,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        conversation.unreadCount.toString(),
+                        style: AppText.caption.copyWith(
+                          color: AppColors.surface,
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+              ],
+            ),
+            SizedBox(height: 4.h),
+            SizedBox(
+              width: 56.r,
+              child: Text(
+                conversation.otherName,
+                style: AppText.caption,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
+            ),
           ],
         ),
-        SizedBox(height: 4.h),
-        SizedBox(
-          width: 56.r,
-          child: Text(
-            name,
-            style: AppText.caption,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
