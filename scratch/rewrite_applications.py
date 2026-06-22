@@ -1,27 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
-import 'package:hugeicons/hugeicons.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/utils/l10n_extensions.dart';
-import '../../../core/widgets/ujob_app_bar.dart';
-import '../../../core/widgets/ujob_loading.dart';
-import '../../../core/widgets/ujob_error.dart';
-import '../../../core/widgets/ujob_job_card.dart';
-import '../../../core/widgets/ujob_pill_tab_bar.dart';
-import 'seeker_application_provider.dart';
+import re
 
-class MyApplicationsScreen extends ConsumerStatefulWidget {
-  const MyApplicationsScreen({super.key});
+with open('lib/features/seeker/applications/my_applications_screen.dart', 'r') as f:
+    content = f.read()
 
-  @override
-  ConsumerState<MyApplicationsScreen> createState() =>
-      _MyApplicationsScreenState();
-}
-
-class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
+# Replace _MyApplicationsScreenState
+new_state = """class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
   late final PageController _pageController;
   int _selectedIndex = 0;
 
@@ -180,3 +163,15 @@ class _ApplicationList extends StatelessWidget {
     );
   }
 }
+"""
+
+start_idx = content.find("class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen>")
+content = content[:start_idx] + new_state
+
+# Also add import for UJobPillTabBar if missing
+if 'ujob_pill_tab_bar.dart' not in content:
+    content = content.replace("import '../../../core/widgets/ujob_job_card.dart';", "import '../../../core/widgets/ujob_job_card.dart';\nimport '../../../core/widgets/ujob_pill_tab_bar.dart';")
+
+with open('lib/features/seeker/applications/my_applications_screen.dart', 'w') as f:
+    f.write(content)
+

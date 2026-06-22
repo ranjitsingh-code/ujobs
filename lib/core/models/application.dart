@@ -1,6 +1,13 @@
 import 'job.dart';
 
-enum ApplicationStatus { applied, reviewing, shortlisting, rejected, accepted }
+enum ApplicationStatus {
+  applied,
+  shortlisted,
+  interviewing,
+  offered,
+  hired,
+  rejected,
+}
 
 class Application {
   final int id;
@@ -32,14 +39,16 @@ class Application {
 
   static ApplicationStatus _parseStatus(String? status) {
     switch (status) {
-      case 'reviewing':
-        return ApplicationStatus.reviewing;
-      case 'shortlisting':
-        return ApplicationStatus.shortlisting;
+      case 'shortlisted':
+        return ApplicationStatus.shortlisted;
+      case 'interviewing':
+        return ApplicationStatus.interviewing;
+      case 'offered':
+        return ApplicationStatus.offered;
+      case 'hired':
+        return ApplicationStatus.hired;
       case 'rejected':
         return ApplicationStatus.rejected;
-      case 'accepted':
-        return ApplicationStatus.accepted;
       default:
         return ApplicationStatus.applied;
     }

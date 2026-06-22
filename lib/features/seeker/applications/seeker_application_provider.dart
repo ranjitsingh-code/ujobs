@@ -22,8 +22,15 @@ final seekerApplicationsProvider =
           Application(
             id: 2,
             job: jobs[1],
-            status: ApplicationStatus.reviewing,
+            status: ApplicationStatus.applied,
             createdAt: DateTime.now().subtract(const Duration(days: 3)),
+          ),
+        if (jobs.length > 2)
+          Application(
+            id: 3,
+            job: jobs[2],
+            status: ApplicationStatus.rejected,
+            createdAt: DateTime.now().subtract(const Duration(days: 5)),
           ),
       ];
 
