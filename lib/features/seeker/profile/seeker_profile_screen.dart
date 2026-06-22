@@ -476,24 +476,7 @@ class _SeekerProfileHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Back Button
-              IconButton(
-                onPressed: () => context.pop(),
-                tooltip: 'Back',
-                style: IconButton.styleFrom(
-                  backgroundColor: AppColors.surface,
-                  fixedSize: Size(44.r, 44.r),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.md,
-                    side: BorderSide(color: AppColors.border),
-                  ),
-                ),
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  color: AppColors.text,
-                  size: 20.r,
-                ),
-              ),
+
               // Avatar Info
               Expanded(
                 child: Column(

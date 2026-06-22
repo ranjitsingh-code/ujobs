@@ -61,37 +61,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                   children: [
                     SizedBox(height: 16.h),
                     
-                    _SectionHeader(
-                      title: l10n.recommendedJobs,
-                      actionLabel: 'See all',
-                      onActionTap: () => context.go('/seeker/jobs'),
-                      subtitle: 'AI matched · updated today',
-                    ),
-                    SizedBox(height: 16.h),
-                    if (data.recommendedJobs.isEmpty)
-                      const _EmptyState(message: 'No matching jobs found')
-                    else
-                      SizedBox(
-                        height: 220.h,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: data.recommendedJobs.length,
-                          separatorBuilder: (_, __) => SizedBox(width: 16.w),
-                          itemBuilder: (context, index) {
-                            final job = data.recommendedJobs[index];
-                            return SizedBox(
-                              width: 300.w,
-                              child: UJobJobCard(
-                                job: job,
-                                onTap: () => context.push('/seeker/jobs/${job.id}'),
-                                // Add a green top border or progress bar to match the design in UJobJobCard or wrap it
-                              ),
-                            );
-                          },
-                        ),
-                      ),
 
-                    SizedBox(height: 32.h),
                     
                     _SectionHeader(
                       title: 'Latest Jobs',
