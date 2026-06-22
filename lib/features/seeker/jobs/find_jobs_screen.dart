@@ -65,9 +65,11 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
             return [
               SliverAppBar(
                 backgroundColor: AppColors.surface,
+                surfaceTintColor: Colors.transparent,
                 pinned: true,
                 floating: false,
                 elevation: 0,
+                scrolledUnderElevation: 0,
                 centerTitle: true,
                 title: Text(
                   l10n.findJobs,
@@ -80,10 +82,12 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
               SliverAppBar(
                 primary: false,
                 backgroundColor: AppColors.surface,
+                surfaceTintColor: Colors.transparent,
                 pinned: false,
                 floating: true,
                 snap: true,
                 elevation: 0,
+                scrolledUnderElevation: 0,
                 toolbarHeight: 80.h,
                 titleSpacing: 0,
                 title: Padding(
@@ -105,9 +109,8 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                       if (_tabIndex == 1) ...[
                         SizedBox(width: 12.w),
                         Container(
-                          height: 52.h,
-                          width: 52.h,
-                          margin: EdgeInsets.only(top: 8.h),
+                          height: 56.h,
+                          width: 56.w,
                           decoration: BoxDecoration(
                             color: AppColors.seekPrimary,
                             borderRadius: BorderRadius.circular(16.r),
@@ -132,16 +135,19 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
               SliverAppBar(
                 primary: false,
                 backgroundColor: AppColors.surface,
+                surfaceTintColor: Colors.transparent,
                 pinned: true,
                 floating: false,
-                elevation: innerBoxIsScrolled ? 2 : 0,
+                elevation: innerBoxIsScrolled ? 1 : 0,
+                scrolledUnderElevation: innerBoxIsScrolled ? 1 : 0,
                 forceElevated: innerBoxIsScrolled,
+                shadowColor: AppColors.borderLight,
                 toolbarHeight: 0, // No title
                 bottom: PreferredSize(
-                  preferredSize: Size.fromHeight(60.h),
+                  preferredSize: Size.fromHeight(68.h),
                   child: Container(
                     color: AppColors.surface,
-                    padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 16.h),
+                    padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
                     child: UJobPillTabBar(
                       tabs: const ['For You', 'All Jobs'],
                       selectedIndex: _tabIndex,
