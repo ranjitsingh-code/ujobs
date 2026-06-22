@@ -85,11 +85,24 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationsState extends ConsumerState<NotificationsScreen> {
-  String _filter = 'all';
+  late final PageController _pageController;
+  int _selectedTabIndex = 0;
   bool _isSelectionMode = false;
   bool _isSearching = false;
   final Set<String> _selectedIds = {};
   String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   static const _tabs   = ['all', 'unread', 'application', 'message', 'system'];
   static const _labels = ['All', 'Unread', 'Applications', 'Messages', 'System'];
@@ -195,15 +208,6 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
     final primaryColor = role == 'employer' ? AppColors.primary : AppColors.seekPrimary;
 
     final notifs = ref.watch(_notifsProvider);
-    var filtered = notifs;
-    if (_filter == 'unread') {
-      filtered = filtered.where((n) => !n.isRead).toList();
-    } else if (_filter != 'all') {
-      filtered = filtered.where((n) => n.type == _filter).toList();
-    }
-    if (_query.isNotEmpty) {
-      filtered = filtered.where((n) => n.title.toLowerCase().contains(_query.toLowerCase()) || (n.body ?? '').toLowerCase().contains(_query.toLowerCase())).toList();
-    }
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -263,62 +267,91 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
       body: Column(
         children: [
           if (!_isSearching && !_isSelectionMode) _buildTabs(primaryColor),
-          if (_isSelectionMode)
-             Padding(
-               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-               child: Row(
-                 children: [
-                   UJobCheckbox(
-                     value: _selectedIds.length == filtered.length && filtered.isNotEmpty,
-                     onChanged: (v) {
-                       setState(() {
-                         if (v) _selectedIds.addAll(filtered.map((n) => n.id));
-                         else _selectedIds.clear();
-                       });
-                     },
-                     label: 'Select All',
-                   ),
-                 ],
-               ),
-             ),
           Expanded(
-            child: filtered.isEmpty
-                ? Center(
-                    child: UJobEmpty(
-                      title: 'No notifications',
-                      subtitle: 'You\'re all caught up!',
-                      icon: HugeIcons.strokeRoundedNotification02,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (idx) {
+                setState(() => _selectedTabIndex = idx);
+              },
+              itemCount: _tabs.length,
+              itemBuilder: (context, pageIndex) {
+                final filter = _tabs[pageIndex];
+                var filtered = notifs;
+                if (filter == 'unread') {
+                  filtered = filtered.where((n) => !n.isRead).toList();
+                } else if (filter != 'all') {
+                  filtered = filtered.where((n) => n.type == filter).toList();
+                }
+                if (_query.isNotEmpty) {
+                  filtered = filtered.where((n) => 
+                    n.title.toLowerCase().contains(_query.toLowerCase()) || 
+                    (n.body ?? '').toLowerCase().contains(_query.toLowerCase())
+                  ).toList();
+                }
+
+                return Column(
+                  children: [
+                    if (_isSelectionMode)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                        child: Row(
+                          children: [
+                            UJobCheckbox(
+                              value: _selectedIds.length == filtered.length && filtered.isNotEmpty,
+                              onChanged: (v) {
+                                setState(() {
+                                  if (v) _selectedIds.addAll(filtered.map((n) => n.id));
+                                  else _selectedIds.clear();
+                                });
+                              },
+                              label: 'Select All',
+                            ),
+                          ],
+                        ),
+                      ),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? Center(
+                              child: UJobEmpty(
+                                title: 'No notifications',
+                                subtitle: 'You\'re all caught up!',
+                                icon: HugeIcons.strokeRoundedNotification02,
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                              itemBuilder: (ctx, i) {
+                                final n = filtered[i];
+                                final isSelected = _selectedIds.contains(n.id);
+                                return _NotifCard(
+                                  notif: n,
+                                  icon: _iconFor(n.type),
+                                  borderColor: _borderColor(n.type, primaryColor),
+                                  primaryColor: primaryColor,
+                                  isSelectionMode: _isSelectionMode,
+                                  isSelected: isSelected,
+                                  onTap: () {
+                                    if (_isSelectionMode) {
+                                      setState(() {
+                                        isSelected ? _selectedIds.remove(n.id) : _selectedIds.add(n.id);
+                                      });
+                                    } else {
+                                      ref.read(_notifsProvider.notifier).markAsRead(n.id);
+                                    }
+                                  },
+                                  onLongPress: () {
+                                    if (!_isSelectionMode) _showMoreOptionsSheet(context, ref, primaryColor);
+                                  },
+                                );
+                              },
+                            ),
                     ),
-                  )
-                : ListView.separated(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                    itemBuilder: (ctx, i) {
-                      final n = filtered[i];
-                      final isSelected = _selectedIds.contains(n.id);
-                      return _NotifCard(
-                        notif: n,
-                        icon: _iconFor(n.type),
-                        borderColor: _borderColor(n.type, primaryColor),
-                        primaryColor: primaryColor,
-                        isSelectionMode: _isSelectionMode,
-                        isSelected: isSelected,
-                        onTap: () {
-                          if (_isSelectionMode) {
-                            setState(() {
-                              isSelected ? _selectedIds.remove(n.id) : _selectedIds.add(n.id);
-                            });
-                          } else {
-                            ref.read(_notifsProvider.notifier).markAsRead(n.id);
-                          }
-                        },
-                        onLongPress: () {
-                          if (!_isSelectionMode) _showMoreOptionsSheet(context, ref, primaryColor);
-                        },
-                      );
-                    },
-                  ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -331,13 +364,19 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
       child: Row(
         children: List.generate(_tabs.length, (i) {
-          final val = _tabs[i];
           final lbl = _labels[i];
-          final active = _filter == val;
+          final active = _selectedTabIndex == i;
           return Padding(
             padding: EdgeInsets.only(right: 8.w),
             child: InkWell(
-              onTap: () => setState(() => _filter = val),
+              onTap: () {
+                setState(() => _selectedTabIndex = i);
+                _pageController.animateToPage(
+                  i,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              },
               borderRadius: BorderRadius.circular(20.r),
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
