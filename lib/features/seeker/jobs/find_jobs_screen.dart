@@ -151,6 +151,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                     child: UJobPillTabBar(
                       tabs: const ['For You', 'All Jobs'],
                       selectedIndex: _tabIndex,
+                      isExpanded: true,
                       onTabSelected: (index) {
                         _pageCtrl.animateToPage(
                           index,
