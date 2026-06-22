@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/job.dart';
+import '../../../core/models/company.dart';
 
 final demoEmployerJobsProvider =
     StateNotifierProvider<DemoEmployerJobsNotifier, List<Job>>((ref) {
@@ -12,6 +13,14 @@ class DemoEmployerJobsNotifier extends StateNotifier<List<Job>> {
     : super([
         Job(
           id: 1,
+          company: Company(
+            id: 1,
+            name: 'TechCorp Solutions',
+            description: 'Leading tech firm',
+            industry: 'Technology',
+            size: '50-200',
+            location: 'San Francisco, CA',
+          ),
           title: 'Software Engineer',
           description: '[{"insert":"We are looking for a skilled Software Engineer to join our dynamic team. You will be responsible for building high-performance, scalable applications. Your daily tasks will include writing clean, maintainable code, reviewing pull requests, and collaborating with cross-functional teams.\\n"}]',
           category: 'Engineering',
@@ -46,6 +55,14 @@ class DemoEmployerJobsNotifier extends StateNotifier<List<Job>> {
         ),
         Job(
           id: 2,
+          company: Company(
+            id: 1,
+            name: 'Global Innovations',
+            description: 'Leading tech firm',
+            industry: 'Technology',
+            size: '50-200',
+            location: 'San Francisco, CA',
+          ),
           title: 'Website Developer',
           description: '[{"insert":"Looking for an experienced Website Developer to design, build, and maintain our company websites. You should be proficient in modern web frameworks and have a strong eye for UI/UX design. You will work closely with the marketing team to ensure optimal website performance and SEO.\\n"}]',
           category: 'Engineering',
@@ -77,6 +94,14 @@ class DemoEmployerJobsNotifier extends StateNotifier<List<Job>> {
         ),
         Job(
           id: 3,
+          company: Company(
+            id: 1,
+            name: 'HealthPlus',
+            description: 'Leading tech firm',
+            industry: 'Technology',
+            size: '50-200',
+            location: 'San Francisco, CA',
+          ),
           title: 'Mobile Application Developer',
           description: '[{"insert":"Seeking a Mobile Application Developer with Flutter experience to build and maintain both iOS and Android applications. You will be an integral part of our core product team, ensuring that our mobile applications are robust, performant, and user-friendly.\\n"}]',
           category: 'Engineering',
@@ -104,6 +129,14 @@ class DemoEmployerJobsNotifier extends StateNotifier<List<Job>> {
         ),
         Job(
           id: 4,
+          company: Company(
+            id: 1,
+            name: 'FinTech Nexus',
+            description: 'Leading tech firm',
+            industry: 'Technology',
+            size: '50-200',
+            location: 'San Francisco, CA',
+          ),
           title: 'SEO Expert',
           description: '[{"insert":"We need an SEO Expert to boost our organic reach and drive massive traffic to our main platforms. You will be conducting keyword research, competitive analysis, and executing full-scale SEO strategies.\\n"}]',
           category: 'Marketing',
@@ -129,6 +162,14 @@ class DemoEmployerJobsNotifier extends StateNotifier<List<Job>> {
         ),
         Job(
           id: 5,
+          company: Company(
+            id: 1,
+            name: 'DataDriven Inc',
+            description: 'Leading tech firm',
+            industry: 'Technology',
+            size: '50-200',
+            location: 'San Francisco, CA',
+          ),
           title: 'Data Analyst',
           description: '[{"insert":"Join our data team as a Data Analyst. You will be responsible for interpreting data, analyzing results, and providing ongoing reports. You will work closely with management to prioritize business and information needs.\\n"}]',
           category: 'Data Science',
@@ -153,6 +194,14 @@ class DemoEmployerJobsNotifier extends StateNotifier<List<Job>> {
         ),
         Job(
           id: 6,
+          company: Company(
+            id: 1,
+            name: 'SecureNet',
+            description: 'Leading tech firm',
+            industry: 'Technology',
+            size: '50-200',
+            location: 'San Francisco, CA',
+          ),
           title: 'Cybersecurity Expert',
           description: '[{"insert":"Protect our infrastructure as a Cybersecurity Expert. You will be analyzing security logs, identifying vulnerabilities, and implementing robust security measures across all our cloud environments.\\n"}]',
           category: 'Security',
@@ -176,6 +225,14 @@ class DemoEmployerJobsNotifier extends StateNotifier<List<Job>> {
         ),
         Job(
           id: 7,
+          company: Company(
+            id: 1,
+            name: 'Marketing Pros',
+            description: 'Leading tech firm',
+            industry: 'Technology',
+            size: '50-200',
+            location: 'San Francisco, CA',
+          ),
           title: 'Digital Marketer',
           description: '[{"insert":"Looking for a versatile Digital Marketer to oversee our online marketing strategy. You will be managing social media campaigns, email marketing, and paid advertising.\\n"}]',
           category: 'Marketing',

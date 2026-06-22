@@ -71,15 +71,38 @@ class UJobJobCard extends StatelessWidget {
                         children: [
                           Text(
                             job.title,
-                            style: AppText.h3.copyWith(fontSize: 16.sp),
+                            style: AppText.heading3.copyWith(fontSize: 16.sp),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (showCompany && job.company != null)
-                            Text(
-                              job.company!.name,
-                              style: AppText.bodyMedium.copyWith(color: AppColors.muted),
-                            ),
+                          SizedBox(height: 4.h),
+                          Row(
+                            children: [
+                              if (showCompany)
+                                Flexible(
+                                  child: Text(
+                                    job.company?.name ?? 'TechCorp Solutions',
+                                    style: AppText.bodyMedium.copyWith(color: AppColors.muted2),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              if (job.location != null && job.location!.isNotEmpty) ...[
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                  child: Container(width: 4.r, height: 4.r, decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle)),
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    job.location!,
+                                    style: AppText.bodyMedium.copyWith(color: AppColors.muted2),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -91,7 +114,7 @@ class UJobJobCard extends StatelessWidget {
                         style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                         icon: HugeIcon(
                           icon: job.isSaved ? HugeIcons.strokeRoundedBookmark01 : HugeIcons.strokeRoundedBookmark02,
-                          color: job.isSaved ? AppColors.seekPrimary : AppColors.muted2,
+                          color: job.isSaved ? AppColors.seekPrimary : AppColors.muted,
                           size: 24.r,
                         ),
                       ),
@@ -110,69 +133,46 @@ class UJobJobCard extends StatelessWidget {
                 ),
                 SizedBox(height: 16.h),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (job.location != null && job.location!.isNotEmpty) ...[
-                      HugeIcon(icon: HugeIcons.strokeRoundedLocation01, color: AppColors.muted, size: 14.r),
-                      SizedBox(width: 4.w),
-                      Flexible(
-                        child: Text(
-                          job.location!,
-                          style: AppText.bodySmall.copyWith(color: AppColors.muted),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (job.createdAt != null)
+                            Row(
+                              children: [
+                                Text(
+                                  timeago.format(job.createdAt!),
+                                  style: AppText.bodySmall.copyWith(color: AppColors.muted),
+                                ),
+                                if (job.applicantCount > 0) ...[
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 6.w),
+                                    child: Container(width: 3.r, height: 3.r, decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle)),
+                                  ),
+                                  Text(
+                                    '${job.applicantCount} applied',
+                                    style: AppText.bodySmall.copyWith(color: AppColors.muted),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            'View details →',
+                            style: AppText.bodyBold.copyWith(color: AppColors.seekPrimary),
+                          ),
+                        ],
                       ),
-                    ],
-                    if (job.salaryMin != null) ...[
-                      if (job.location != null && job.location!.isNotEmpty)
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                          child: Container(width: 3.r, height: 3.r, decoration: const BoxDecoration(color: AppColors.muted2, shape: BoxShape.circle)),
-                        ),
-                      Flexible(
-                        child: Text(
-                          job.salaryMax != null 
-                            ? '${job.salaryMin} - ${job.salaryMax}' 
-                            : job.salaryMin!,
-                          style: AppText.bodySemiBold.copyWith(color: AppColors.seekPrimaryDark),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                SizedBox(height: 16.h),
-                Row(
-                  children: [
-                    if (job.createdAt != null) ...[
-                      Text(
-                        timeago.format(job.createdAt!),
-                        style: AppText.bodySmall.copyWith(color: AppColors.muted2),
-                      ),
-                      if (job.applicantCount > 0) ...[
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                          child: Container(width: 3.r, height: 3.r, decoration: const BoxDecoration(color: AppColors.muted2, shape: BoxShape.circle)),
-                        ),
-                        Text(
-                          '${job.applicantCount} applied',
-                          style: AppText.bodySmall.copyWith(color: AppColors.muted),
-                        ),
-                      ],
-                    ],
-                    const Spacer(),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'View details',
-                          style: AppText.bodyBold.copyWith(color: AppColors.seekPrimary),
-                        ),
-                        SizedBox(width: 4.w),
-                        HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: AppColors.seekPrimary, size: 16.r),
-                      ],
                     ),
+                    if (job.salaryMin != null)
+                      Text(
+                        job.salaryMax != null 
+                          ? '${job.salaryMin} - ${job.salaryMax}' 
+                          : job.salaryMin!,
+                        style: AppText.heading3.copyWith(color: AppColors.text, fontSize: 16.sp),
+                      ),
                   ],
                 ),
               ],

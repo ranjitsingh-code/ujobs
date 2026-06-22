@@ -64,7 +64,47 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
         children: [
           Container(
             color: AppColors.surface,
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+            padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
+            child: Row(
+              children: [
+                Expanded(
+                  child: UJobTextField(
+                    label: '',
+                    hint: 'Search jobs, skills...',
+                    controller: _searchController,
+                    prefix: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Container(
+                  height: 52.h,
+                  width: 52.h,
+                  margin: EdgeInsets.only(top: 8.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.seekPrimary,
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: IconButton(
+                    icon: HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, color: AppColors.surface, size: 24.r),
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (context) => const _FilterSheet(),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            color: AppColors.surface,
+            padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 12.h),
             child: UJobPillTabBar(
               tabs: const ['For you', 'All jobs'],
               isExpanded: true,
@@ -106,12 +146,11 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
           children: [
             Padding(
               padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 12.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text('Find Your Next Job', style: AppText.heading2),
-                  SizedBox(height: 4.h),
-                  Text('${jobs.length} positions matched to your profile', style: AppText.bodyMedium.copyWith(color: AppColors.muted)),
+                  Text('Recommended', style: AppText.heading3),
+                  const Spacer(),
+                  Text('${jobs.length} matches', style: AppText.bodyMedium.copyWith(color: AppColors.seekPrimary)),
                 ],
               ),
             ),
@@ -138,47 +177,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
   Widget _buildAllJobsTab(AsyncValue jobsAsync, dynamic l10n) {
     return Column(
       children: [
-        // Search Header
-        Container(
-          color: AppColors.surface,
-          padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 16.h),
-          child: Row(
-            children: [
-              Expanded(
-                child: UJobTextField(
-                  label: '',
-                  hint: 'Search jobs, skills...',
-                  controller: _searchController,
-                  prefix: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
-                  ),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Container(
-                height: 52.h,
-                width: 52.h,
-                margin: EdgeInsets.only(top: 8.h),
-                decoration: BoxDecoration(
-                  color: AppColors.seekPrimary,
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                child: IconButton(
-                  icon: HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, color: AppColors.surface, size: 24.r),
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      isScrollControlled: true,
-                      builder: (context) => const _FilterSheet(),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+
         // Jobs List
         Expanded(
           child: jobsAsync.when(
@@ -197,31 +196,22 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                     padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${jobs.length} positions available', style: AppText.heading3),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _sortBy,
-                                isDense: true,
-                                icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, color: AppColors.muted, size: 16.r),
-                                style: AppText.bodySemiBold.copyWith(color: AppColors.seekPrimaryDark),
-                                dropdownColor: AppColors.surface,
-                                items: _sortOptions.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                                onChanged: (v) => setState(() => _sortBy = v!),
-                              ),
+                        Text('${jobs.length} positions', style: AppText.bodyBold),
+                        DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _sortBy,
+                            isDense: true,
+                            icon: Padding(
+                              padding: EdgeInsets.only(left: 4.w),
+                              child: HugeIcon(icon: HugeIcons.strokeRoundedArrowDown01, color: AppColors.muted, size: 18.r),
                             ),
-                          ],
+                            style: AppText.bodyMedium.copyWith(color: AppColors.seekPrimaryDark),
+                            dropdownColor: AppColors.surface,
+                            items: _sortOptions.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                            onChanged: (v) => setState(() => _sortBy = v!),
+                          ),
                         ),
                       ],
                     ),
