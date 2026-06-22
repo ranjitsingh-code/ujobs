@@ -61,7 +61,6 @@ class SeekerDashboardScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     _SectionHeader(
                       title: 'Latest Jobs',
                       actionLabel: 'See all',

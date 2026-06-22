@@ -298,7 +298,6 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                                       .state = ref
                                       .read(activeJobFilterProvider)
                                       .copyWith(sortBy: val);
-                                  Navigator.pop(context);
                                 },
                               ),
                             );
