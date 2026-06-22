@@ -67,9 +67,15 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
           physics: const BouncingScrollPhysics(),
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
-              SliverToBoxAdapter(
-                child: Container(
-                  color: AppColors.surface,
+              SliverAppBar(
+                backgroundColor: AppColors.surface,
+                pinned: false,
+                floating: true,
+                snap: true,
+                elevation: 0,
+                toolbarHeight: 80.h,
+                titleSpacing: 0,
+                title: Padding(
                   padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
                   child: Row(
                     children: [
@@ -82,6 +88,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                             padding: EdgeInsets.symmetric(horizontal: 16.w),
                             child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
                           ),
+                          onChanged: (_) {},
                         ),
                       ),
                       if (_tabIndex == 1) ...[
@@ -111,9 +118,15 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                   ),
                 ),
               ),
-              SliverPersistentHeader(
+              SliverAppBar(
+                backgroundColor: AppColors.surface,
                 pinned: true,
-                delegate: _UJobTabsDelegate(
+                floating: false,
+                elevation: innerBoxIsScrolled ? 2 : 0,
+                forceElevated: innerBoxIsScrolled,
+                toolbarHeight: 0, // No title
+                bottom: PreferredSize(
+                  preferredSize: Size.fromHeight(60.h),
                   child: Container(
                     color: AppColors.surface,
                     padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 16.h),
