@@ -98,11 +98,14 @@ class UJobJobCard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 16.h),
-                Row(
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
                   children: [
                     _Badge(label: job.employmentType.replaceAll('_', ' ').toUpperCase()),
-                    SizedBox(width: 8.w),
                     _Badge(label: job.workplaceType.toUpperCase()),
+                    if (job.category != null && job.category!.isNotEmpty)
+                      _Badge(label: job.category!.toUpperCase()),
                   ],
                 ),
                 SizedBox(height: 16.h),
@@ -137,12 +140,39 @@ class UJobJobCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                    const Spacer(),
-                    if (job.createdAt != null)
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  children: [
+                    if (job.createdAt != null) ...[
                       Text(
                         timeago.format(job.createdAt!),
                         style: AppText.bodySmall.copyWith(color: AppColors.muted2),
                       ),
+                      if (job.applicantCount > 0) ...[
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
+                          child: Container(width: 3.r, height: 3.r, decoration: const BoxDecoration(color: AppColors.muted2, shape: BoxShape.circle)),
+                        ),
+                        Text(
+                          '${job.applicantCount} applied',
+                          style: AppText.bodySmall.copyWith(color: AppColors.muted),
+                        ),
+                      ],
+                    ],
+                    const Spacer(),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'View details',
+                          style: AppText.bodyBold.copyWith(color: AppColors.seekPrimary),
+                        ),
+                        SizedBox(width: 4.w),
+                        HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: AppColors.seekPrimary, size: 16.r),
+                      ],
+                    ),
                   ],
                 ),
               ],
