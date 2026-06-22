@@ -36,6 +36,7 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
       backgroundColor: AppColors.background,
       appBar: UJobAppBar(
         title: l10n.browseJobs,
+        showBack: false,
       ),
       body: Column(
         children: [
