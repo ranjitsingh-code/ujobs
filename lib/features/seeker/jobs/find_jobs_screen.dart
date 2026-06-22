@@ -122,6 +122,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                                 context: context,
                                 backgroundColor: Colors.transparent,
                                 isScrollControlled: true,
+                                useSafeArea: true,
                                 builder: (context) => const _FilterSheet(),
                               );
                             },
