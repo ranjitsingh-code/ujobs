@@ -29,8 +29,8 @@ class EmployerShell extends ConsumerWidget {
       body: AnimatedPageWrapper(child: child),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
+        selectedFontSize: 10,
+        unselectedFontSize: 10,
         currentIndex: currentIndex,
         onTap: (i) {
           switch (i) {
@@ -56,12 +56,12 @@ class EmployerShell extends ConsumerWidget {
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedHome01,
               color: AppColors.muted2,
-              size: 24,
+              size: 22,
             ),
             activeIcon: HugeIcon(
               icon: HugeIcons.strokeRoundedHome01,
               color: AppColors.primary,
-              size: 24,
+              size: 22,
             ),
             label: context.l10n.dashboard,
           ),
@@ -69,12 +69,12 @@ class EmployerShell extends ConsumerWidget {
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedBriefcase01,
               color: AppColors.muted2,
-              size: 24,
+              size: 22,
             ),
             activeIcon: HugeIcon(
               icon: HugeIcons.strokeRoundedBriefcase01,
               color: AppColors.primary,
-              size: 24,
+              size: 22,
             ),
             label: context.l10n.jobsTab,
           ),
@@ -82,12 +82,12 @@ class EmployerShell extends ConsumerWidget {
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedUserGroup,
               color: AppColors.muted2,
-              size: 24,
+              size: 22,
             ),
             activeIcon: HugeIcon(
               icon: HugeIcons.strokeRoundedUserGroup,
               color: AppColors.primary,
-              size: 24,
+              size: 22,
             ),
             label: context.l10n.applicants,
           ),
@@ -95,12 +95,12 @@ class EmployerShell extends ConsumerWidget {
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedBubbleChat,
               color: AppColors.muted2,
-              size: 24,
+              size: 22,
             ),
             activeIcon: HugeIcon(
               icon: HugeIcons.strokeRoundedBubbleChat,
               color: AppColors.primary,
-              size: 24,
+              size: 22,
             ),
             label: context.l10n.messages,
           ),
@@ -108,12 +108,12 @@ class EmployerShell extends ConsumerWidget {
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedUser,
               color: AppColors.muted2,
-              size: 24,
+              size: 22,
             ),
             activeIcon: HugeIcon(
               icon: HugeIcons.strokeRoundedUser,
               color: AppColors.primary,
-              size: 24,
+              size: 22,
             ),
             label: context.l10n.accountSection,
           ),
