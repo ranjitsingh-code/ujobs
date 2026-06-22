@@ -398,9 +398,18 @@ class _FilterSheetState extends State<_FilterSheet> {
                       _category = 'All Categories';
                     });
                   },
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppColors.borderLight.withValues(alpha: 0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   child: Text(
                     'Reset',
-                    style: AppText.bodyBold.copyWith(color: AppColors.muted),
+                    style: AppText.bodyBold.copyWith(color: AppColors.text, fontSize: 13.sp),
                   ),
                 ),
                 IconButton(
