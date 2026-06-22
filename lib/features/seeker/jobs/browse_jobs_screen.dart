@@ -8,6 +8,9 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_job_card.dart';
+import '../../../core/widgets/ujob_text_field.dart';
+import '../../../core/widgets/ujob_multi_chip_group.dart';
+import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_error.dart';
 import 'seeker_job_provider.dart';
@@ -45,24 +48,13 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Container(
-                        height: 52.h,
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search jobs, skills...',
-                            hintStyle: AppText.body.copyWith(color: AppColors.muted),
-                            prefixIcon: Padding(
-                              padding: EdgeInsets.all(14.w),
-                              child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 24.r),
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-                          ),
+                      child: UJobTextField(
+                        label: '',
+                        hint: 'Search jobs, skills...',
+                        controller: _searchController,
+                        prefix: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted, size: 20.r),
                         ),
                       ),
                     ),
@@ -70,6 +62,7 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
                     Container(
                       height: 52.h,
                       width: 52.h,
+                      margin: EdgeInsets.only(top: 8.h),
                       decoration: BoxDecoration(
                         color: AppColors.seekPrimary,
                         borderRadius: BorderRadius.circular(16.r),
@@ -77,7 +70,6 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
                       child: IconButton(
                         icon: HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, color: AppColors.surface, size: 24.r),
                         onPressed: () {
-                          // Show filter bottom sheet
                           _showFilterSheet(context);
                         },
                       ),
@@ -181,40 +173,26 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
                 SizedBox(height: 24.h),
                 Text('Job Type', style: AppText.bodyBold),
                 SizedBox(height: 12.h),
-                Wrap(
-                  spacing: 12.w,
-                  runSpacing: 12.h,
-                  children: [
-                    _FilterChip(label: 'Full-time', isSelected: true),
-                    _FilterChip(label: 'Part-time', isSelected: false),
-                    _FilterChip(label: 'Contract', isSelected: false),
-                    _FilterChip(label: 'Freelance', isSelected: false),
-                  ],
+                UJobMultiChipGroup<String>(
+                  options: const ['Full-time', 'Part-time', 'Contract', 'Freelance'],
+                  selectedValues: const ['Full-time'],
+                  labelBuilder: (v) => v,
+                  onChanged: (v) {},
                 ),
                 SizedBox(height: 24.h),
                 Text('Workplace Mode', style: AppText.bodyBold),
                 SizedBox(height: 12.h),
-                Wrap(
-                  spacing: 12.w,
-                  runSpacing: 12.h,
-                  children: [
-                    _FilterChip(label: 'On-site', isSelected: true),
-                    _FilterChip(label: 'Remote', isSelected: false),
-                    _FilterChip(label: 'Hybrid', isSelected: false),
-                  ],
+                UJobMultiChipGroup<String>(
+                  options: const ['On-site', 'Remote', 'Hybrid'],
+                  selectedValues: const ['On-site'],
+                  labelBuilder: (v) => v,
+                  onChanged: (v) {},
                 ),
                 SizedBox(height: 32.h),
-                SizedBox(
-                  width: double.infinity,
-                  height: 54.h,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.seekPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                    ),
-                    child: Text('Apply Filters', style: AppText.bodyBold.copyWith(color: AppColors.surface)),
-                  ),
+                UJobButton(
+                  label: 'Apply Filters',
+                  onTap: () => Navigator.pop(context),
+                  color: AppColors.seekPrimary,
                 ),
               ],
             ),
@@ -226,24 +204,3 @@ class _BrowseJobsScreenState extends ConsumerState<BrowseJobsScreen> {
 
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  const _FilterChip({required this.label, required this.isSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.seekPrimary.withValues(alpha: 0.1) : AppColors.background,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: isSelected ? AppColors.seekPrimary : AppColors.borderLight),
-      ),
-      child: Text(
-        label,
-        style: AppText.bodyMedium.copyWith(color: isSelected ? AppColors.seekPrimary : AppColors.text),
-      ),
-    );
-  }
-}
