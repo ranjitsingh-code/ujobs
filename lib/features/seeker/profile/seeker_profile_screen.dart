@@ -460,96 +460,115 @@ class _SeekerProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     int percentCompleted = (completeness * 100).toInt();
 
+    // Replicate CompanyProfileHeader design but with Seeker colors
     return Container(
-      padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 32.h),
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32.r),
-          bottomRight: Radius.circular(32.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.seekPrimary,
+            AppColors.seekSecondary,
+          ],
         ),
-        boxShadow: AppShadow.card(),
       ),
+      padding: EdgeInsets.fromLTRB(20.w, MediaQuery.of(context).padding.top + 24.h, 20.w, 32.h),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-              // Avatar Info
+              // Avatar
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 72.r,
+                    height: 72.r,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: AppRadius.xl,
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: Center(
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                        style: AppText.heading1.copyWith(color: AppColors.seekPrimary),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -6.r,
+                    right: -6.r,
+                    child: GestureDetector(
+                      onTap: onEditImage,
+                      child: Container(
+                        width: 24.r,
+                        height: 24.r,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: HugeIcon(icon: HugeIcons.strokeRoundedCamera01, size: 14.r, color: AppColors.seekPrimary),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(width: 16.w),
+              // Info
               Expanded(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Stack(
+                    SizedBox(height: 4.h),
+                    Row(
                       children: [
-                        Container(
-                          width: 88.r,
-                          height: 88.r,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.seekPrimary.withValues(alpha: 0.1),
-                            border: Border.all(color: AppColors.seekPrimary.withValues(alpha: 0.2), width: 4),
-                          ),
-                          child: Center(
-                            child: HugeIcon(icon: HugeIcons.strokeRoundedUser, color: AppColors.seekPrimary, size: 40.r),
+                        Flexible(
+                          child: Text(
+                            name,
+                            style: AppText.heading2.copyWith(color: AppColors.white),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: GestureDetector(
-                            onTap: onEditImage,
-                            child: Container(
-                              padding: EdgeInsets.all(6.r),
-                              decoration: BoxDecoration(
-                                color: AppColors.seekPrimary,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: AppColors.surface, width: 2),
-                              ),
-                              child: HugeIcon(icon: HugeIcons.strokeRoundedCamera02, color: AppColors.surface, size: 14.r),
-                            ),
+                        if (completeness == 1.0) ...[
+                          SizedBox(width: 6.w),
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                            color: AppColors.white,
+                            size: 20.r,
                           ),
+                        ],
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => context.push('/seeker/settings'),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                          icon: HugeIcon(icon: HugeIcons.strokeRoundedSettings01, color: AppColors.white, size: 22.r),
                         ),
                       ],
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      name,
-                      style: AppText.heading2.copyWith(color: AppColors.text2),
-                      textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       headline.isNotEmpty ? headline : 'Add a headline',
-                      style: AppText.bodyMd.copyWith(color: AppColors.muted),
-                      textAlign: TextAlign.center,
+                      style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 2.h),
                     Text(
                       email,
-                      style: AppText.caption.copyWith(color: AppColors.muted2),
-                      textAlign: TextAlign.center,
+                      style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-              ),
-              // Settings Button
-              IconButton(
-                onPressed: () => context.push('/seeker/settings'),
-                tooltip: 'Settings',
-                style: IconButton.styleFrom(
-                  backgroundColor: AppColors.surface,
-                  fixedSize: Size(44.r, 44.r),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.md,
-                    side: BorderSide(color: AppColors.border),
-                  ),
-                ),
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedSettings01,
-                  color: AppColors.text,
-                  size: 20.r,
                 ),
               ),
             ],
@@ -559,9 +578,9 @@ class _SeekerProfileHeader extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: AppColors.seekPrimary.withValues(alpha: 0.05),
+              color: AppColors.surface.withValues(alpha: 0.15),
               borderRadius: AppRadius.lg,
-              border: Border.all(color: AppColors.seekPrimary.withValues(alpha: 0.1)),
+              border: Border.all(color: AppColors.surface.withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -571,11 +590,11 @@ class _SeekerProfileHeader extends StatelessWidget {
                   children: [
                     Text(
                       'Profile Completeness',
-                      style: AppText.bodyMd.copyWith(color: AppColors.seekPrimary),
+                      style: AppText.bodyMd.copyWith(color: AppColors.white),
                     ),
                     Text(
                       '${percentCompleted}%',
-                      style: AppText.bodyBold.copyWith(color: AppColors.seekPrimary),
+                      style: AppText.bodyBold.copyWith(color: AppColors.white),
                     ),
                   ],
                 ),
@@ -584,16 +603,16 @@ class _SeekerProfileHeader extends StatelessWidget {
                   borderRadius: AppRadius.pill,
                   child: LinearProgressIndicator(
                     value: completeness,
-                    backgroundColor: AppColors.seekPrimary.withValues(alpha: 0.2),
-                    color: AppColors.seekPrimary,
+                    backgroundColor: AppColors.surface.withValues(alpha: 0.2),
+                    color: AppColors.surface,
                     minHeight: 6.h,
                   ),
                 ),
                 if (completeness < 1.0) ...[
                   SizedBox(height: 12.h),
                   Text(
-                    'Complete your profile to unlock all features',
-                    style: AppText.caption.copyWith(color: AppColors.seekPrimary.withValues(alpha: 0.8)),
+                    'Complete your profile to stand out to employers',
+                    style: AppText.caption.copyWith(color: AppColors.white.withValues(alpha: 0.8)),
                   ),
                 ],
               ],
