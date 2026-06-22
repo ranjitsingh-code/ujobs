@@ -42,7 +42,7 @@ class SeekerShell extends ConsumerWidget {
         items: [
           BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedHome01, color: AppColors.muted2, size: 24),         activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedHome01, color: AppColors.primary, size: 24),              label: context.l10n.home),
           BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.muted2, size: 24),        activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: AppColors.primary, size: 24),            label: context.l10n.jobsTab),
-          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: AppColors.muted2, size: 24),    activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: AppColors.primary, size: 24),        label: context.l10n.statusApplied),
+          BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: AppColors.muted2, size: 24),    activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: AppColors.primary, size: 24),        label: context.l10n.applications),
           BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedBubbleChat, color: AppColors.muted2, size: 24),    activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedBubbleChat, color: AppColors.primary, size: 24),       label: context.l10n.messages),
           BottomNavigationBarItem(icon: HugeIcon(icon: HugeIcons.strokeRoundedUser03, color: AppColors.muted2, size: 24),         activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedUser03, color: AppColors.primary, size: 24),            label: context.l10n.profile),
         ],
