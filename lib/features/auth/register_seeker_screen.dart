@@ -8,7 +8,13 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_terms_agreement.dart';
 import '../../core/widgets/ujob_text_field.dart';
+import '../../core/widgets/ujob_phone_input.dart';
+import '../../core/models/country.dart';
 
+import 'package:dio/dio.dart';
+import '../../core/api/api_endpoints.dart';
+import '../../core/providers/auth_provider.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../core/utils/l10n_extensions.dart';
 import '../../core/widgets/ujob_auth_links.dart';
 import '../../core/widgets/ujob_role_switch_card.dart';
@@ -26,9 +32,11 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
   final _firstCtrl = TextEditingController();
   final _lastCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   bool _acceptedTerms = false;
+  Country? _selectedCountry;
 
   bool _loading = false;
   String? _error;
@@ -43,6 +51,7 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
     _firstCtrl.dispose();
     _lastCtrl.dispose();
     _emailCtrl.dispose();
+    _phoneCtrl.dispose();
     _passCtrl.dispose();
     _confirmCtrl.dispose();
     super.dispose();
@@ -75,12 +84,55 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
       _loading = true;
       _error = null;
     });
-    // Simulate API success
-    await Future.delayed(const Duration(milliseconds: 1500));
 
-    if (mounted) {
-      setState(() => _loading = false);
-      context.go('/otp');
+    FocusManager.instance.primaryFocus?.unfocus();
+    EasyLoading.show(status: 'Registering...');
+
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final res = await dio.post(
+        Ep.registerSeeker,
+        data: {
+          'first_name': _firstCtrl.text.trim(),
+          'last_name': _lastCtrl.text.trim(),
+          'email': _emailCtrl.text.trim(),
+          'phone_code': _selectedCountry?.phoneCode ?? '',
+          'phone': _phoneCtrl.text.trim(),
+          'password': _passCtrl.text,
+        },
+      );
+
+      final rawData = res.data as Map<String, dynamic>;
+      if (rawData['success'] == false) {
+        if (mounted) {
+          setState(() => _loading = false);
+        }
+        EasyLoading.showError(rawData['error']?['message']?.toString() ?? 'Registration failed.');
+        return;
+      }
+
+      final data = (rawData['data'] ?? rawData) as Map<String, dynamic>;
+      final userId = data['user_id']?.toString() ?? data['user']?['id']?.toString() ?? '';
+
+      EasyLoading.showSuccess('Registration Successful!');
+
+      if (mounted) {
+        setState(() => _loading = false);
+        context.go('/otp', extra: userId);
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+      final msg = e.response?.data is Map 
+          ? (e.response!.data['error']?['message'] ?? 'A network error occurred.') 
+          : 'A network error occurred.';
+      EasyLoading.showError(msg);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+      EasyLoading.showError('An unexpected error occurred.');
     }
   }
 
@@ -170,6 +222,16 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
                       isEmail: true,
                     ),
                     SizedBox(height: 16.h),
+                    UJobPhoneInput(
+                      label: l10n.phone,
+                      hint: l10n.phoneHint,
+                      phoneController: _phoneCtrl,
+                      onCountryCodeChanged: (country) {
+                        _selectedCountry = country;
+                      },
+                      isRequired: false,
+                    ),
+                    SizedBox(height: 16.h),
                     UJobTextField(
                       label: l10n.password,
                       hint: l10n.passwordCreateHint,
@@ -194,8 +256,8 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
                     UJobTermsAgreement(
                       value: _acceptedTerms,
                       onChanged: _setTermsAccepted,
-                      onTermsTap: () => context.push('/terms-and-conditions'),
-                      onPrivacyTap: () => context.push('/privacy-policy'),
+                      onTermsTap: () => context.push('/pages/terms'),
+                      onPrivacyTap: () => context.push('/pages/privacy-policy'),
                       prefix: l10n.byRegisteringAgree,
                       termsLabel: l10n.terms,
                       privacyLabel: l10n.privacyPolicyWithPeriod,

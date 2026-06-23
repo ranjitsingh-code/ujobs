@@ -10,14 +10,16 @@ import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_web_view.dart';
 
 enum LegalPageType {
-  terms('terms-and-conditions'),
-  privacy('privacy-policy');
+  terms('terms-of-service'),
+  privacy('privacy-policy'),
+  about('about-us'),
+  contact('contact-us');
 
   const LegalPageType(this.slug);
   final String slug;
 }
 
-final _legalPageProvider = FutureProvider.autoDispose.family<String, String>((
+final _legalPageProvider = FutureProvider.autoDispose.family<({String? url, String? html}), String>((
   ref,
   slug,
 ) async {
@@ -31,12 +33,17 @@ final _legalPageProvider = FutureProvider.autoDispose.family<String, String>((
     throw const FormatException('Invalid legal page response');
   }
 
-  final url = _legalPageUrl(value);
-  if (url == null) {
-    throw const FormatException('Legal page URL is missing');
+  final content = (value['body'] ?? value['content'])?.toString().trim();
+  if (content != null && content.isNotEmpty) {
+    return (url: null, html: content);
   }
 
-  return url;
+  final url = _legalPageUrl(value);
+  if (url != null) {
+    return (url: url, html: null);
+  }
+
+  throw const FormatException('Legal page content/URL is missing');
 });
 
 String? _legalPageUrl(Map<String, dynamic> data) {
@@ -56,9 +63,12 @@ class LegalPageScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final fallbackTitle = type == LegalPageType.terms
-        ? l10n.termsAndConditions
-        : l10n.privacyPolicy;
+    final fallbackTitle = switch (type) {
+      LegalPageType.terms => l10n.termsOfUse,
+      LegalPageType.privacy => l10n.privacyPolicy,
+      LegalPageType.about => 'About Us',
+      LegalPageType.contact => l10n.contactUs,
+    };
     final page = ref.watch(_legalPageProvider(type.slug));
 
     return Scaffold(
@@ -69,8 +79,11 @@ class LegalPageScreen extends ConsumerWidget {
           message: l10n.errorLegalPageLoad,
           onRetry: () => ref.invalidate(_legalPageProvider(type.slug)),
         ),
-        data: (url) =>
-            UJobWebView(url: url, errorMessage: l10n.errorLegalPageLoad),
+        data: (data) => UJobWebView(
+          url: data.url,
+          htmlContent: data.html,
+          errorMessage: l10n.errorLegalPageLoad,
+        ),
       ),
     );
   }

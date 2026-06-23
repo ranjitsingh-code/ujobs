@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:dio/dio.dart';
+import '../../core/api/api_endpoints.dart';
+import '../../core/providers/auth_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/ujob_auth_header.dart';
 import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_text_field.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import '../../core/utils/l10n_extensions.dart';
 
@@ -53,14 +57,19 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     });
   }
 
+  final _codeCtrl = TextEditingController();
+  final _newPassCtrl = TextEditingController();
+
   @override
   void dispose() {
     _emailCtrl.dispose();
+    _codeCtrl.dispose();
+    _newPassCtrl.dispose();
     _successCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  Future<void> _submitRequest() async {
     final l10n = context.l10n;
     final email = _emailCtrl.text.trim();
 
@@ -74,15 +83,82 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
       _error = null;
     });
 
-    // Mock API call for UI testing
-    await Future.delayed(const Duration(seconds: 2));
+    FocusManager.instance.primaryFocus?.unfocus();
 
-    if (mounted) {
-      setState(() {
-        _loading = false;
-        _sent = true;
-      });
-      _successCtrl.forward();
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      await dio.post(
+        Ep.forgotPasswordRequest,
+        data: {'email': email},
+      );
+      
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _sent = true;
+        });
+        _successCtrl.forward();
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = e.response?.data is Map 
+              ? (e.response!.data['error']?['message'] ?? 'A network error occurred.') 
+              : 'A network error occurred.';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'An unexpected error occurred.';
+        });
+      }
+    }
+  }
+
+  Future<void> _submitReset() async {
+    final email = _emailCtrl.text.trim();
+    final code = _codeCtrl.text.trim();
+    final newPass = _newPassCtrl.text;
+
+    if (code.isEmpty || newPass.isEmpty) {
+      EasyLoading.showError(context.l10n.errorRequiredField);
+      return;
+    }
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    EasyLoading.show(status: 'Resetting Password...');
+
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final res = await dio.post(
+        Ep.forgotPasswordReset,
+        data: {
+          'email': email,
+          'code': code,
+          'new_password': newPass,
+        },
+      );
+
+      final rawData = res.data as Map<String, dynamic>;
+      if (rawData['success'] == false) {
+        EasyLoading.showError(rawData['error']?['message']?.toString() ?? 'Failed to reset password.');
+        return;
+      }
+
+      EasyLoading.showSuccess('Password reset successfully!');
+      if (mounted) {
+        context.go('/login');
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data is Map 
+          ? (e.response!.data['error']?['message'] ?? 'A network error occurred.') 
+          : 'A network error occurred.';
+      EasyLoading.showError(msg);
+    } catch (e) {
+      EasyLoading.showError('An unexpected error occurred.');
     }
   }
 
@@ -98,10 +174,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
             transitionBuilder: (child, anim) =>
                 FadeTransition(opacity: anim, child: child),
             child: _sent
-                ? _SuccessView(
-                    key: const ValueKey('success'),
+                ? _ResetView(
+                    key: const ValueKey('reset'),
                     email: _emailCtrl.text.trim(),
-                    onBack: () => context.go('/login'),
+                    codeCtrl: _codeCtrl,
+                    newPassCtrl: _newPassCtrl,
+                    onBack: () => setState(() => _sent = false),
+                    onSubmit: _submitReset,
                     ctrl: _successCtrl,
                     scale: _successScale,
                     fade: _successFade,
@@ -112,7 +191,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                     error: _error,
                     loading: _loading,
                     onBack: () => context.pop(),
-                    onSubmit: _submit,
+                    onSubmit: _submitRequest,
                   ),
           ),
         ),
@@ -174,16 +253,20 @@ class _FormView extends StatelessWidget {
   }
 }
 
-class _SuccessView extends StatelessWidget {
+class _ResetView extends StatelessWidget {
   final String email;
-  final VoidCallback onBack;
+  final TextEditingController codeCtrl, newPassCtrl;
+  final VoidCallback onBack, onSubmit;
   final AnimationController ctrl;
   final Animation<double> scale, fade;
 
-  const _SuccessView({
+  const _ResetView({
     super.key,
     required this.email,
+    required this.codeCtrl,
+    required this.newPassCtrl,
     required this.onBack,
+    required this.onSubmit,
     required this.ctrl,
     required this.scale,
     required this.fade,
@@ -195,53 +278,37 @@ class _SuccessView extends StatelessWidget {
     return FadeTransition(
       opacity: fade,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 64.h),
-          // Animated success icon
-          ScaleTransition(
-            scale: scale,
-            child: Container(
-              width: 88.r,
-              height: 88.r,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.successBg,
-                shape: BoxShape.circle,
-              ),
-              child: HugeIcon(
-                icon: HugeIcons.strokeRoundedMailOpen01,
-                color: AppColors.success,
-                size: 44.r,
-              ),
-            ),
+          SizedBox(height: 8.h),
+          UJobAuthHeader(icon: HugeIcons.strokeRoundedMailOpen01, onBack: onBack),
+          SizedBox(height: 20.h),
+          Text('Enter Reset Code', style: AppText.heading2),
+          SizedBox(height: 6.h),
+          Text(
+            'We sent a 6-digit code to $email',
+            style: AppText.body.copyWith(color: AppColors.muted),
+          ),
+          SizedBox(height: 28.h),
+          UJobTextField(
+            label: 'Reset Code',
+            hint: 'Enter 6-digit code',
+            controller: codeCtrl,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+            isRequired: true,
+          ),
+          SizedBox(height: 16.h),
+          UJobTextField(
+            label: 'New Password',
+            hint: 'Enter new password',
+            controller: newPassCtrl,
+            isPassword: true,
+            textInputAction: TextInputAction.done,
+            isRequired: true,
           ),
           SizedBox(height: 24.h),
-          Text(
-            l10n.checkInboxTitle,
-            style: AppText.heading2,
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            l10n.resetSentSub,
-            style: AppText.body.copyWith(color: AppColors.muted),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            email,
-            style: AppText.bodyBold.copyWith(color: AppColors.text),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            l10n.spamCheckSub,
-            style: AppText.small.copyWith(color: AppColors.muted2),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 36.h),
-          UJobButton(label: l10n.backToSignIn, onTap: onBack),
+          UJobButton(label: 'Reset Password', onTap: onSubmit),
           SizedBox(height: 24.h),
         ],
       ),

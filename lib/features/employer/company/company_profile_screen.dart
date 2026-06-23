@@ -4,13 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 import '../../../core/models/company_profile.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_dropdown_field.dart';
@@ -41,7 +39,6 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
             CompanyProfileHeader(
               company: company,
               completeness: completeness,
-              onEditLogo: () => _showEditCompanyInfo(context, ref, company),
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 24.h),
@@ -100,22 +97,32 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   ),
                   SizedBox(height: 16.h),
                   _SectionCard(
-                    title: 'Hiring Information',
+                    title: 'Contact Information',
                     subtitle: [
-                      company.size,
-                      company.workType,
+                      company.contactPersonName,
+                      company.contactEmail,
                     ].where((e) => e != null && e.isNotEmpty).join(' · '),
-                    icon: HugeIcons.strokeRoundedBriefcase01,
-                    onEdit: () => _showEditHiringInfo(context, ref, company),
+                    icon: HugeIcons.strokeRoundedContactBook,
+                    onEdit: () => _showEditContact(context, ref, company),
                     child: Column(
                       children: [
                         _DetailRow(
-                          label: context.l10n.companySizeLabel,
-                          value: company.size,
+                          label: context.l10n.contactPerson,
+                          value: company.contactPersonName,
                         ),
                         _DetailRow(
-                          label: context.l10n.workType,
-                          value: company.workType,
+                          label: context.l10n.emailLabel,
+                          value: company.contactEmail,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.phone,
+                          value: company.contactPhone,
+                        ),
+                        _DetailRow(
+                          label: context.l10n.visibility,
+                          value: company.showContactInfo
+                              ? 'Visible to job seekers'
+                              : 'Hidden from public page',
                         ),
                       ],
                     ),
@@ -152,32 +159,22 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                   ),
                   SizedBox(height: 16.h),
                   _SectionCard(
-                    title: 'Contact Information',
+                    title: 'Hiring Information',
                     subtitle: [
-                      company.contactPersonName,
-                      company.contactEmail,
+                      company.size,
+                      company.workType,
                     ].where((e) => e != null && e.isNotEmpty).join(' · '),
-                    icon: HugeIcons.strokeRoundedContactBook,
-                    onEdit: () => _showEditContact(context, ref, company),
+                    icon: HugeIcons.strokeRoundedBriefcase01,
+                    onEdit: () => _showEditHiringInfo(context, ref, company),
                     child: Column(
                       children: [
                         _DetailRow(
-                          label: context.l10n.contactPerson,
-                          value: company.contactPersonName,
+                          label: context.l10n.companySizeLabel,
+                          value: company.size,
                         ),
                         _DetailRow(
-                          label: context.l10n.emailLabel,
-                          value: company.contactEmail,
-                        ),
-                        _DetailRow(
-                          label: context.l10n.phone,
-                          value: company.contactPhone,
-                        ),
-                        _DetailRow(
-                          label: context.l10n.visibility,
-                          value: company.showContactInfo
-                              ? 'Visible to job seekers'
-                              : 'Hidden from public page',
+                          label: context.l10n.workType,
+                          value: company.workType,
                         ),
                       ],
                     ),
@@ -218,58 +215,6 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
     );
   }
 
-  void _showBottomSheet(BuildContext context, String title, Widget child) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: AppText.heading3.copyWith(color: AppColors.text2),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(ctx),
-                      child: Container(
-                        padding: EdgeInsets.all(8.r),
-                        decoration: const BoxDecoration(
-                          color: AppColors.bg,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.close_rounded,
-                          size: 20.r,
-                          color: AppColors.text2,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(color: AppColors.border, height: 1),
-              Padding(padding: EdgeInsets.all(20.r), child: child),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showEditCompanyInfo(
     BuildContext context,
     WidgetRef ref,
@@ -281,8 +226,6 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
         : null;
     final websiteCtrl = TextEditingController(text: company.website);
     String currentDescription = company.description ?? '';
-    String? currentLogo = company.logo;
-    String? nameError;
     String? websiteError;
 
     showModalBottomSheet(
@@ -340,92 +283,14 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                     children: [
                       UJobTextField(
                         label: context.l10n.companyName,
-                        hint: context.l10n.egAcmeLtd,
                         controller: nameCtrl,
-                        errorText: nameError,
-                      ),
-                      SizedBox(height: 16.h),
-                      Text(
-                        'Company Logo',
-                        style: AppText.label.copyWith(color: AppColors.text2),
-                      ),
-                      SizedBox(height: 8.h),
-                      GestureDetector(
-                        onTap: () async {
-                          final picker = ImagePicker();
-                          final pickedFile = await picker.pickImage(
-                            source: ImageSource.gallery,
-                          );
-                          if (pickedFile != null) {
-                            setState(() {
-                              currentLogo = pickedFile.path;
-                            });
-                          }
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(16.r),
-                          decoration: BoxDecoration(
-                            color: AppColors.bg,
-                            borderRadius: AppRadius.md,
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 48.r,
-                                height: 48.r,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryLight,
-                                  borderRadius: AppRadius.sm,
-                                ),
-                                clipBehavior: Clip.hardEdge,
-                                child:
-                                    currentLogo != null &&
-                                        currentLogo!.isNotEmpty
-                                    ? (currentLogo!.startsWith('http')
-                                          ? Image.network(
-                                              currentLogo!,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Image.file(
-                                              File(currentLogo!),
-                                              fit: BoxFit.cover,
-                                            ))
-                                    : Center(
-                                        child: HugeIcon(
-                                          icon: HugeIcons.strokeRoundedImage01,
-                                          color: AppColors.primary,
-                                          size: 24.r,
-                                        ),
-                                      ),
-                              ),
-                              SizedBox(width: 16.w),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      currentLogo != null &&
-                                              currentLogo!.isNotEmpty
-                                          ? 'Change Logo'
-                                          : 'Upload Logo',
-                                      style: AppText.bodyMd.copyWith(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    SizedBox(height: 4.h),
-                                    Text(
-                                      'PNG, JPG or SVG · Max 3 MB\nSquare recommended',
-                                      style: AppText.caption.copyWith(
-                                        color: AppColors.muted2,
-                                        height: 1.2,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                        readOnly: true,
+                        suffix: Padding(
+                          padding: EdgeInsets.only(right: 12.w),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedLock,
+                            color: AppColors.muted,
+                            size: 18.r,
                           ),
                         ),
                       ),
@@ -496,18 +361,10 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                         label: context.l10n.save,
                         onTap: () {
                           setState(() {
-                            nameError = null;
                             websiteError = null;
                           });
 
                           bool hasError = false;
-                          if (nameCtrl.text.trim().isEmpty) {
-                            setState(
-                              () => nameError = 'Company Name is required',
-                            );
-                            hasError = true;
-                          }
-
                           if (websiteCtrl.text.isNotEmpty) {
                             if (!websiteCtrl.text.startsWith('http://') &&
                                 !websiteCtrl.text.startsWith('https://')) {
@@ -524,8 +381,6 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                           ref
                               .read(companyProfileProvider.notifier)
                               .state = company.copyWith(
-                            name: nameCtrl.text,
-                            logo: currentLogo,
                             industry: currentIndustry ?? '',
                             website: websiteCtrl.text,
                             description: currentDescription,
@@ -1162,12 +1017,10 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
 class CompanyProfileHeader extends StatelessWidget {
   final CompanyProfile company;
   final double completeness;
-  final VoidCallback onEditLogo;
   const CompanyProfileHeader({
     super.key,
     required this.company,
     required this.completeness,
-    required this.onEditLogo,
   });
 
   @override
@@ -1211,58 +1064,31 @@ class CompanyProfileHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Avatar
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 72.r,
-                    height: 72.r,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: AppRadius.xl,
-                    ),
-                    clipBehavior: Clip.hardEdge,
-                    child: company.logo != null && company.logo!.isNotEmpty
-                        ? (company.logo!.startsWith('http')
-                              ? Image.network(company.logo!, fit: BoxFit.cover)
-                              : Image.file(
-                                  File(company.logo!),
-                                  fit: BoxFit.cover,
-                                ))
-                        : Center(
-                            child: Text(
-                              company.name.isNotEmpty
-                                  ? company.name[0].toUpperCase()
-                                  : 'A',
-                              style: AppText.heading1.copyWith(
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                  ),
-                  Positioned(
-                    bottom: -6.r,
-                    right: -6.r,
-                    child: GestureDetector(
-                      onTap: onEditLogo,
-                      child: Container(
-                        width: 24.r,
-                        height: 24.r,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedCamera01,
-                            size: 14.r,
+              Container(
+                width: 72.r,
+                height: 72.r,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.xl,
+                ),
+                clipBehavior: Clip.hardEdge,
+                child: company.logo != null && company.logo!.isNotEmpty
+                    ? (company.logo!.startsWith('http')
+                          ? Image.network(company.logo!, fit: BoxFit.cover)
+                          : Image.file(
+                              File(company.logo!),
+                              fit: BoxFit.cover,
+                            ))
+                    : Center(
+                        child: Text(
+                          company.name.isNotEmpty
+                              ? company.name[0].toUpperCase()
+                              : 'A',
+                          style: AppText.heading1.copyWith(
                             color: AppColors.primary,
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
               ),
               SizedBox(width: 16.w),
               // Info

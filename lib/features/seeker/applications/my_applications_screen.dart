@@ -6,16 +6,17 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/l10n_extensions.dart';
-import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_job_card.dart';
 import '../../../core/widgets/ujob_pill_tab_bar.dart';
 import '../../../core/models/application.dart';
+import '../../../core/widgets/ujob_toast.dart';
 import 'seeker_application_provider.dart';
 
 class MyApplicationsScreen extends ConsumerStatefulWidget {
-  const MyApplicationsScreen({super.key});
+  final int initialIndex;
+  const MyApplicationsScreen({super.key, this.initialIndex = 0});
 
   @override
   ConsumerState<MyApplicationsScreen> createState() =>
@@ -24,7 +25,7 @@ class MyApplicationsScreen extends ConsumerStatefulWidget {
 
 class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
   late final PageController _pageController;
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   static const _filters = [
     'All',
@@ -40,7 +41,8 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: _selectedIndex);
+    _selectedIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
   }
 
   @override
@@ -67,90 +69,96 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const UJobAppBar(title: 'My Applications', showBack: false),
-      body: appsAsync.when(
-        loading: () => const UJobLoading(),
-        error: (err, stack) => UJobError(
-          message: l10n.error,
-          onRetry: () => ref.refresh(seekerApplicationsProvider(null)),
-        ),
-        data: (applications) {
-          if (applications.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedBriefcase01,
-                    color: AppColors.muted,
-                    size: 64.r,
-                  ),
-                  SizedBox(height: 16.h),
-                  Text('No Applications Yet', style: AppText.heading2),
-                  SizedBox(height: 8.h),
-                  Text(
-                    'Start applying to jobs to see them here.',
-                    style: AppText.body.copyWith(color: AppColors.muted),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final labels = _filters.map((f) {
-            final count = applications.where((a) {
-              if (f == 'All') return true;
-              return a.status.name.toLowerCase() == f.toLowerCase() ||
-                  (f == 'Interview' && a.status.name == 'interviewing') ||
-                  (f == 'Offer' && a.status.name == 'offered');
-            }).length;
-            return '$f ($count)';
-          }).toList();
-
-          return Column(
-            children: [
-              Container(
-                color: AppColors.surface,
-                padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
-                child: UJobPillTabBar(
-                  tabs: labels,
-                  selectedIndex: _selectedIndex,
-                  onTabSelected: _selectFilter,
-                ),
-              ),
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: (idx) {
-                    if (_selectedIndex != idx) {
-                      setState(() => _selectedIndex = idx);
-                    }
-                  },
-                  itemCount: _filters.length,
-                  itemBuilder: (context, index) {
-                    return _ApplicationList(
-                      applications: applications,
-                      filter: _filters[index],
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
+      appBar: AppBar(
+        toolbarHeight: 0,
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        automaticallyImplyLeading: false,
       ),
+      body: appsAsync.when(
+          loading: () => const UJobLoading(),
+          error: (err, stack) => UJobError(
+            message: l10n.error,
+            onRetry: () => ref.refresh(seekerApplicationsProvider(null)),
+          ),
+          data: (applications) {
+            if (applications.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedBriefcase01,
+                      color: AppColors.muted,
+                      size: 64.r,
+                    ),
+                    SizedBox(height: 16.h),
+                    Text('No Applications Yet', style: AppText.heading2),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Start applying to jobs to see them here.',
+                      style: AppText.body.copyWith(color: AppColors.muted),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final labels = _filters.map((f) {
+              final count = applications.where((a) {
+                if (f == 'All') return true;
+                return a.status.name.toLowerCase() == f.toLowerCase() ||
+                    (f == 'Interview' && a.status.name == 'interviewing') ||
+                    (f == 'Offer' && a.status.name == 'offered');
+              }).length;
+              return '$f ($count)';
+            }).toList();
+
+            return Column(
+              children: [
+                Container(
+                  color: AppColors.surface,
+                  padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
+                  child: UJobPillTabBar(
+                    tabs: labels,
+                    selectedIndex: _selectedIndex,
+                    onTabSelected: _selectFilter,
+                  ),
+                ),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (idx) {
+                      if (_selectedIndex != idx) {
+                        setState(() => _selectedIndex = idx);
+                      }
+                    },
+                    itemCount: _filters.length,
+                    itemBuilder: (context, index) {
+                      return _ApplicationList(
+                        applications: applications,
+                        filter: _filters[index],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
     );
   }
 }
 
-class _ApplicationList extends StatelessWidget {
+class _ApplicationList extends ConsumerWidget {
   final List<Application> applications;
   final String filter;
 
   const _ApplicationList({required this.applications, required this.filter});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final filtered = applications.where((a) {
       if (filter == 'All') return true;
       return a.status.name.toLowerCase() == filter.toLowerCase() ||
@@ -173,10 +181,22 @@ class _ApplicationList extends StatelessWidget {
       separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
         final app = filtered[index];
+        final apps = ref.watch(seekerApplicationsProvider(null)).value ?? [];
+        final isSaved = apps.any(
+          (a) => a.job.id == app.job.id && a.status == ApplicationStatus.saved,
+        );
         return UJobJobCard(
-          job: app.job,
+          job: app.job.copyWith(isSaved: isSaved),
           onTap: () => context.push('/seeker/jobs/${app.job.id}'),
-          // add application status here ideally, or a custom wrapper
+          onSaveTap: () {
+            ref
+                .read(seekerApplicationsProvider(null).notifier)
+                .toggleSave(app.job);
+            UJobToast.success(
+              context,
+              isSaved ? 'unsaved' : 'This has been saved',
+            );
+          },
         );
       },
     );

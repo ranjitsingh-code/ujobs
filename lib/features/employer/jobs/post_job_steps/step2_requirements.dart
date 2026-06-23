@@ -155,40 +155,6 @@ class Step2Requirements extends ConsumerWidget {
               notifier.updateField(state.copyWith(certifications: list));
             },
           ),
-          SizedBox(height: 20.h),
-
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: UJobTextField(
-                  label: context.l10n.ageMinOptional,
-                  hint: context.l10n.eg22,
-                  keyboardType: TextInputType.number,
-                  controller: TextEditingController(text: state.ageMin)
-                    ..selection = TextSelection.collapsed(
-                      offset: state.ageMin.length,
-                    ),
-                  onChanged: (val) =>
-                      notifier.updateField(state.copyWith(ageMin: val)),
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: UJobTextField(
-                  label: context.l10n.ageMaxOptional,
-                  hint: context.l10n.eg45,
-                  keyboardType: TextInputType.number,
-                  controller: TextEditingController(text: state.ageMax)
-                    ..selection = TextSelection.collapsed(
-                      offset: state.ageMax.length,
-                    ),
-                  onChanged: (val) =>
-                      notifier.updateField(state.copyWith(ageMax: val)),
-                ),
-              ),
-            ],
-          ),
           SizedBox(height: 60.h), // Padding for bottom action bar
         ],
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/role_provider.dart';
+import '../storage/local_storage.dart';
+
+final localStorageProvider = Provider<LocalStorage>((ref) => LocalStorage());
 
 final onboardingSeenProvider = FutureProvider<bool>(
-  (ref) => ref.read(secureStorageProvider).getOnboardingSeen(),
+  (ref) => ref.read(localStorageProvider).getOnboardingSeen(),
 );

@@ -80,7 +80,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   Future<void> _markSeenAndGo() async {
-    await ref.read(secureStorageProvider).saveOnboardingSeen();
+    await ref.read(localStorageProvider).saveOnboardingSeen();
     ref.invalidate(onboardingSeenProvider);
     if (mounted) context.go('/role-picker');
   }

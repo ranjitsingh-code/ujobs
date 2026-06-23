@@ -6,10 +6,16 @@ import '../theme/app_colors.dart';
 import 'ujob_error.dart';
 
 class UJobWebView extends StatefulWidget {
-  final String url;
+  final String? url;
+  final String? htmlContent;
   final String errorMessage;
 
-  const UJobWebView({required this.url, required this.errorMessage, super.key});
+  const UJobWebView({
+    this.url,
+    this.htmlContent,
+    required this.errorMessage,
+    super.key,
+  }) : assert(url != null || htmlContent != null);
 
   @override
   State<UJobWebView> createState() => _UJobWebViewState();
@@ -48,7 +54,7 @@ class _UJobWebViewState extends State<UJobWebView> {
   @override
   void didUpdateWidget(covariant UJobWebView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.url != widget.url) _load();
+    if (oldWidget.url != widget.url || oldWidget.htmlContent != widget.htmlContent) _load();
   }
 
   void _setLoading() {
@@ -62,7 +68,27 @@ class _UJobWebViewState extends State<UJobWebView> {
 
   Future<void> _load() async {
     _setLoading();
-    await _controller.loadRequest(Uri.parse(widget.url));
+    if (widget.htmlContent != null) {
+      final styledHtml = '''
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 16px; color: #1E293B; line-height: 1.6; }
+          h1, h2, h3 { color: #0F172A; }
+          a { color: #0076FF; }
+        </style>
+      </head>
+      <body>
+        ${widget.htmlContent}
+      </body>
+      </html>
+      ''';
+      await _controller.loadHtmlString(styledHtml);
+    } else if (widget.url != null) {
+      await _controller.loadRequest(Uri.parse(widget.url!));
+    }
   }
 
   @override

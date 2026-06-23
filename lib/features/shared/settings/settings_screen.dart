@@ -3,14 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../../../core/api/api_endpoints.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/role_provider.dart';
+import '../../../core/providers/cms_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/ujob_validator.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
-import '../../../core/providers/locale_provider.dart';
 import '../../../core/utils/l10n_extensions.dart';
+import '../../../core/widgets/ujob_button.dart';
+import '../../../core/widgets/ujob_phone_number_field.dart';
+import '../../../core/widgets/ujob_radio_card.dart';
+import '../../../core/widgets/ujob_text_field.dart';
+import '../../../core/widgets/ujob_toast.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -22,89 +29,94 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // Shared States
   bool _twoFa = false;
+  bool _allowNotifications = true;
+  String _visibilityMode = 'public';
 
-  // Notifications - Shared
-  bool _pushNotif = true;
-
-  // Notifications - Employer
+  // Notifications - Employer email
+  bool _emailNewJobApplication = true;
   bool _emailCandidateMessage = true;
   bool _emailInterviewResponse = true;
   bool _emailMarketing = false;
-  bool _chatSound = true;
-  bool _chatPopup = true;
 
-  // Notifications - Seeker
-  bool _pushNewJobs = true;
-  bool _pushApplicationUpdates = true;
-  bool _pushMessages = true;
+  // Notifications - Seeker email
+  bool _emailJobRecommendations = true;
+  bool _emailApplicationUpdates = true;
+  bool _emailMessages = true;
 
   // Privacy & Preferences
   bool _profileVisible = true;
   bool _showSalaryExpectations = false;
-  bool _privacyShowEmail = true;
-  bool _privacyShowPhone = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final locale = ref.watch(localeProvider);
     final role = ref.watch(activeRoleProvider);
     final isEmployer = role == 'employer';
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: UJobAppBar(
-        title: l10n.settings,
-        showBack: true,
-        backgroundColor: AppColors.background,
-      ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 120.h),
-        children: [
-          // ================= SECURITY =================
-          _SectionTitle('SECURITY'),
-          _SectionContainer(
-            children: [
-              _NavTile(
-                label: l10n.changePassword,
-                subtitle: 'Use a strong password to protect your account',
-                onTap: () => _showChangePasswordSheet(context),
-              ),
-              _NavTile(
-                label: l10n.changeEmail,
-                subtitle: 'Update your login email address',
-                onTap: () => _showChangeFieldSheet(
-                  context: context,
-                  title: l10n.changeEmail,
-                  fieldLabel: l10n.email,
-                  buttonLabel: l10n.save,
-                  type: TextInputType.emailAddress,
+      appBar: isEmployer
+          ? null
+          : UJobAppBar(
+              title: l10n.settings,
+              showBack: true,
+              backgroundColor: AppColors.background,
+            ),
+      body: SafeArea(
+        top: isEmployer,
+        bottom: false,
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 120.h),
+          children: [
+            // ================= SECURITY =================
+            _SectionTitle('SECURITY'),
+            _SectionContainer(
+              children: [
+                _NavTile(
+                  label: l10n.changePassword,
+                  subtitle: isEmployer
+                      ? l10n.employerChangePasswordSubtitle
+                      : l10n.seekerChangePasswordSubtitle,
+                  onTap: () => _showChangePasswordSheet(context),
                 ),
-              ),
-              _NavTile(
-                label: l10n.changePhone,
-                subtitle: 'Update your contact phone number',
-                onTap: () => _showChangeFieldSheet(
-                  context: context,
-                  title: l10n.changePhone,
-                  fieldLabel: l10n.phone,
-                  buttonLabel: l10n.save,
-                  type: TextInputType.phone,
+                _NavTile(
+                  label: isEmployer
+                      ? l10n.changeEmail
+                      : l10n.changeEmailAddress,
+                  subtitle: l10n.changeEmailSubtitle,
+                  onTap: () => _showChangeFieldSheet(
+                    context: context,
+                    title: isEmployer
+                        ? l10n.changeEmail
+                        : l10n.changeEmailAddress,
+                    fieldLabel: l10n.newEmailAddress,
+                    buttonLabel: l10n.sendVerificationCode,
+                    type: TextInputType.emailAddress,
+                  ),
                 ),
-              ),
-              if (isEmployer) ...[
+                _NavTile(
+                  label: l10n.changePhone,
+                  subtitle: l10n.changePhoneSubtitle,
+                  onTap: () => _showChangeFieldSheet(
+                    context: context,
+                    title: l10n.changePhone,
+                    fieldLabel: l10n.phone,
+                    buttonLabel: l10n.save,
+                    type: TextInputType.phone,
+                  ),
+                ),
                 Padding(
                   padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 20.h),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Two-Factor Authentication',
+                        l10n.twoFactorAuth,
                         style: AppText.bodyBold.copyWith(color: AppColors.text),
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        'Add an extra layer of security to your account',
+                        l10n.twoFactorAuthSubtitle,
                         style: AppText.small.copyWith(color: AppColors.muted),
                       ),
                       SizedBox(height: 12.h),
@@ -123,8 +135,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 children: [
                                   Text(
                                     _twoFa
-                                        ? 'Status: Enabled'
-                                        : 'Status: Disabled',
+                                        ? l10n.statusEnabled
+                                        : l10n.statusDisabled,
                                     style: AppText.bodyBold.copyWith(
                                       color: _twoFa
                                           ? AppColors.success
@@ -133,7 +145,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ),
                                   SizedBox(height: 4.h),
                                   Text(
-                                    'Authenticator App (Google, Authy)',
+                                    l10n.authenticatorAppLabel,
                                     style: AppText.small.copyWith(
                                       color: AppColors.text,
                                     ),
@@ -143,7 +155,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                             Switch(
                               value: _twoFa,
-                              onChanged: (v) => setState(() => _twoFa = v),
+                              onChanged: (v) => _onToggle2FA(v),
                               activeTrackColor: AppColors.primary,
                               inactiveTrackColor: AppColors.borderLight,
                             ),
@@ -154,301 +166,639 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
               ],
-            ],
-          ),
+            ),
 
-          SizedBox(height: 24.h),
+            SizedBox(height: 24.h),
 
-          // ================= NOTIFICATIONS =================
-          _SectionTitle('NOTIFICATIONS'),
-          _SectionContainer(
-            children: [
-              if (isEmployer) ...[
-                _NavTile(
-                  label: 'Email Notifications',
-                  subtitle: 'Manage what emails you receive from us',
-                  showArrow: false,
-                  showBorder: false,
-                  onTap: () {},
-                ),
-                _ToggleTile(
-                  label: 'Candidate Messages',
-                  value: _emailCandidateMessage,
-                  onChanged: (v) => setState(() => _emailCandidateMessage = v),
-                ),
-                _ToggleTile(
-                  label: 'Interview Responses',
-                  value: _emailInterviewResponse,
-                  onChanged: (v) => setState(() => _emailInterviewResponse = v),
-                ),
-                _ToggleTile(
-                  label: 'Marketing & Tips',
-                  value: _emailMarketing,
-                  onChanged: (v) => setState(() => _emailMarketing = v),
-                ),
-                _NavTile(
-                  label: 'Browser Notifications',
-                  subtitle:
-                      'Get alerts when the app is running in the background',
-                  showArrow: false,
-                  showBorder: false,
-                  onTap: () {},
-                ),
-                _ToggleTile(
-                  label: 'Allow Push Notifications',
-                  value: _pushNotif,
-                  onChanged: (v) => setState(() => _pushNotif = v),
-                ),
-                _NavTile(
-                  label: 'Chat Notifications',
-                  subtitle: 'Settings for real-time messaging',
-                  showArrow: false,
-                  showBorder: false,
-                  onTap: () {},
-                ),
-                _ToggleTile(
-                  label: 'Sound Alerts',
-                  value: _chatSound,
-                  onChanged: (v) => setState(() => _chatSound = v),
-                ),
-                _ToggleTile(
-                  label: 'Popup Preview',
-                  value: _chatPopup,
-                  onChanged: (v) => setState(() => _chatPopup = v),
-                  showBorder: false,
-                ),
-              ] else ...[
-                _ToggleTile(
-                  label: 'New Job Recommendations',
-                  subtitle:
-                      'Get notified when jobs matching your profile are posted',
-                  value: _pushNewJobs,
-                  onChanged: (v) => setState(() => _pushNewJobs = v),
-                ),
-                _ToggleTile(
-                  label: 'Application Updates',
-                  subtitle: 'Get notified when your application status changes',
-                  value: _pushApplicationUpdates,
-                  onChanged: (v) => setState(() => _pushApplicationUpdates = v),
-                ),
-                _ToggleTile(
-                  label: 'Messages',
-                  subtitle: 'Get notified when an employer sends you a message',
-                  value: _pushMessages,
-                  onChanged: (v) => setState(() => _pushMessages = v),
-                  showBorder: false,
-                ),
-              ],
-            ],
-          ),
-
-          SizedBox(height: 24.h),
-
-          // ================= PRIVACY & PREFERENCES =================
-          _SectionTitle(isEmployer ? 'PRIVACY' : 'PRIVACY & PREFERENCES'),
-          _SectionContainer(
-            children: [
-              if (isEmployer) ...[
-                _ToggleTile(
-                  label: 'Show Email on Profile',
-                  subtitle: 'Candidates can see your contact email',
-                  value: _privacyShowEmail,
-                  onChanged: (v) => setState(() => _privacyShowEmail = v),
-                ),
-                _ToggleTile(
-                  label: 'Show Phone on Profile',
-                  subtitle: 'Candidates can see your contact phone',
-                  value: _privacyShowPhone,
-                  onChanged: (v) => setState(() => _privacyShowPhone = v),
-                ),
-                _ToggleTile(
-                  label: 'Public Company Profile',
-                  subtitle: 'Allow search engines to index your company page',
-                  value: _profileVisible,
-                  onChanged: (v) => setState(() => _profileVisible = v),
-                  showBorder: false,
-                ),
-              ] else ...[
-                _ToggleTile(
-                  label: 'Public Profile',
-                  subtitle: 'Allow employers to find your profile',
-                  value: _profileVisible,
-                  onChanged: (v) => setState(() => _profileVisible = v),
-                ),
-                _ToggleTile(
-                  label: 'Show Salary Expectations',
-                  subtitle: 'Allow employers to see your expected salary range',
-                  value: _showSalaryExpectations,
-                  onChanged: (v) => setState(() => _showSalaryExpectations = v),
-                  showBorder: false,
-                ),
-              ],
-            ],
-          ),
-
-          SizedBox(height: 24.h),
-
-          // ================= PREFERENCES / LANGUAGE =================
-          _SectionTitle(isEmployer ? 'PREFERENCES' : 'LANGUAGE'),
-          _SectionContainer(
-            children: [
-              _NavTile(
-                label: l10n.appLanguage,
-                subtitle: locale.languageCode == 'en' ? 'English' : 'العربية',
-                onTap: () => _showLanguageSheet(context),
-                showBorder: isEmployer,
-              ),
-              if (isEmployer)
-                _NavTile(
-                  label: 'Timezone',
-                  subtitle: 'UTC-5 (Eastern Time)',
-                  onTap: () {},
-                  showBorder: false,
-                ),
-            ],
-          ),
-
-          SizedBox(height: 24.h),
-
-          if (isEmployer) ...[
-            // ================= ACCOUNT DATA =================
-            _SectionTitle('ACCOUNT DATA'),
+            // ================= NOTIFICATIONS =================
+            _SectionTitle('NOTIFICATIONS'),
             _SectionContainer(
               children: [
                 _NavTile(
-                  label: 'Download Data Archive',
-                  subtitle: 'Request a copy of your personal data',
+                  label: l10n.emailNotifications,
+                  subtitle: l10n.emailNotificationsSubtitle,
+                  showArrow: false,
+                  showBorder: true,
                   onTap: () {},
                 ),
-                _NavTile(
-                  label: 'Data Portability',
-                  subtitle: 'Export your job postings to CSV/JSON',
-                  onTap: () {},
+                if (isEmployer) ...[
+                  _ToggleTile(
+                    label: l10n.newJobApplication,
+                    subtitle: l10n.newJobApplicationSubtitle,
+                    value: _emailNewJobApplication,
+                    onChanged: (v) =>
+                        setState(() => _emailNewJobApplication = v),
+                  ),
+                  _ToggleTile(
+                    label: l10n.candidateMessages,
+                    subtitle: l10n.candidateMessagesSubtitle,
+                    value: _emailCandidateMessage,
+                    onChanged: (v) =>
+                        setState(() => _emailCandidateMessage = v),
+                  ),
+                  _ToggleTile(
+                    label: l10n.interviewResponses,
+                    subtitle: l10n.interviewResponsesSubtitle,
+                    value: _emailInterviewResponse,
+                    onChanged: (v) =>
+                        setState(() => _emailInterviewResponse = v),
+                  ),
+                  _ToggleTile(
+                    label: l10n.marketingEmails,
+                    subtitle: l10n.marketingEmailsSubtitle,
+                    value: _emailMarketing,
+                    onChanged: (v) => setState(() => _emailMarketing = v),
+                  ),
+                ] else ...[
+                  _ToggleTile(
+                    label: l10n.jobRecommendations,
+                    value: _emailJobRecommendations,
+                    onChanged: (v) =>
+                        setState(() => _emailJobRecommendations = v),
+                  ),
+                  _ToggleTile(
+                    label: l10n.applicationUpdates,
+                    value: _emailApplicationUpdates,
+                    onChanged: (v) =>
+                        setState(() => _emailApplicationUpdates = v),
+                  ),
+                  _ToggleTile(
+                    label: l10n.messages,
+                    value: _emailMessages,
+                    onChanged: (v) => setState(() => _emailMessages = v),
+                  ),
+                ],
+                _ToggleTile(
+                  label: l10n.allowNotifications,
+                  subtitle: l10n.allowNotificationsSubtitle,
+                  value: _allowNotifications,
+                  onChanged: (v) => setState(() => _allowNotifications = v),
                   showBorder: false,
                 ),
               ],
             ),
-            SizedBox(height: 24.h),
-          ],
 
-          // ================= ACCOUNT =================
-          _SectionTitle(isEmployer ? 'DELETE ACCOUNT' : 'ACCOUNT'),
-          _SectionContainer(
-            children: [
-              _NavTile(
-                label: l10n.deleteAccount,
-                subtitle: 'Permanently delete your account and all data',
-                textColor: AppColors.error,
-                showArrow: false,
-                onTap: () => _showDeleteDialog(context),
-                showBorder: !isEmployer,
+            SizedBox(height: 24.h),
+
+            // ================= PRIVACY =================
+            _SectionTitle(l10n.privacySection),
+            if (isEmployer) ...[
+              _SectionContainer(
+                children: [
+                  _NavTile(
+                    label: l10n.companyProfileVisibility,
+                    subtitle: 'Control who can see your company profile',
+                    showArrow: false,
+                    showBorder: false,
+                    onTap: () {},
+                  ),
+                ],
               ),
-              if (!isEmployer)
-                _NavTile(
-                  label: l10n.signOut,
-                  subtitle: 'Sign out of your account on this device',
-                  textColor: AppColors.error,
-                  showArrow: false,
-                  showBorder: false,
-                  onTap: () => _signOut(context),
+              SizedBox(height: 8.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 0),
+                child: UJobRadioCard(
+                  title: l10n.publicProfile,
+                  subtitle: l10n.publicProfileSubtitle,
+                  value: 'public',
+                  groupValue: _visibilityMode,
+                  onChanged: (v) => setState(() => _visibilityMode = v),
                 ),
+              ),
+            ] else ...[
+              _SectionContainer(
+                children: [
+                  _ToggleTile(
+                    label: l10n.profileVisibility,
+                    subtitle: l10n.profileVisibilitySubtitle,
+                    value: _profileVisible,
+                    onChanged: (v) => setState(() => _profileVisible = v),
+                    showBorder: true,
+                  ),
+                  _ToggleTile(
+                    label: l10n.showSalaryExpectations,
+                    subtitle: l10n.showSalaryExpectationsSubtitle,
+                    value: _showSalaryExpectations,
+                    onChanged: (v) =>
+                        setState(() => _showSalaryExpectations = v),
+                    showBorder: false,
+                  ),
+                ],
+              ),
             ],
-          ),
 
-          if (isEmployer) ...[
             SizedBox(height: 24.h),
-            // ================= LOG OUT (Employer puts it here or in account) =================
+
+            if (isEmployer) ...[
+              // ================= ACCOUNT DATA =================
+              _SectionTitle('ACCOUNT DATA'),
+              _SectionContainer(
+                children: [
+                  _NavTile(
+                    label: l10n.downloadAccountData,
+                    subtitle: l10n.downloadAccountDataSubtitle,
+                    showArrow: false,
+                    showBorder: false,
+                    onTap: () {},
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              _SectionContainer(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 12.h),
+                    child: Text(
+                      l10n.exportDataDesc,
+                      style: AppText.small.copyWith(color: AppColors.muted),
+                    ),
+                  ),
+                  _NavTile(
+                    label: l10n.exportJobsCsv,
+                    onTap: () {},
+                  ),
+                  _NavTile(
+                    label: l10n.exportApplicantsCsv,
+                    onTap: () {},
+                    showBorder: false,
+                  ),
+                ],
+              ),
+              SizedBox(height: 24.h),
+            ],
+
+            // ================= ABOUT & SUPPORT =================
+            _SectionTitle('ABOUT & SUPPORT'),
             _SectionContainer(
               children: [
-                _NavTile(
-                  label: l10n.signOut,
-                  subtitle: 'Log out of this session',
-                  textColor: AppColors.error,
-                  showArrow: false,
-                  showBorder: false,
-                  onTap: () => _signOut(context),
+                ref.watch(cmsPagesListProvider).when(
+                  data: (pages) {
+                    return Column(
+                      children: pages.asMap().entries.map((entry) {
+                        final isLast = entry.key == pages.length - 1;
+                        return _NavTile(
+                          label: entry.value.title,
+                          onTap: () => context.push('/pages/${entry.value.slug}'),
+                          showBorder: !isLast,
+                        );
+                      }).toList(),
+                    );
+                  },
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (err, _) => const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('Failed to load pages.'),
+                  ),
                 ),
               ],
             ),
+
+            SizedBox(height: 24.h),
+
+            // ================= ACCOUNT =================
+            _SectionTitle(isEmployer ? 'DELETE ACCOUNT' : 'ACCOUNT'),
+            _SectionContainer(
+              children: [
+                _NavTile(
+                  label: l10n.deleteAccount,
+                  subtitle: l10n.deleteAccountSubtitle,
+                  textColor: AppColors.error,
+                  showArrow: false,
+                  onTap: () => _showDeleteDialog(context),
+                  showBorder: !isEmployer,
+                ),
+                if (!isEmployer)
+                  _NavTile(
+                    label: l10n.signOut,
+                    subtitle: 'Sign out of your account on this device',
+                    textColor: AppColors.error,
+                    showArrow: false,
+                    showBorder: false,
+                    onTap: () => _showSignOutDialog(context),
+                  ),
+              ],
+            ),
+
+            if (isEmployer) ...[
+              SizedBox(height: 24.h),
+              _SectionContainer(
+                children: [
+                  _NavTile(
+                    label: l10n.signOut,
+                    subtitle: 'Log out of this session',
+                    textColor: AppColors.error,
+                    showArrow: false,
+                    showBorder: false,
+                    onTap: () => _showSignOutDialog(context),
+                  ),
+                ],
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 
   // --- Helpers ---
-  void _showChangePasswordSheet(BuildContext context) {
-    showModalBottomSheet(
+
+  Future<void> _showChangePasswordSheet(BuildContext context) async {
+    final l10n = context.l10n;
+    final isEmployer = ref.read(activeRoleProvider) == 'employer';
+    final currentCtrl = TextEditingController();
+    final newCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+
+    String? currentError;
+    String? newError;
+    String? confirmError;
+    String? submitError;
+    var loading = false;
+
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => Container(height: 300),
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            Future<void> submit() async {
+              final current = currentCtrl.text.trim();
+              final next = newCtrl.text.trim();
+              final confirm = confirmCtrl.text.trim();
+              final nextError = UJobValidator.validate(
+                context: sheetContext,
+                value: next,
+                isPassword: true,
+              );
+
+              setSheetState(() {
+                currentError = current.isEmpty ? l10n.errorRequiredField : null;
+                newError = nextError;
+                confirmError = confirm.isEmpty
+                    ? l10n.errorRequiredField
+                    : confirm != next
+                    ? l10n.errorPasswordMismatch
+                    : null;
+                submitError = null;
+              });
+
+              if (currentError != null ||
+                  newError != null ||
+                  confirmError != null) {
+                return;
+              }
+
+              setSheetState(() => loading = true);
+
+              try {
+                await ref
+                    .read(dioClientProvider)
+                    .dio
+                    .patch(
+                      isEmployer ? Ep.empPassword : Ep.seekPassword,
+                      data: {
+                        'current_password': current,
+                        'new_password': next,
+                        'password_confirmation': confirm,
+                      },
+                    );
+
+                if (!sheetContext.mounted) return;
+                Navigator.pop(sheetContext);
+                if (mounted) {
+                  UJobToast.success(context, l10n.passwordUpdatedSuccess);
+                }
+              } catch (_) {
+                if (!sheetContext.mounted) return;
+                setSheetState(() {
+                  loading = false;
+                  submitError = l10n.error;
+                });
+              }
+            }
+
+            return _SettingsSheet(
+              title: l10n.changePassword,
+              subtitle: isEmployer
+                  ? l10n.employerChangePasswordSubtitle
+                  : l10n.seekerChangePasswordSubtitle,
+              children: [
+                UJobTextField(
+                  label: l10n.currentPassword,
+                  hint: isEmployer ? null : l10n.currentPasswordHint,
+                  controller: currentCtrl,
+                  errorText: currentError,
+                  isPassword: true,
+                  textInputAction: TextInputAction.next,
+                  isRequired: true,
+                ),
+                SizedBox(height: 16.h),
+                UJobTextField(
+                  label: l10n.newPassword,
+                  hint: isEmployer ? null : l10n.newPasswordHint,
+                  controller: newCtrl,
+                  errorText: newError,
+                  isPassword: true,
+                  textInputAction: TextInputAction.next,
+                  isRequired: true,
+                  isSecurePassword: true,
+                ),
+                SizedBox(height: 16.h),
+                UJobTextField(
+                  label: l10n.confirmNewPassword,
+                  hint: isEmployer ? null : l10n.confirmNewPasswordHint,
+                  controller: confirmCtrl,
+                  errorText: confirmError,
+                  isPassword: true,
+                  textInputAction: TextInputAction.done,
+                  isRequired: true,
+                  isConfirmPassword: true,
+                  matchValue: newCtrl.text,
+                ),
+                if (submitError != null) ...[
+                  SizedBox(height: 12.h),
+                  _SettingsErrorBanner(submitError!),
+                ],
+                SizedBox(height: 24.h),
+                UJobButton(
+                  label: isEmployer ? l10n.updatePassword : l10n.changePassword,
+                  onTap: submit,
+                  isLoading: loading,
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
-  void _showChangeFieldSheet({
+  Future<void> _showChangeFieldSheet({
     required BuildContext context,
     required String title,
     required String fieldLabel,
     required String buttonLabel,
     required TextInputType type,
-  }) {
-    showModalBottomSheet(
+  }) async {
+    final l10n = context.l10n;
+    final controller = TextEditingController();
+    final passwordCtrl = TextEditingController();
+    final isEmail = type == TextInputType.emailAddress;
+    final isPhone = type == TextInputType.phone;
+    final isEmployer = ref.read(activeRoleProvider) == 'employer';
+    final currentUser = ref.read(authProvider).valueOrNull;
+    final currentEmail =
+        currentUser?.email ??
+        (isEmployer
+            ? 'nexoviasolutions@gmail.com'
+            : 'mdazadhossain95@gmail.com');
+    final fieldKey = isEmail ? 'email' : 'phone';
+    final successMessage = isEmail
+        ? l10n.verificationCodeSent
+        : l10n.phoneUpdatedSuccess;
+
+    String? fieldError;
+    String? countryCode = '+44';
+    String? passwordError;
+    String? submitError;
+    var loading = false;
+
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => Container(height: 300),
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            Future<void> submit() async {
+              final value = controller.text.trim();
+              final phoneValue = isPhone ? '$countryCode$value' : value;
+              final error = UJobValidator.validate(
+                context: sheetContext,
+                value: isPhone ? value : phoneValue,
+                isEmail: isEmail,
+                isPhone: isPhone,
+              );
+
+              setSheetState(() {
+                fieldError = error;
+                passwordError = isEmail && passwordCtrl.text.trim().isEmpty
+                    ? l10n.errorRequiredField
+                    : null;
+                submitError = null;
+              });
+
+              if (fieldError != null || passwordError != null) {
+                return;
+              }
+
+              setSheetState(() => loading = true);
+
+              try {
+                await ref
+                    .read(dioClientProvider)
+                    .dio
+                    .patch(
+                      isEmployer ? Ep.empSettings : Ep.seekSettings,
+                      data: {
+                        fieldKey: phoneValue,
+                        if (isEmail) 'current_password': passwordCtrl.text,
+                      },
+                    );
+
+                if (!sheetContext.mounted) return;
+                Navigator.pop(sheetContext);
+                if (mounted) {
+                  if (isEmail) {
+                    context.push('/otp', extra: {'email': value});
+                  } else {
+                    UJobToast.success(context, successMessage);
+                  }
+                }
+              } catch (_) {
+                if (!sheetContext.mounted) return;
+                setSheetState(() {
+                  loading = false;
+                  submitError = l10n.error;
+                });
+              }
+            }
+
+            return _SettingsSheet(
+              title: title,
+              children: [
+                if (isEmail) ...[
+                  Text(
+                    l10n.currentValue(currentEmail),
+                    style: AppText.body.copyWith(color: AppColors.muted),
+                  ),
+                  SizedBox(height: 20.h),
+                ],
+                if (isPhone) ...[
+                  UJobPhoneNumberField(
+                    label: fieldLabel,
+                    controller: controller,
+                    initialDialCode: countryCode ?? '+44',
+                    onCountryCodeChanged: (value) {
+                      setSheetState(() => countryCode = value);
+                    },
+                    errorText: fieldError,
+                    hint: l10n.localPhoneNumberHint,
+                  ),
+                ] else ...[
+                  UJobTextField(
+                    label: fieldLabel,
+                    hint: isEmail && !isEmployer ? currentEmail : null,
+                    controller: controller,
+                    keyboardType: type,
+                    textInputAction: TextInputAction.done,
+                    errorText: fieldError,
+                    isRequired: true,
+                    isEmail: isEmail,
+                  ),
+                ],
+                if (isEmail) ...[
+                  SizedBox(height: 16.h),
+                  UJobTextField(
+                    label: isEmployer
+                        ? l10n.currentPasswordVerification
+                        : l10n.currentPassword,
+                    hint: isEmployer ? null : l10n.passwordMaskHint,
+                    controller: passwordCtrl,
+                    textInputAction: TextInputAction.done,
+                    errorText: passwordError,
+                    isRequired: true,
+                    isPassword: true,
+                  ),
+                  if (!isEmployer) ...[
+                    SizedBox(height: 6.h),
+                    Text(
+                      l10n.requiredToVerifyYou,
+                      style: AppText.small.copyWith(color: AppColors.muted),
+                    ),
+                  ],
+                ],
+                if (submitError != null) ...[
+                  SizedBox(height: 12.h),
+                  _SettingsErrorBanner(submitError!),
+                ],
+                SizedBox(height: 24.h),
+                UJobButton(
+                  label: buttonLabel,
+                  onTap: submit,
+                  isLoading: loading,
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
-  void _showLanguageSheet(BuildContext context) {
-    showModalBottomSheet(
+  void _onToggle2FA(bool enable) {
+    _show2FAConfirmSheet(context, enable: enable);
+  }
+
+  Future<void> _show2FAConfirmSheet(
+    BuildContext context, {
+    required bool enable,
+  }) async {
+    final l10n = context.l10n;
+    final isEmployer = ref.read(activeRoleProvider) == 'employer';
+    final passwordCtrl = TextEditingController();
+
+    String? passwordError;
+    String? submitError;
+    var loading = false;
+
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 20.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Select Language', style: AppText.heading2),
-              SizedBox(height: 16.h),
-              ListTile(
-                title: const Text('English'),
-                trailing: ref.read(localeProvider).languageCode == 'en'
-                    ? const HugeIcon(
-                        icon: HugeIcons.strokeRoundedCheckmarkBadge01,
-                        color: AppColors.primary,
-                      )
-                    : null,
-                onTap: () {
-                  ref
-                      .read(localeProvider.notifier)
-                      .setLocale(const Locale('en'));
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                title: const Text('العربية'),
-                trailing: ref.read(localeProvider).languageCode == 'ar'
-                    ? const HugeIcon(
-                        icon: HugeIcons.strokeRoundedCheckmarkBadge01,
-                        color: AppColors.primary,
-                      )
-                    : null,
-                onTap: () {
-                  ref
-                      .read(localeProvider.notifier)
-                      .setLocale(const Locale('ar'));
-                  Navigator.pop(ctx);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            Future<void> submit() async {
+              final password = passwordCtrl.text.trim();
+              setSheetState(() {
+                passwordError =
+                    password.isEmpty ? l10n.errorRequiredField : null;
+                submitError = null;
+              });
+              if (passwordError != null) return;
+
+              setSheetState(() => loading = true);
+              try {
+                await ref.read(dioClientProvider).dio.patch(
+                  isEmployer ? Ep.emp2FA : Ep.seek2FA,
+                  data: {'enabled': enable, 'current_password': password},
+                );
+                if (!sheetContext.mounted) return;
+                Navigator.pop(sheetContext);
+                if (mounted) {
+                  setState(() => _twoFa = enable);
+                  UJobToast.success(
+                    context,
+                    enable ? l10n.twoFAEnabledSuccess : l10n.twoFADisabledSuccess,
+                  );
+                }
+              } catch (_) {
+                if (!sheetContext.mounted) return;
+                setSheetState(() {
+                  loading = false;
+                  submitError = l10n.error;
+                });
+              }
+            }
+
+            return _SettingsSheet(
+              title: enable ? l10n.confirm2FAEnable : l10n.confirm2FADisable,
+              subtitle: enable
+                  ? l10n.enable2FADescription
+                  : l10n.disable2FADescription,
+              children: [
+                UJobTextField(
+                  label: l10n.currentPassword,
+                  hint: l10n.passwordMaskHint,
+                  controller: passwordCtrl,
+                  errorText: passwordError,
+                  isPassword: true,
+                  isRequired: true,
+                  textInputAction: TextInputAction.done,
+                ),
+                if (submitError != null) ...[
+                  SizedBox(height: 12.h),
+                  _SettingsErrorBanner(submitError!),
+                ],
+                SizedBox(height: 24.h),
+                UJobButton(
+                  label: enable ? l10n.confirm2FAEnable : l10n.confirm2FADisable,
+                  onTap: submit,
+                  isLoading: loading,
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
+
+
 
   void _showDeleteDialog(BuildContext context) {
     showDialog(
@@ -460,13 +810,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           size: 32.r,
         ),
         iconBgColor: AppColors.error,
-        title: 'Delete Account',
-        description:
-            'Are you sure you want to delete your account? This action cannot be undone.',
-        confirmText: 'Delete',
+        title: context.l10n.deleteAccount,
+        description: context.l10n.deleteAccountDescription,
+        confirmText: context.l10n.delete,
         confirmColor: AppColors.error,
-        cancelText: 'Cancel',
+        cancelText: context.l10n.cancel,
         onConfirm: () => Navigator.pop(ctx),
+      ),
+    );
+  }
+
+  void _showSignOutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => UJobAlertDialog(
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedLogout01,
+          color: AppColors.error,
+          size: 32.r,
+        ),
+        iconBgColor: AppColors.error,
+        title: context.l10n.signOut,
+        description: context.l10n.signOutConfirmation,
+        confirmText: context.l10n.signOut,
+        confirmColor: AppColors.error,
+        cancelText: context.l10n.cancel,
+        onConfirm: () {
+          Navigator.pop(ctx);
+          _signOut(context);
+        },
       ),
     );
   }
@@ -474,6 +846,94 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _signOut(BuildContext context) {
     ref.read(authProvider.notifier).logout();
     context.go('/role-picker');
+  }
+}
+
+class _SettingsSheet extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final List<Widget> children;
+
+  const _SettingsSheet({
+    required this.title,
+    this.subtitle,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          20.w,
+          20.h,
+          20.w,
+          MediaQuery.of(context).viewInsets.bottom + 24.h,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: Text(title, style: AppText.heading2)),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    color: AppColors.text,
+                    size: 22.r,
+                  ),
+                ),
+              ],
+            ),
+            if (subtitle != null) ...[
+              SizedBox(height: 4.h),
+              Text(
+                subtitle!,
+                style: AppText.body.copyWith(color: AppColors.muted),
+              ),
+            ],
+            SizedBox(height: 20.h),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsErrorBanner extends StatelessWidget {
+  final String message;
+
+  const _SettingsErrorBanner(this.message);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: AppColors.errorBg,
+        borderRadius: AppRadius.md,
+      ),
+      child: Row(
+        children: [
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedAlert01,
+            color: AppColors.error,
+            size: 16.r,
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              message,
+              style: AppText.small.copyWith(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

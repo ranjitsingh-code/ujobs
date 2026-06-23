@@ -72,19 +72,19 @@ class Job {
 
   factory Job.fromJson(Map<String, dynamic> json) {
     return Job(
-      id: json['id'] as int,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      category: json['category'] as String?,
-      employmentType: json['employment_type'] as String,
-      workplaceType: json['workplace_type'] as String,
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      category: json['categories'] != null ? (json['categories']['name'] as String?) : json['category'] as String?,
+      employmentType: json['employment_type'] as String? ?? '',
+      workplaceType: json['workplace_type'] as String? ?? '',
       location: json['location'] as String?,
       salaryMin: json['salary_min']?.toString(),
       salaryMax: json['salary_max']?.toString(),
       experienceLevel: json['experience_level'] as String?,
       status: _parseStatus(json['status'] as String?),
-      company: json['company'] != null
-          ? Company.fromJson(json['company'])
+      company: (json['companies'] ?? json['company']) != null
+          ? Company.fromJson(json['companies'] ?? json['company'])
           : null,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])
@@ -239,6 +239,7 @@ class Job {
   static int _parseApplicantCount(Map<String, dynamic> json) {
     return _parseCount(json, const [
       'applicants_count',
+      '_count.applications',
       'applicant_count',
       'applications_count',
     ]);

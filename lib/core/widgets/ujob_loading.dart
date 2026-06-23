@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:shimmer/shimmer.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -49,4 +50,25 @@ class UJobLoadingCard extends StatelessWidget {
       ),
     ),
   );
+}
+
+class UJobSpinner extends StatelessWidget {
+  final double size;
+  final Color? color;
+
+  const UJobSpinner({
+    super.key,
+    this.size = 32.0,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: LoadingAnimationWidget.fourRotatingDots(
+        color: color ?? AppColors.primary,
+        size: size.r,
+      ),
+    );
+  }
 }

@@ -2030,11 +2030,41 @@ abstract class AppLocalizations {
   /// **'SECURITY'**
   String get securitySection;
 
+  /// No description provided for @otpVerificationSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified Successfully!'**
+  String get otpVerificationSuccess;
+
+  /// No description provided for @otpResendSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Code sent successfully!'**
+  String get otpResendSuccess;
+
+  /// No description provided for @otpErrorInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid code entered.'**
+  String get otpErrorInvalid;
+
   /// No description provided for @changePassword.
   ///
   /// In en, this message translates to:
   /// **'Change Password'**
   String get changePassword;
+
+  /// No description provided for @employerChangePasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a strong password to protect your account'**
+  String get employerChangePasswordSubtitle;
+
+  /// No description provided for @seekerChangePasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a strong password with letters, numbers and symbols'**
+  String get seekerChangePasswordSubtitle;
 
   /// No description provided for @changeEmail.
   ///
@@ -2042,17 +2072,143 @@ abstract class AppLocalizations {
   /// **'Change Email'**
   String get changeEmail;
 
+  /// No description provided for @changeEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Email Address'**
+  String get changeEmailAddress;
+
+  /// No description provided for @changeEmailSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your login email address'**
+  String get changeEmailSubtitle;
+
+  /// No description provided for @newEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'New Email Address'**
+  String get newEmailAddress;
+
+  /// No description provided for @currentValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {value}'**
+  String currentValue(Object value);
+
+  /// No description provided for @sendVerificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Verification Code'**
+  String get sendVerificationCode;
+
+  /// No description provided for @verificationCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code sent'**
+  String get verificationCodeSent;
+
+  /// No description provided for @requiredToVerifyYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Required to verify it\'s you'**
+  String get requiredToVerifyYou;
+
+  /// No description provided for @passwordMaskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'•••••••••••'**
+  String get passwordMaskHint;
+
   /// No description provided for @changePhone.
   ///
   /// In en, this message translates to:
   /// **'Change Phone Number'**
   String get changePhone;
 
+  /// No description provided for @changePhoneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your contact phone number'**
+  String get changePhoneSubtitle;
+
+  /// No description provided for @countryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Country Code'**
+  String get countryCode;
+
+  /// No description provided for @localPhoneNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter number without country code'**
+  String get localPhoneNumberHint;
+
   /// No description provided for @twoFactorAuth.
   ///
   /// In en, this message translates to:
   /// **'Two-Factor Authentication'**
   String get twoFactorAuth;
+
+  /// No description provided for @twoFactorAuthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an extra layer of security to your account'**
+  String get twoFactorAuthSubtitle;
+
+  /// No description provided for @statusEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: Enabled'**
+  String get statusEnabled;
+
+  /// No description provided for @statusDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: Disabled'**
+  String get statusDisabled;
+
+  /// No description provided for @authenticatorAppLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email OTP (sent to your registered email)'**
+  String get authenticatorAppLabel;
+
+  /// No description provided for @confirm2FAEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to Enable 2FA'**
+  String get confirm2FAEnable;
+
+  /// No description provided for @confirm2FADisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm to Disable 2FA'**
+  String get confirm2FADisable;
+
+  /// No description provided for @enable2FADescription.
+  ///
+  /// In en, this message translates to:
+  /// **'An OTP code will be sent to your email each time you sign in.'**
+  String get enable2FADescription;
+
+  /// No description provided for @disable2FADescription.
+  ///
+  /// In en, this message translates to:
+  /// **'You will no longer be required to enter an OTP when signing in.'**
+  String get disable2FADescription;
+
+  /// No description provided for @twoFAEnabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication enabled'**
+  String get twoFAEnabledSuccess;
+
+  /// No description provided for @twoFADisabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication disabled'**
+  String get twoFADisabledSuccess;
 
   /// No description provided for @notificationsSection.
   ///
@@ -2096,11 +2252,23 @@ abstract class AppLocalizations {
   /// **'Current Password'**
   String get currentPassword;
 
+  /// No description provided for @currentPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter current password'**
+  String get currentPasswordHint;
+
   /// No description provided for @newPassword.
   ///
   /// In en, this message translates to:
   /// **'New Password'**
   String get newPassword;
+
+  /// No description provided for @newPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter new password'**
+  String get newPasswordHint;
 
   /// No description provided for @confirmNewPassword.
   ///
@@ -2108,11 +2276,35 @@ abstract class AppLocalizations {
   /// **'Confirm New Password'**
   String get confirmNewPassword;
 
+  /// No description provided for @confirmNewPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat new password'**
+  String get confirmNewPasswordHint;
+
   /// No description provided for @updatePassword.
   ///
   /// In en, this message translates to:
   /// **'Update Password'**
   String get updatePassword;
+
+  /// No description provided for @passwordUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password updated successfully'**
+  String get passwordUpdatedSuccess;
+
+  /// No description provided for @emailUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Email updated successfully'**
+  String get emailUpdatedSuccess;
+
+  /// No description provided for @phoneUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number updated successfully'**
+  String get phoneUpdatedSuccess;
 
   /// No description provided for @deleteAccountTitle.
   ///
@@ -2780,11 +2972,23 @@ abstract class AppLocalizations {
   /// **'New Job Application'**
   String get newJobApplication;
 
+  /// No description provided for @newJobApplicationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when a candidate applies to one of your jobs'**
+  String get newJobApplicationSubtitle;
+
   /// No description provided for @candidateMessages.
   ///
   /// In en, this message translates to:
   /// **'Candidate Messages'**
   String get candidateMessages;
+
+  /// No description provided for @candidateMessagesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive emails when candidates send you messages'**
+  String get candidateMessagesSubtitle;
 
   /// No description provided for @interviewResponses.
   ///
@@ -2792,11 +2996,59 @@ abstract class AppLocalizations {
   /// **'Interview Responses'**
   String get interviewResponses;
 
+  /// No description provided for @interviewResponsesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified about interview confirmations and cancellations'**
+  String get interviewResponsesSubtitle;
+
   /// No description provided for @marketingEmails.
   ///
   /// In en, this message translates to:
   /// **'Marketing Emails'**
   String get marketingEmails;
+
+  /// No description provided for @marketingEmailsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Product updates, tips, and promotional offers'**
+  String get marketingEmailsSubtitle;
+
+  /// No description provided for @marketingTips.
+  ///
+  /// In en, this message translates to:
+  /// **'Marketing & Tips'**
+  String get marketingTips;
+
+  /// No description provided for @allowNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Notifications'**
+  String get allowNotifications;
+
+  /// No description provided for @allowNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive push notifications on this device'**
+  String get allowNotificationsSubtitle;
+
+  /// No description provided for @emailNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Notifications'**
+  String get emailNotifications;
+
+  /// No description provided for @emailNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which emails you receive'**
+  String get emailNotificationsSubtitle;
+
+  /// No description provided for @newJobRecommendations.
+  ///
+  /// In en, this message translates to:
+  /// **'New Job Recommendations'**
+  String get newJobRecommendations;
 
   /// No description provided for @messageSound.
   ///
@@ -2816,11 +3068,89 @@ abstract class AppLocalizations {
   /// **'Public Profile'**
   String get publicProfile;
 
+  /// No description provided for @publicProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your company profile is visible to all job seekers, including those not logged in'**
+  String get publicProfileSubtitle;
+
   /// No description provided for @privateProfile.
   ///
   /// In en, this message translates to:
   /// **'Private Profile'**
   String get privateProfile;
+
+  /// No description provided for @privacySection.
+  ///
+  /// In en, this message translates to:
+  /// **'PRIVACY'**
+  String get privacySection;
+
+  /// No description provided for @privacyPreferencesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'PRIVACY & PREFERENCES'**
+  String get privacyPreferencesSection;
+
+  /// No description provided for @companyProfileVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Profile Visibility'**
+  String get companyProfileVisibility;
+
+  /// No description provided for @companyProfileVisibilitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow search engines to index your company page'**
+  String get companyProfileVisibilitySubtitle;
+
+  /// No description provided for @profileVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Visibility'**
+  String get profileVisibility;
+
+  /// No description provided for @profileVisibilitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow employers to find your profile'**
+  String get profileVisibilitySubtitle;
+
+  /// No description provided for @showEmailOnProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Email on Profile'**
+  String get showEmailOnProfile;
+
+  /// No description provided for @showEmailOnProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Candidates can see your contact email'**
+  String get showEmailOnProfileSubtitle;
+
+  /// No description provided for @showPhoneOnProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Phone on Profile'**
+  String get showPhoneOnProfile;
+
+  /// No description provided for @showPhoneOnProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Candidates can see your contact phone'**
+  String get showPhoneOnProfileSubtitle;
+
+  /// No description provided for @showSalaryExpectations.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Salary Expectations'**
+  String get showSalaryExpectations;
+
+  /// No description provided for @showSalaryExpectationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow employers to see your expected salary range'**
+  String get showSalaryExpectationsSubtitle;
 
   /// No description provided for @showEmailToCandidates.
   ///
@@ -2846,6 +3176,24 @@ abstract class AppLocalizations {
   /// **'Date Format'**
   String get dateFormat;
 
+  /// No description provided for @downloadAccountData.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Account Data'**
+  String get downloadAccountData;
+
+  /// No description provided for @downloadAccountDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export a copy of your data'**
+  String get downloadAccountDataSubtitle;
+
+  /// No description provided for @exportDataDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Download your jobs and applicant data as CSV files.'**
+  String get exportDataDesc;
+
   /// No description provided for @exportJobsCsv.
   ///
   /// In en, this message translates to:
@@ -2858,11 +3206,35 @@ abstract class AppLocalizations {
   /// **'Export Applicants (CSV)'**
   String get exportApplicantsCsv;
 
+  /// No description provided for @contactUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Us'**
+  String get contactUs;
+
+  /// No description provided for @termsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use'**
+  String get termsOfUse;
+
   /// No description provided for @deleteMyAccount.
   ///
   /// In en, this message translates to:
   /// **'Delete My Account'**
   String get deleteMyAccount;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently remove your account and all data'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @deleteAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Once you delete your account, all of your data including jobs, applications, and settings will be permanently removed. This action cannot be undone.'**
+  String get deleteAccountDescription;
 
   /// No description provided for @selectAll.
   ///
@@ -2899,6 +3271,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search applicants...'**
   String get searchApplicants;
+
+  /// No description provided for @searchJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Search jobs...'**
+  String get searchJobs;
 
   /// No description provided for @totalJobs.
   ///
@@ -3379,6 +3757,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search jobs, companies...'**
   String get searchJobsCompanies;
+
+  /// No description provided for @companyProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Profile'**
+  String get companyProfile;
+
+  /// No description provided for @follow.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow'**
+  String get follow;
+
+  /// No description provided for @noDescriptionAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No description available.'**
+  String get noDescriptionAvailable;
+
+  /// No description provided for @companySize.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Size'**
+  String get companySize;
+
+  /// No description provided for @noOpenPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'No open positions.'**
+  String get noOpenPositions;
+
+  /// No description provided for @errorLoadingJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading jobs'**
+  String get errorLoadingJobs;
+
+  /// No description provided for @viewsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No views} =1{1 view} other{{count} views}}'**
+  String viewsCount(num count);
+
+  /// No description provided for @salary.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary'**
+  String get salary;
+
+  /// No description provided for @jobType.
+  ///
+  /// In en, this message translates to:
+  /// **'Job Type'**
+  String get jobType;
+
+  /// No description provided for @workplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workplace'**
+  String get workplace;
+
+  /// No description provided for @notSpecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
+  String get notSpecified;
+
+  /// No description provided for @companiesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Companies'**
+  String get companiesTab;
+
+  /// No description provided for @employerDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Employer Directory'**
+  String get employerDirectory;
+
+  /// No description provided for @browseCompanies.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Companies'**
+  String get browseCompanies;
+
+  /// No description provided for @exploreEmployersDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore top employers hiring right now. Find your next great workplace.'**
+  String get exploreEmployersDesc;
+
+  /// No description provided for @searchCompanies.
+  ///
+  /// In en, this message translates to:
+  /// **'Search companies…'**
+  String get searchCompanies;
+
+  /// No description provided for @companiesFoundCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} companies found'**
+  String companiesFoundCount(int count);
+
+  /// No description provided for @openJobsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} open jobs'**
+  String openJobsCount(int count);
+
+  /// No description provided for @verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get verified;
+
+  /// No description provided for @viewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get viewButton;
 }
 
 class _AppLocalizationsDelegate

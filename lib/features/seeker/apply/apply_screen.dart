@@ -10,6 +10,10 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
+import '../../../core/widgets/ujob_alert_dialog.dart';
+import '../../../core/widgets/ujob_rich_text_editor.dart';
+import '../../../core/widgets/ujob_wizard_stepper.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/widgets/ujob_result_screen.dart';
 
 import '../jobs/seeker_job_provider.dart';
@@ -32,8 +36,10 @@ class ApplyScreen extends ConsumerStatefulWidget {
   ConsumerState<ApplyScreen> createState() => _ApplyScreenState();
 }
 
+enum ApplyStep { coverLetter, questions }
+
 class _ApplyScreenState extends ConsumerState<ApplyScreen> {
-  int _step = 0; // 0 = Cover Letter, 1 = Screening Questions
+  int _stepIndex = 0;
   final _coverCtrl = TextEditingController();
   final Map<int, String> _questionAnswers = {};
   bool _submitting = false;
@@ -46,12 +52,31 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
   }
 
   Future<void> _submit() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => UJobAlertDialog(
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedBriefcase01,
+          color: AppColors.seekPrimary,
+          size: 32.r,
+        ),
+        iconBgColor: AppColors.seekPrimary,
+        title: 'Apply for this Job?',
+        description:
+            'Are you sure you want to submit your application for ${widget.jobTitle} at ${widget.companyName ?? 'Company'}?',
+        confirmText: 'Apply',
+        confirmColor: AppColors.seekPrimary,
+        onConfirm: () => Navigator.pop(context, true),
+      ),
+    );
+
+    if (confirmed != true) return;
+
     setState(() => _submitting = true);
     try {
       await Future.delayed(const Duration(seconds: 1));
       setState(() => _submitted = true);
     } catch (_) {
-      // Mock success for testing purposes as backend may not be ready
       setState(() => _submitted = true);
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -68,38 +93,62 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
             'Your application has been sent. We\'ll notify you when the employer responds.',
         buttonLabel: 'Back to Job',
         onTap: () {
-          Navigator.pop(context, true); // Pop true to update state
+          Navigator.pop(context, true);
         },
       );
     }
 
     final jobAsync = ref.watch(seekerJobDetailProvider(widget.jobId));
-    final hasQuestions =
-        jobAsync.valueOrNull?.screeningQuestions?.isNotEmpty ?? false;
-    final totalSteps = hasQuestions ? 2 : 1;
+    final job = jobAsync.valueOrNull;
+
+    if (job == null)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
+    final steps = <ApplyStep>[];
+    if (job.coverLetterRequirement != 'Disabled') {
+      steps.add(ApplyStep.coverLetter);
+    }
+    if (job.screeningQuestions != null && job.screeningQuestions!.isNotEmpty) {
+      steps.add(ApplyStep.questions);
+    }
+
+    if (steps.isEmpty) {
+      return Scaffold(
+        body: Center(child: Text('No application steps required.')),
+      );
+    }
+
+    final currentStep = steps[_stepIndex];
+    final totalSteps = steps.length;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: UJobAppBar(
-        title: _step == 0 ? 'Cover Letter' : 'Screening Questions',
-        rightWidget: Padding(
-          padding: EdgeInsets.only(right: 8.w),
-          child: Text(
-            '${_step + 1} / $totalSteps',
-            style: AppText.bodyBold.copyWith(color: AppColors.muted),
-          ),
-        ),
+      appBar: const UJobAppBar(
+        title: 'Job Application',
       ),
       body: Column(
         children: [
-          _StepIndicator(current: _step, total: totalSteps),
+          Container(
+            color: AppColors.surface,
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            child: UJobWizardStepper(
+              currentStep: _stepIndex,
+              steps: steps
+                  .map(
+                    (s) => s == ApplyStep.coverLetter
+                        ? 'Cover Letter'
+                        : 'Questions',
+                  )
+                  .toList(),
+            ),
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: AppSpacing.pagePad,
-              child: _step == 0
+              child: currentStep == ApplyStep.coverLetter
                   ? _StepCoverLetter(controller: _coverCtrl)
                   : _StepScreeningQuestions(
-                      questions: jobAsync.valueOrNull?.screeningQuestions ?? [],
+                      questions: job.screeningQuestions ?? [],
                       answers: _questionAnswers,
                       onAnswerChanged: (index, value) {
                         setState(() {
@@ -110,37 +159,18 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
             ),
           ),
           _BottomBar(
-            step: _step,
+            step: _stepIndex,
             totalSteps: totalSteps,
             submitting: _submitting,
-            onBack: _step > 0 ? () => setState(() => _step--) : null,
-            onNext: _step < totalSteps - 1
-                ? () => setState(() => _step++)
+            onBack: _stepIndex > 0 ? () => setState(() => _stepIndex--) : null,
+            onNext: _stepIndex < totalSteps - 1
+                ? () => setState(() => _stepIndex++)
                 : _submit,
           ),
         ],
       ),
     );
   }
-}
-
-class _StepIndicator extends StatelessWidget {
-  final int current;
-  final int total;
-  const _StepIndicator({required this.current, required this.total});
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: List.generate(total, (i) {
-      return Expanded(
-        child: Container(
-          height: 3.h,
-          margin: EdgeInsets.only(right: i < total - 1 ? 2.w : 0),
-          color: i <= current ? AppColors.primary : AppColors.borderLight,
-        ),
-      );
-    }),
-  );
 }
 
 class _StepCoverLetter extends StatelessWidget {
@@ -155,16 +185,48 @@ class _StepCoverLetter extends StatelessWidget {
       Text('Cover Letter', style: AppText.heading2),
       SizedBox(height: 8.h),
       Text(
-        'Optional — introduce yourself and explain why you\'re a great fit.',
+        'Introduce yourself and explain why you\'re a great fit.',
         style: AppText.body.copyWith(color: AppColors.muted),
       ),
       SizedBox(height: 24.h),
-      UJobTextField(
-        label: context.l10n.coverLetterTitle,
-        hint: "Hi, I'm excited to apply for this role because...",
-        controller: controller,
-        maxLines: 8,
-        keyboardType: TextInputType.multiline,
+      ValueListenableBuilder<TextEditingValue>(
+        valueListenable: controller,
+        builder: (context, value, child) {
+          final displayCtrl = TextEditingController(
+            text: getPlainTextFromQuillJson(value.text),
+          );
+          return GestureDetector(
+            onTap: () => showUJobRichTextEditor(
+              context: context,
+              title: 'Cover Letter',
+              initialValue: controller.text,
+              onSave: (val) {
+                controller.text = val;
+              },
+            ),
+            child: UJobTextField(
+              label: context.l10n.coverLetterTitle,
+              hint: "Tap to write your cover letter in the rich editor...",
+              controller: displayCtrl,
+              readOnly: true,
+              minLines: 5,
+              maxLines: 10,
+              labelTrailing: HugeIcon(
+                icon: HugeIcons.strokeRoundedMaximize01,
+                color: AppColors.seekPrimary,
+                size: 20.r,
+              ),
+              onTap: () => showUJobRichTextEditor(
+                context: context,
+                title: 'Cover Letter',
+                initialValue: controller.text,
+                onSave: (val) {
+                  controller.text = val;
+                },
+              ),
+            ),
+          );
+        },
       ),
     ],
   );
@@ -258,38 +320,85 @@ class _BottomBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
-    decoration: const BoxDecoration(
-      color: AppColors.surface,
-      border: Border(top: BorderSide(color: AppColors.borderLight)),
-    ),
-    child: SafeArea(
-      top: false,
-      child: Row(
-        children: [
-          if (onBack != null) ...[
-            Expanded(
-              child: UJobButton(
-                label: context.l10n.back,
-                onTap: onBack,
-                outlined: true,
-              ),
-            ),
-            SizedBox(width: 12.w),
-          ],
-          Expanded(
-            flex: 2,
-            child: UJobButton(
-              label: step < totalSteps - 1
-                  ? 'Next: Questions'
-                  : 'Submit Application',
-              onTap: submitting ? null : onNext,
-              isLoading: submitting,
-            ),
-          ),
-        ],
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Container(
+      padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.borderLight)),
       ),
-    ),
-  );
+      child: SafeArea(
+        top: false,
+        child: onBack == null
+            ? Row(
+                children: [
+                  Expanded(
+                    child: UJobButton(
+                      label: l10n.cancel,
+                      outlined: true,
+                      color: AppColors.muted,
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
+                        color: AppColors.muted,
+                        size: 20.r,
+                      ),
+                      onTap: () => Navigator.pop(context),
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    flex: 2,
+                    child: UJobButton(
+                      label: step < totalSteps - 1 ? l10n.next : 'Submit',
+                      icon: HugeIcon(
+                        icon: step < totalSteps - 1
+                            ? HugeIcons.strokeRoundedArrowRight01
+                            : HugeIcons.strokeRoundedSent,
+                        color: AppColors.surface,
+                        size: 20.r,
+                      ),
+                      onTap: submitting ? null : onNext,
+                      isLoading: submitting,
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: UJobButton(
+                      label: l10n.back,
+                      outlined: true,
+                      color: AppColors.muted,
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowLeft01,
+                        color: AppColors.muted,
+                        size: 20.r,
+                      ),
+                      onTap: onBack,
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    flex: 2,
+                    child: UJobButton(
+                      label: step < totalSteps - 1 ? l10n.next : 'Submit',
+                      icon: HugeIcon(
+                        icon: step < totalSteps - 1
+                            ? HugeIcons.strokeRoundedArrowRight01
+                            : HugeIcons.strokeRoundedSent,
+                        color: AppColors.surface,
+                        size: 20.r,
+                      ),
+                      onTap: submitting ? null : onNext,
+                      isLoading: submitting,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
 }

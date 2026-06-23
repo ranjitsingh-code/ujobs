@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -87,10 +88,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     } else {
       if (mounted) {
         setState(() {
-          _emailCtrl.text = _role == 'employer'
-              ? 'employer@example.com'
-              : 'seeker@example.com';
-          _passwordCtrl.text = 'password123';
+          _emailCtrl.text = 'john.doe@example.com';
+          _passwordCtrl.text = 'SecurePass123!';
         });
       }
     }
@@ -119,7 +118,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       return;
     }
 
-    // Clear errors if any
     if (_emailError != null || _passError != null) {
       setState(() {
         _emailError = null;
@@ -127,25 +125,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       });
     }
 
-    // Mock authentication: update auth and role providers
-    await ref.read(authProvider.notifier).mockLogin();
-    await ref.read(secureStorageProvider).saveRole(_role);
-    ref.read(activeRoleProvider.notifier).setRole(_role);
+    // Dismiss keyboard
+    FocusManager.instance.primaryFocus?.unfocus();
 
-    // Save remember-me
-    final storage = ref.read(secureStorageProvider);
-    if (_rememberMe) {
-      await storage.saveRememberMe(_emailCtrl.text, _passwordCtrl.text);
-    } else {
-      await storage.clearRememberMe();
-    }
+    EasyLoading.show(status: 'Logging in...');
+    final (result, userId) = await ref
+        .read(authProvider.notifier)
+        .login(_emailCtrl.text.trim(), _passwordCtrl.text, _role);
+    EasyLoading.dismiss();
 
-    if (mounted) {
-      if (_role == 'employer') {
-        context.go('/employer');
-      } else {
-        context.go('/seeker');
-      }
+    if (!mounted) return;
+
+    switch (result) {
+      case LoginResult.success:
+        final storage = ref.read(secureStorageProvider);
+        if (_rememberMe) {
+          await storage.saveRememberMe(_emailCtrl.text.trim(), _passwordCtrl.text);
+        } else {
+          await storage.clearRememberMe();
+        }
+        
+        if (_role == 'employer') {
+          context.go('/employer');
+        } else {
+          context.go('/seeker');
+        }
+        break;
+
+      case LoginResult.requiresOtp:
+        if (mounted) {
+          context.push('/otp', extra: userId);
+        }
+        break;
+
+      case LoginResult.invalidCredentials:
+        setState(() {
+          _passError = 'Invalid email or password';
+          _emailError = 'Invalid email or password';
+        });
+        break;
+
+      case LoginResult.suspended:
+        setState(() {
+          _passError = 'Account suspended or pending verification.';
+        });
+        break;
+
+      case LoginResult.error:
+        EasyLoading.showError(userId ?? 'A network error occurred. Please try again.');
+        break;
     }
   }
 
@@ -246,12 +274,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 _role = r;
                                 final currentEmail = _emailCtrl.text.trim();
                                 if (currentEmail.isEmpty ||
-                                    currentEmail == 'seeker@example.com' ||
-                                    currentEmail == 'employer@example.com') {
-                                  _emailCtrl.text = r == 'employer'
-                                      ? 'employer@example.com'
-                                      : 'seeker@example.com';
-                                  _passwordCtrl.text = 'password123';
+                                    currentEmail == 'mdazadhossain95@gmail.com' ||
+                                    currentEmail == 'nexoviasolutions@gmail.com' ||
+                                    currentEmail == 'john.doe@example.com') {
+                                  _emailCtrl.text = 'john.doe@example.com';
+                                  _passwordCtrl.text = 'SecurePass123!';
                                 }
                               });
                             },

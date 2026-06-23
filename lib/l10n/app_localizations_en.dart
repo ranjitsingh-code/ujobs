@@ -995,16 +995,102 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securitySection => 'SECURITY';
 
   @override
+  String get otpVerificationSuccess => 'Verified Successfully!';
+
+  @override
+  String get otpResendSuccess => 'Code sent successfully!';
+
+  @override
+  String get otpErrorInvalid => 'Invalid code entered.';
+
+  @override
   String get changePassword => 'Change Password';
+
+  @override
+  String get employerChangePasswordSubtitle =>
+      'Use a strong password to protect your account';
+
+  @override
+  String get seekerChangePasswordSubtitle =>
+      'Use a strong password with letters, numbers and symbols';
 
   @override
   String get changeEmail => 'Change Email';
 
   @override
+  String get changeEmailAddress => 'Change Email Address';
+
+  @override
+  String get changeEmailSubtitle => 'Update your login email address';
+
+  @override
+  String get newEmailAddress => 'New Email Address';
+
+  @override
+  String currentValue(Object value) {
+    return 'Current: $value';
+  }
+
+  @override
+  String get sendVerificationCode => 'Send Verification Code';
+
+  @override
+  String get verificationCodeSent => 'Verification code sent';
+
+  @override
+  String get requiredToVerifyYou => 'Required to verify it\'s you';
+
+  @override
+  String get passwordMaskHint => '•••••••••••';
+
+  @override
   String get changePhone => 'Change Phone Number';
 
   @override
+  String get changePhoneSubtitle => 'Update your contact phone number';
+
+  @override
+  String get countryCode => 'Country Code';
+
+  @override
+  String get localPhoneNumberHint => 'Enter number without country code';
+
+  @override
   String get twoFactorAuth => 'Two-Factor Authentication';
+
+  @override
+  String get twoFactorAuthSubtitle =>
+      'Add an extra layer of security to your account';
+
+  @override
+  String get statusEnabled => 'Status: Enabled';
+
+  @override
+  String get statusDisabled => 'Status: Disabled';
+
+  @override
+  String get authenticatorAppLabel =>
+      'Email OTP (sent to your registered email)';
+
+  @override
+  String get confirm2FAEnable => 'Confirm to Enable 2FA';
+
+  @override
+  String get confirm2FADisable => 'Confirm to Disable 2FA';
+
+  @override
+  String get enable2FADescription =>
+      'An OTP code will be sent to your email each time you sign in.';
+
+  @override
+  String get disable2FADescription =>
+      'You will no longer be required to enter an OTP when signing in.';
+
+  @override
+  String get twoFAEnabledSuccess => 'Two-factor authentication enabled';
+
+  @override
+  String get twoFADisabledSuccess => 'Two-factor authentication disabled';
 
   @override
   String get notificationsSection => 'NOTIFICATIONS';
@@ -1028,13 +1114,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentPassword => 'Current Password';
 
   @override
+  String get currentPasswordHint => 'Enter current password';
+
+  @override
   String get newPassword => 'New Password';
+
+  @override
+  String get newPasswordHint => 'Enter new password';
 
   @override
   String get confirmNewPassword => 'Confirm New Password';
 
   @override
+  String get confirmNewPasswordHint => 'Repeat new password';
+
+  @override
   String get updatePassword => 'Update Password';
+
+  @override
+  String get passwordUpdatedSuccess => 'Password updated successfully';
+
+  @override
+  String get emailUpdatedSuccess => 'Email updated successfully';
+
+  @override
+  String get phoneUpdatedSuccess => 'Phone number updated successfully';
 
   @override
   String get deleteAccountTitle => 'Delete Account';
@@ -1400,13 +1504,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newJobApplication => 'New Job Application';
 
   @override
+  String get newJobApplicationSubtitle =>
+      'Get notified when a candidate applies to one of your jobs';
+
+  @override
   String get candidateMessages => 'Candidate Messages';
+
+  @override
+  String get candidateMessagesSubtitle =>
+      'Receive emails when candidates send you messages';
 
   @override
   String get interviewResponses => 'Interview Responses';
 
   @override
+  String get interviewResponsesSubtitle =>
+      'Get notified about interview confirmations and cancellations';
+
+  @override
   String get marketingEmails => 'Marketing Emails';
+
+  @override
+  String get marketingEmailsSubtitle =>
+      'Product updates, tips, and promotional offers';
+
+  @override
+  String get marketingTips => 'Marketing & Tips';
+
+  @override
+  String get allowNotifications => 'Allow Notifications';
+
+  @override
+  String get allowNotificationsSubtitle =>
+      'Receive push notifications on this device';
+
+  @override
+  String get emailNotifications => 'Email Notifications';
+
+  @override
+  String get emailNotificationsSubtitle => 'Choose which emails you receive';
+
+  @override
+  String get newJobRecommendations => 'New Job Recommendations';
 
   @override
   String get messageSound => 'Message Sound';
@@ -1418,7 +1557,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get publicProfile => 'Public Profile';
 
   @override
+  String get publicProfileSubtitle =>
+      'Your company profile is visible to all job seekers, including those not logged in';
+
+  @override
   String get privateProfile => 'Private Profile';
+
+  @override
+  String get privacySection => 'PRIVACY';
+
+  @override
+  String get privacyPreferencesSection => 'PRIVACY & PREFERENCES';
+
+  @override
+  String get companyProfileVisibility => 'Company Profile Visibility';
+
+  @override
+  String get companyProfileVisibilitySubtitle =>
+      'Allow search engines to index your company page';
+
+  @override
+  String get profileVisibility => 'Profile Visibility';
+
+  @override
+  String get profileVisibilitySubtitle =>
+      'Allow employers to find your profile';
+
+  @override
+  String get showEmailOnProfile => 'Show Email on Profile';
+
+  @override
+  String get showEmailOnProfileSubtitle =>
+      'Candidates can see your contact email';
+
+  @override
+  String get showPhoneOnProfile => 'Show Phone on Profile';
+
+  @override
+  String get showPhoneOnProfileSubtitle =>
+      'Candidates can see your contact phone';
+
+  @override
+  String get showSalaryExpectations => 'Show Salary Expectations';
+
+  @override
+  String get showSalaryExpectationsSubtitle =>
+      'Allow employers to see your expected salary range';
 
   @override
   String get showEmailToCandidates => 'Show Email to Candidates';
@@ -1433,13 +1617,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dateFormat => 'Date Format';
 
   @override
+  String get downloadAccountData => 'Download Account Data';
+
+  @override
+  String get downloadAccountDataSubtitle => 'Export a copy of your data';
+
+  @override
+  String get exportDataDesc =>
+      'Download your jobs and applicant data as CSV files.';
+
+  @override
   String get exportJobsCsv => 'Export Jobs (CSV)';
 
   @override
   String get exportApplicantsCsv => 'Export Applicants (CSV)';
 
   @override
+  String get contactUs => 'Contact Us';
+
+  @override
+  String get termsOfUse => 'Terms of Use';
+
+  @override
   String get deleteMyAccount => 'Delete My Account';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Permanently remove your account and all data';
+
+  @override
+  String get deleteAccountDescription =>
+      'Once you delete your account, all of your data including jobs, applications, and settings will be permanently removed. This action cannot be undone.';
 
   @override
   String get selectAll => 'Select All';
@@ -1458,6 +1666,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchApplicants => 'Search applicants...';
+
+  @override
+  String get searchJobs => 'Search jobs...';
 
   @override
   String get totalJobs => 'Total Jobs';
@@ -1700,4 +1911,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchJobsCompanies => 'Search jobs, companies...';
+
+  @override
+  String get companyProfile => 'Company Profile';
+
+  @override
+  String get follow => 'Follow';
+
+  @override
+  String get noDescriptionAvailable => 'No description available.';
+
+  @override
+  String get companySize => 'Company Size';
+
+  @override
+  String get noOpenPositions => 'No open positions.';
+
+  @override
+  String get errorLoadingJobs => 'Error loading jobs';
+
+  @override
+  String viewsCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count views',
+      one: '1 view',
+      zero: 'No views',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salary => 'Salary';
+
+  @override
+  String get jobType => 'Job Type';
+
+  @override
+  String get workplace => 'Workplace';
+
+  @override
+  String get notSpecified => 'Not specified';
+
+  @override
+  String get companiesTab => 'Companies';
+
+  @override
+  String get employerDirectory => 'Employer Directory';
+
+  @override
+  String get browseCompanies => 'Browse Companies';
+
+  @override
+  String get exploreEmployersDesc =>
+      'Explore top employers hiring right now. Find your next great workplace.';
+
+  @override
+  String get searchCompanies => 'Search companies…';
+
+  @override
+  String companiesFoundCount(int count) {
+    return '$count companies found';
+  }
+
+  @override
+  String openJobsCount(int count) {
+    return '$count open jobs';
+  }
+
+  @override
+  String get verified => 'Verified';
+
+  @override
+  String get viewButton => 'View';
 }

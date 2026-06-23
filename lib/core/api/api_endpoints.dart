@@ -1,13 +1,19 @@
 class Ep {
+  static const String baseUrl = 'https://ujobapi.gidentex.com/api/v1';
+  static const String webUrl = 'https://ujobs.com';
+
   // Auth
   static const login = '/auth/login';
   static const registerEmployer = '/auth/register/employer';
   static const registerSeeker = '/auth/register/seeker';
   static const verifyOtp =
       '/auth/verify-otp'; // ⚠️ returns 500 — handle gracefully
-  static const forgotPassword = '/auth/forgot-password';
+  static const resendOtp = '/auth/resend-otp';
+  static const forgotPasswordRequest = '/auth/forgot-password/request';
+  static const forgotPasswordReset = '/auth/forgot-password/reset';
   static const me = '/auth/me';
   static const refresh = '/auth/refresh';
+  static const logout = '/auth/logout';
 
   // Employer
   static const employerMe = '/employer/me';
@@ -20,6 +26,7 @@ class Ep {
       '/employer/company/$id'; // PUT only — GET from /employer/me
   static const empSettings = '/employer/settings';
   static const empPassword = '/employer/settings/password';
+  static const emp2FA = '/employer/settings/2fa';
   static const empAuditLog = '/employer/settings/audit-log';
   static const empNotifications = '/employer/notifications';
   static const empUnreadCount = '/employer/notifications/unread-count';
@@ -51,6 +58,7 @@ class Ep {
       '/public/jobs/$id/screening-questions';
   static const seekSettings = '/seeker/settings';
   static const seekPassword = '/seeker/settings/password';
+  static const seek2FA = '/seeker/settings/2fa';
   static const seekAuditLog = '/seeker/settings/audit-log';
 
   // Public
@@ -60,9 +68,11 @@ class Ep {
   static String publicCompany(String id) => '/public/companies/$id';
   static const publicCategories = '/public/categories';
   static const publicSkills = '/public/skills';
+  static const publicCountries = '/public/countries';
   static const publicStats = '/public/stats';
   static const publicHomepage = '/public/homepage';
   static const publicTestimonials = '/public/testimonials';
+  static const publicPages = '/public/pages';
   static String publicPage(String slug) => '/public/pages/$slug';
 
   // Conversations

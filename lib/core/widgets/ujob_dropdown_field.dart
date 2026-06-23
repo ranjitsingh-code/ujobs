@@ -5,6 +5,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/l10n_extensions.dart';
 import 'ujob_text_field.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/countries_provider.dart';
 
 class UJobDropdownField<T> extends StatelessWidget {
   final String label;
@@ -249,7 +251,7 @@ class _SearchableDropdownSheetState<T>
   }
 }
 
-class UJobCountryDropdown extends StatelessWidget {
+class UJobCountryDropdown extends ConsumerWidget {
   final String? value;
   final ValueChanged<String?> onChanged;
   final String? errorText;
@@ -262,18 +264,39 @@ class UJobCountryDropdown extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return UJobDropdownField<String>(
-      label: l10n.country,
-      hint: l10n.countryHint,
-      value: value,
-      errorText: errorText,
-      onChanged: onChanged,
-      options: [
-        (l10n.countryUnitedKingdom, 'United Kingdom'),
-        (l10n.countryIreland, 'Ireland'),
-      ],
+    final countriesAsync = ref.watch(countriesProvider);
+
+    return countriesAsync.when(
+      data: (countries) {
+        return UJobDropdownField<String>(
+          label: l10n.country,
+          hint: l10n.countryHint,
+          value: value,
+          errorText: errorText,
+          onChanged: onChanged,
+          options: countries
+              .map((c) => ('${c.flag} ${c.name}', c.name))
+              .toList(),
+        );
+      },
+      loading: () => UJobDropdownField<String>(
+        label: l10n.country,
+        hint: 'Loading countries...',
+        value: value,
+        errorText: errorText,
+        onChanged: onChanged,
+        options: const [],
+      ),
+      error: (_, __) => UJobDropdownField<String>(
+        label: l10n.country,
+        hint: 'Failed to load countries',
+        value: value,
+        errorText: errorText,
+        onChanged: onChanged,
+        options: const [],
+      ),
     );
   }
 }

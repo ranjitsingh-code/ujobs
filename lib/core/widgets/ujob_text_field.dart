@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
@@ -37,7 +36,7 @@ class UJobTextField extends StatefulWidget {
   final int? exactLength;
 
   const UJobTextField({
-    required this.label,
+    this.label = '',
     this.hint,
     this.errorText,
     this.controller,
@@ -72,6 +71,7 @@ class UJobTextField extends StatefulWidget {
 class _UJobTextFieldState extends State<UJobTextField> {
   bool _obscureText = true;
   String? _autoError;
+  VoidCallback? _controllerListener;
 
   String? get _currentError => widget.errorText ?? _autoError;
 
@@ -117,20 +117,44 @@ class _UJobTextFieldState extends State<UJobTextField> {
   @override
   void initState() {
     super.initState();
-    if (widget.controller != null) {
-      widget.controller!.addListener(() {
-        _validate(widget.controller!.text);
-      });
-    }
+    _attachControllerListener();
   }
 
   @override
   void didUpdateWidget(covariant UJobTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      _detachControllerListener(oldWidget.controller);
+      _attachControllerListener();
+    }
     if (widget.errorText != oldWidget.errorText ||
         widget.matchValue != oldWidget.matchValue) {
       _validate(widget.controller?.text ?? '');
     }
+  }
+
+  @override
+  void dispose() {
+    _detachControllerListener(widget.controller);
+    super.dispose();
+  }
+
+  void _attachControllerListener() {
+    final controller = widget.controller;
+    if (controller == null) return;
+    _controllerListener = () {
+      if (!mounted) return;
+      _validate(controller.text);
+    };
+    controller.addListener(_controllerListener!);
+  }
+
+  void _detachControllerListener(TextEditingController? controller) {
+    final listener = _controllerListener;
+    if (controller != null && listener != null) {
+      controller.removeListener(listener);
+    }
+    _controllerListener = null;
   }
 
   @override

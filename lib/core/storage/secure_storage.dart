@@ -45,10 +45,7 @@ class SecureStorage {
       _s.write(key: _keyLocale, value: code);
   Future<String> getLocale() async => await _s.read(key: _keyLocale) ?? 'en';
 
-  Future<void> saveOnboardingSeen() =>
-      _s.write(key: _keyOnboarding, value: '1');
-  Future<bool> getOnboardingSeen() async =>
-      await _s.read(key: _keyOnboarding) == '1';
+
 
   Future<void> clearAll() => _s.deleteAll();
 }

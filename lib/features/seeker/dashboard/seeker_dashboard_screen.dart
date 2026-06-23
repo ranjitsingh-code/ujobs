@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../../../core/providers/role_provider.dart';
+import '../../shared/notifications/notifications_screen.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -10,8 +12,16 @@ import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_job_card.dart';
-import '../../shared/chat/conversation_provider.dart';
+import '../../shared/chat/conversation_provider.dart' hide ApplicationStatus;
 import 'seeker_dashboard_provider.dart';
+import '../applications/seeker_application_provider.dart';
+import '../../../core/models/application.dart';
+import '../../../core/widgets/ujob_toast.dart';
+import '../../../core/widgets/ujob_notification_button.dart';
+import '../../../core/widgets/ujob_messages_to_reply.dart';
+import '../../../core/widgets/ujob_dashboard_section_header.dart';
+import '../../../core/widgets/ujob_boxed_empty_state.dart';
+import '../../../core/widgets/ujob_profile_setup_prompt.dart';
 
 class SeekerDashboardScreen extends ConsumerWidget {
   const SeekerDashboardScreen({super.key});
@@ -57,6 +67,9 @@ class SeekerDashboardScreen extends ConsumerWidget {
                 initials: initials,
                 dashboard: data,
                 onNotificationsTap: () => context.push('/seeker/notifications'),
+                onAppliedTap: () => context.go('/seeker/applied', extra: 2),
+                onMatchesTap: () => context.go('/seeker/jobs'),
+                onSavedTap: () => context.go('/seeker/applied', extra: 1),
               ),
             ),
             SliverToBoxAdapter(
@@ -66,27 +79,27 @@ class SeekerDashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Banner
-                    _ProfileSetupPrompt(
+                    UJobProfileSetupPrompt(
                       onSetup: () => context.go('/seeker/profile'),
                     ),
 
                     // Messages
                     if (needsReply.isNotEmpty) ...[
-                      _MessagesToReply(
+                      UJobMessagesToReply(
                         conversations: needsReply,
                         onViewAll: () => context.go('/seeker/messages'),
                       ),
                       SizedBox(height: 32.h),
                     ],
 
-                    _SectionHeader(
+                    UJobDashboardSectionHeader(
                       title: 'Latest Jobs',
                       actionLabel: 'See all',
                       onActionTap: () => context.go('/seeker/jobs'),
                     ),
                     SizedBox(height: 8.h),
                     if (data.recommendedJobs.isEmpty)
-                      const _EmptyState(
+                      const UJobBoxedEmptyState(
                         title: 'No recent jobs found',
                         subtitle:
                             'Check back later or adjust your profile preferences.',
@@ -101,9 +114,30 @@ class SeekerDashboardScreen extends ConsumerWidget {
                         separatorBuilder: (_, __) => SizedBox(height: 12.h),
                         itemBuilder: (context, index) {
                           final job = data.recommendedJobs[index];
+                          final apps =
+                              ref
+                                  .watch(seekerApplicationsProvider(null))
+                                  .value ??
+                              [];
+                          final isSaved = apps.any(
+                            (a) =>
+                                a.job.id == job.id &&
+                                a.status == ApplicationStatus.saved,
+                          );
                           return UJobJobCard(
-                            job: job,
+                            job: job.copyWith(isSaved: isSaved),
                             onTap: () => context.push('/seeker/jobs/${job.id}'),
+                            onSaveTap: () {
+                              ref
+                                  .read(
+                                    seekerApplicationsProvider(null).notifier,
+                                  )
+                                  .toggleSave(job);
+                              UJobToast.success(
+                                context,
+                                isSaved ? 'unsaved' : 'This has been saved',
+                              );
+                            },
                           );
                         },
                       ),
@@ -125,6 +159,9 @@ class _DashboardHeader extends StatelessWidget {
   final String initials;
   final SeekerDashboardData dashboard;
   final VoidCallback onNotificationsTap;
+  final VoidCallback onAppliedTap;
+  final VoidCallback onMatchesTap;
+  final VoidCallback onSavedTap;
 
   const _DashboardHeader({
     required this.greeting,
@@ -132,6 +169,9 @@ class _DashboardHeader extends StatelessWidget {
     required this.initials,
     required this.dashboard,
     required this.onNotificationsTap,
+    required this.onAppliedTap,
+    required this.onMatchesTap,
+    required this.onSavedTap,
   });
 
   @override
@@ -182,7 +222,10 @@ class _DashboardHeader extends StatelessWidget {
                           ],
                         ),
                       ),
-                      _NotificationButton(onTap: onNotificationsTap),
+                      UJobNotificationButton(
+                        onTap: onNotificationsTap,
+                        borderColor: AppColors.seekPrimary,
+                      ),
                     ],
                   ),
                   SizedBox(height: 24.h),
@@ -192,21 +235,21 @@ class _DashboardHeader extends StatelessWidget {
                         title: '${dashboard.applicationsCount}',
                         subtitle: 'Applied',
                         isSelected: false,
-                        onTap: () {},
+                        onTap: onAppliedTap,
                       ),
                       SizedBox(width: 12.w),
                       _StatCard(
                         title: '47',
                         subtitle: 'Matches',
                         isSelected: false,
-                        onTap: () {},
+                        onTap: onMatchesTap,
                       ),
                       SizedBox(width: 12.w),
                       _StatCard(
                         title: '12',
                         subtitle: 'Saved',
                         isSelected: false,
-                        onTap: () {},
+                        onTap: onSavedTap,
                       ),
                     ],
                   ),
@@ -277,360 +320,3 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final String? actionLabel;
-  final VoidCallback? onActionTap;
-
-  const _SectionHeader({
-    required this.title,
-    this.subtitle,
-    this.actionLabel,
-    this.onActionTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: AppText.heading2.copyWith(color: AppColors.text2),
-            ),
-            if (subtitle != null) ...[
-              SizedBox(height: 4.h),
-              Row(
-                children: [
-                  Container(
-                    width: 6.r,
-                    height: 6.r,
-                    decoration: const BoxDecoration(
-                      color: AppColors.success,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  SizedBox(width: 6.w),
-                  Text(
-                    subtitle!,
-                    style: AppText.small.copyWith(color: AppColors.muted),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-        if (actionLabel != null)
-          GestureDetector(
-            onTap: onActionTap,
-            child: Text(
-              actionLabel!,
-              style: AppText.bodyBold.copyWith(color: AppColors.seekPrimary),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final dynamic icon;
-
-  const _EmptyState({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 48.h, horizontal: 24.w),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.xl,
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          HugeIcon(icon: icon, color: AppColors.muted2, size: 48.r),
-          SizedBox(height: 16.h),
-          Text(
-            title,
-            style: AppText.heading3.copyWith(color: AppColors.text2),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            subtitle,
-            style: AppText.body.copyWith(color: AppColors.muted),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NotificationButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _NotificationButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        IconButton(
-          onPressed: onTap,
-          tooltip: 'Notifications',
-          style: IconButton.styleFrom(
-            backgroundColor: AppColors.surface.withValues(alpha: 0.12),
-            fixedSize: Size(44.r, 44.r),
-          ),
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedNotification01,
-            color: AppColors.surface,
-            size: 23,
-          ),
-        ),
-        Positioned(
-          right: -1.w,
-          top: -3.h,
-          child: Container(
-            width: 20.r,
-            height: 20.r,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.error,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.seekPrimary, width: 2),
-            ),
-            child: Text(
-              '2',
-              style: AppText.caption.copyWith(
-                color: AppColors.surface,
-                fontSize: 9.sp,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ProfileSetupPrompt extends StatelessWidget {
-  final VoidCallback onSetup;
-
-  const _ProfileSetupPrompt({required this.onSetup});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 24.h),
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.text.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-              color: AppColors.warning.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedUserAdd01,
-              color: AppColors.warning,
-              size: 28.r,
-            ),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Complete your profile',
-                  style: AppText.titleSm.copyWith(color: AppColors.text),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  'A complete profile helps you stand out to employers.',
-                  style: AppText.small.copyWith(color: AppColors.muted),
-                ),
-                SizedBox(height: 16.h),
-                FilledButton(
-                  onPressed: onSetup,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.seekPrimary,
-                    foregroundColor: AppColors.surface,
-                    minimumSize: Size(120.w, 36.h),
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                  ),
-                  child: const Text('Setup now'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MessagesToReply extends StatelessWidget {
-  final List<Conversation> conversations;
-  final VoidCallback onViewAll;
-
-  const _MessagesToReply({
-    required this.conversations,
-    required this.onViewAll,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeader(
-          title: 'Needs Reply',
-          actionLabel: 'View all',
-          onActionTap: onViewAll,
-        ),
-        SizedBox(height: 12.h),
-        SizedBox(
-          height: 78.h,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: conversations.length,
-            separatorBuilder: (_, _) => SizedBox(width: 16.w),
-            itemBuilder: (context, index) {
-              final conversation = conversations[index];
-              return _MessageAvatar(conversation: conversation);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MessageAvatar extends StatelessWidget {
-  final Conversation conversation;
-
-  const _MessageAvatar({required this.conversation});
-
-  @override
-  Widget build(BuildContext context) {
-    final initials =
-        conversation.otherInitials ??
-        (conversation.otherName.isNotEmpty ? conversation.otherName[0] : '?');
-
-    return Semantics(
-      button: true,
-      label: conversation.unreadCount > 0
-          ? '${conversation.otherName}, ${conversation.unreadCount} unread messages'
-          : '${conversation.otherName}, awaiting reply',
-      child: InkWell(
-        onTap: () {
-          if (conversation.id.startsWith('demo-')) {
-            context.go('/seeker/messages');
-            return;
-          }
-          context.push(
-            '/conversations/${conversation.id}',
-            extra: {
-              'name': conversation.otherName,
-              'initials': conversation.otherInitials,
-              'avatar': conversation.otherAvatar,
-            },
-          );
-        },
-        borderRadius: BorderRadius.circular(28.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 28.r,
-                  backgroundColor: AppColors.borderLight,
-                  backgroundImage: conversation.otherAvatar != null
-                      ? NetworkImage(conversation.otherAvatar!)
-                      : null,
-                  child: conversation.otherAvatar == null
-                      ? Text(
-                          initials,
-                          style: AppText.bodyBold.copyWith(
-                            color: AppColors.text2,
-                          ),
-                        )
-                      : null,
-                ),
-                if (conversation.unreadCount > 0)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: EdgeInsets.all(4.r),
-                      decoration: const BoxDecoration(
-                        color: AppColors.error,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        conversation.unreadCount.toString(),
-                        style: AppText.caption.copyWith(
-                          color: AppColors.surface,
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            SizedBox(height: 4.h),
-            SizedBox(
-              width: 56.r,
-              child: Text(
-                conversation.otherName,
-                style: AppText.caption,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

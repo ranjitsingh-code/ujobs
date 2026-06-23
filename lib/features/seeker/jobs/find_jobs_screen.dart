@@ -8,6 +8,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_job_card.dart';
+import '../../../core/widgets/ujob_boxed_empty_state.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_multi_chip_group.dart';
 import '../../../core/widgets/ujob_button.dart';
@@ -64,20 +65,15 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverAppBar(
+                primary: true,
                 backgroundColor: AppColors.surface,
                 surfaceTintColor: Colors.transparent,
                 pinned: true,
                 floating: false,
                 elevation: 0,
                 scrolledUnderElevation: 0,
-                centerTitle: true,
-                title: Text(
-                  l10n.findJobs,
-                  style: AppText.bodyBold.copyWith(
-                    color: AppColors.text,
-                    fontSize: 18.sp,
-                  ),
-                ),
+                toolbarHeight: 0,
+                automaticallyImplyLeading: false,
               ),
               SliverAppBar(
                 primary: false,
@@ -204,7 +200,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
           return Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: _EmptyState(
+              child: UJobBoxedEmptyState(
                 title: l10n.noMatchingJobsFound,
                 subtitle: 'Try adjusting your filters or search terms.',
                 icon: HugeIcons.strokeRoundedSearchMinus,
@@ -266,7 +262,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                 return Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: _EmptyState(
+                    child: UJobBoxedEmptyState(
                       title: l10n.noMatchingJobsFound,
                       subtitle: 'Try adjusting your filters or search terms.',
                       icon: HugeIcons.strokeRoundedSearchMinus,
@@ -716,46 +712,3 @@ class _UJobTabsDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final dynamic icon;
-
-  const _EmptyState({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 48.h, horizontal: 24.w),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          HugeIcon(icon: icon, color: AppColors.muted2, size: 48.r),
-          SizedBox(height: 16.h),
-          Text(
-            title,
-            style: AppText.heading3.copyWith(color: AppColors.text2),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            subtitle,
-            style: AppText.body.copyWith(color: AppColors.muted),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}

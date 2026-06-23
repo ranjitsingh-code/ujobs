@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/job.dart';
+import '../models/company.dart';
 import '../providers/auth_provider.dart';
 import '../providers/role_provider.dart';
 import '../providers/onboarding_provider.dart';
@@ -28,13 +29,17 @@ import '../../features/seeker/seeker_shell.dart';
 import '../../features/seeker/dashboard/seeker_dashboard_screen.dart';
 import '../../features/seeker/jobs/find_jobs_screen.dart';
 import '../../features/seeker/jobs/seeker_job_detail_screen.dart';
+import '../../features/seeker/company/seeker_company_profile_screen.dart';
+import '../../features/seeker/company/seeker_companies_screen.dart';
 import '../../features/seeker/applications/my_applications_screen.dart';
 import '../../features/seeker/messages/seeker_messages_screen.dart';
 import '../../features/seeker/profile/seeker_profile_screen.dart';
 import '../../features/shared/settings/settings_screen.dart';
+import '../../features/shared/webview/webview_screen.dart';
 import '../../features/seeker/apply/apply_screen.dart';
 import '../../features/shared/chat/chat_screen.dart';
 import '../../features/shared/legal/legal_page_screen.dart';
+import '../../features/shared/legal/cms_page_screen.dart';
 
 final _routerNotifier = _AppRouterNotifier();
 
@@ -151,7 +156,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register/seeker',
         builder: (_, _) => const RegisterSeekerScreen(),
       ),
-      GoRoute(path: '/otp', builder: (_, _) => const OtpScreen()),
+      GoRoute(
+        path: '/otp',
+        builder: (_, state) {
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            return OtpScreen(
+              email: extra['email'] as String?,
+              userId: extra['userId'] as String?,
+            );
+          }
+          return OtpScreen(userId: extra as String?);
+        },
+      ),
       GoRoute(
         path: '/forgot-password',
         builder: (_, _) => const ForgotPasswordScreen(),
@@ -163,6 +180,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/privacy-policy',
         builder: (_, _) => const LegalPageScreen(type: LegalPageType.privacy),
+      ),
+      GoRoute(
+        path: '/about-us',
+        builder: (_, _) => const LegalPageScreen(type: LegalPageType.about),
+      ),
+      GoRoute(
+        path: '/contact-us',
+        builder: (_, _) => const LegalPageScreen(type: LegalPageType.contact),
+      ),
+
+      GoRoute(
+        path: '/pages/:slug',
+        builder: (_, state) => CmsPageScreen(slug: state.pathParameters['slug']!),
       ),
 
       // Shared chat — outside shells so both roles can access
@@ -265,6 +295,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
+            path: '/seeker/company',
+            builder: (_, state) {
+              final extra = state.extra as Map<String, dynamic>? ?? {};
+              return SeekerCompanyProfileScreen(
+                company: extra['company'] as Company,
+              );
+            },
+          ),
+          GoRoute(
             path: '/seeker/jobs/:id/apply',
             builder: (_, state) {
               final extra = state.extra as Map<String, dynamic>? ?? {};
@@ -278,8 +317,17 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/seeker/applied',
+            pageBuilder: (_, state) {
+              final index = state.extra is int ? state.extra as int : 0;
+              return NoTransitionPage(
+                child: MyApplicationsScreen(initialIndex: index),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/seeker/companies',
             pageBuilder: (_, _) =>
-                const NoTransitionPage(child: MyApplicationsScreen()),
+                const NoTransitionPage(child: SeekerCompaniesScreen()),
           ),
           GoRoute(
             path: '/seeker/messages',
@@ -300,6 +348,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, _) => const SettingsScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/webview',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          return WebViewScreen(
+            title: extra['title'] as String? ?? '',
+            url: extra['url'] as String? ?? '',
+          );
+        },
       ),
     ],
   );

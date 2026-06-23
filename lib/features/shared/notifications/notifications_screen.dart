@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -10,9 +11,10 @@ import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_checkbox.dart';
 import '../../../core/widgets/ujob_empty.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
+import '../../../core/widgets/ujob_pill_tab_bar.dart';
 import '../../../core/providers/role_provider.dart';
 
-class _Notif {
+class Notif {
   final String id;
   final String title;
   final String? body;
@@ -20,7 +22,7 @@ class _Notif {
   final bool isRead;
   final DateTime createdAt;
 
-  const _Notif({
+  const Notif({
     required this.id,
     required this.title,
     this.body,
@@ -29,8 +31,8 @@ class _Notif {
     required this.createdAt,
   });
 
-  _Notif copyWith({bool? isRead}) {
-    return _Notif(
+  Notif copyWith({bool? isRead}) {
+    return Notif(
       id: id,
       title: title,
       body: body,
@@ -42,7 +44,7 @@ class _Notif {
 }
 
 final _empMock = [
-  _Notif(
+  Notif(
     id: 'e1',
     title: 'New Candidate Applied',
     body: 'Michael Scott applied for Regional Manager.',
@@ -50,7 +52,7 @@ final _empMock = [
     isRead: false,
     createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
   ),
-  _Notif(
+  Notif(
     id: 'e2',
     title: 'Application Withdrawn',
     body: 'Dwight Schrute withdrew his application.',
@@ -58,7 +60,7 @@ final _empMock = [
     isRead: false,
     createdAt: DateTime.now().subtract(const Duration(hours: 2)),
   ),
-  _Notif(
+  Notif(
     id: 'e3',
     title: 'New Message',
     body: 'Jim Halpert sent you a message.',
@@ -66,7 +68,7 @@ final _empMock = [
     isRead: true,
     createdAt: DateTime.now().subtract(const Duration(days: 1)),
   ),
-  _Notif(
+  Notif(
     id: 'e4',
     title: 'System Update',
     body: 'We have updated our terms of service.',
@@ -77,7 +79,7 @@ final _empMock = [
 ];
 
 final _seekerMock = [
-  _Notif(
+  Notif(
     id: 's1',
     title: 'Application Viewed',
     body: 'Your application was viewed by Google.',
@@ -85,7 +87,7 @@ final _seekerMock = [
     isRead: false,
     createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
   ),
-  _Notif(
+  Notif(
     id: 's2',
     title: 'New Message',
     body: 'You have a new message from nexovia solutions.',
@@ -93,7 +95,7 @@ final _seekerMock = [
     isRead: false,
     createdAt: DateTime.now().subtract(const Duration(hours: 2)),
   ),
-  _Notif(
+  Notif(
     id: 's3',
     title: 'Job Match',
     body: 'A new job matches your profile: Senior Flutter Dev.',
@@ -101,7 +103,7 @@ final _seekerMock = [
     isRead: true,
     createdAt: DateTime.now().subtract(const Duration(days: 1)),
   ),
-  _Notif(
+  Notif(
     id: 's4',
     title: 'System Update',
     body: 'We have updated our terms of service.',
@@ -111,9 +113,9 @@ final _seekerMock = [
   ),
 ];
 
-class _NotifsNotifier extends AutoDisposeNotifier<List<_Notif>> {
+class NotifsNotifier extends Notifier<List<Notif>> {
   @override
-  List<_Notif> build() {
+  List<Notif> build() {
     final role = ref.watch(activeRoleProvider);
     return role == 'employer' ? List.from(_empMock) : List.from(_seekerMock);
   }
@@ -128,15 +130,20 @@ class _NotifsNotifier extends AutoDisposeNotifier<List<_Notif>> {
         .toList();
   }
 
+  void toggleReadStatus(String id) {
+    state = state
+        .map((n) => n.id == id ? n.copyWith(isRead: !n.isRead) : n)
+        .toList();
+  }
+
   void deleteNotifications(List<String> ids) {
     state = state.where((n) => !ids.contains(n.id)).toList();
   }
 }
 
-final _notifsProvider =
-    NotifierProvider.autoDispose<_NotifsNotifier, List<_Notif>>(
-      () => _NotifsNotifier(),
-    );
+final notifsProvider = NotifierProvider<NotifsNotifier, List<Notif>>(
+  () => NotifsNotifier(),
+);
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -147,6 +154,7 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 
 class _NotificationsState extends ConsumerState<NotificationsScreen> {
   late final PageController _pageController;
+  final _searchCtrl = TextEditingController();
   int _selectedTabIndex = 0;
   bool _isSelectionMode = false;
   bool _isSearching = false;
@@ -162,6 +170,7 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -181,6 +190,30 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
     });
   }
 
+  void _confirmDeleteSingle(WidgetRef ref, Notif n) {
+    showDialog(
+      context: context,
+      builder: (ctx) => UJobAlertDialog(
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedDelete02,
+          color: AppColors.error,
+          size: 32.r,
+        ),
+        iconBgColor: AppColors.error,
+        confirmColor: AppColors.error,
+        title: 'Delete Notification',
+        description:
+            'Are you sure you want to delete this notification? This action cannot be undone.',
+        cancelText: 'Cancel',
+        confirmText: 'Delete',
+        onConfirm: () {
+          ref.read(notifsProvider.notifier).deleteNotifications([n.id]);
+          Navigator.pop(ctx);
+        },
+      ),
+    );
+  }
+
   void _confirmDeleteSelected(WidgetRef ref, Color primaryColor) {
     showDialog(
       context: context,
@@ -195,10 +228,9 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
             'Are you sure you want to delete ${_selectedIds.length} notification(s)? This action cannot be undone.',
         cancelText: 'Cancel',
         confirmText: 'Delete',
-        onCancel: () => Navigator.pop(ctx),
         onConfirm: () {
           ref
-              .read(_notifsProvider.notifier)
+              .read(notifsProvider.notifier)
               .deleteNotifications(_selectedIds.toList());
           setState(() {
             _selectedIds.clear();
@@ -206,6 +238,72 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
           });
           Navigator.pop(ctx);
         },
+      ),
+    );
+  }
+
+  void _showSingleNotifOptions(BuildContext context, WidgetRef ref, Notif n) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 40.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Notification Options', style: AppText.heading3),
+                IconButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    color: AppColors.text,
+                    size: 24.r,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            ListTile(
+              leading: HugeIcon(
+                icon: n.isRead
+                    ? HugeIcons.strokeRoundedMail02
+                    : HugeIcons.strokeRoundedMailOpen01,
+                color: AppColors.text,
+                size: 24.r,
+              ),
+              title: Text(
+                n.isRead ? 'Mark as Unread' : 'Mark as Read',
+                style: AppText.bodyBold,
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                ref.read(notifsProvider.notifier).toggleReadStatus(n.id);
+              },
+            ),
+            ListTile(
+              leading: HugeIcon(
+                icon: HugeIcons.strokeRoundedDelete02,
+                color: AppColors.error,
+                size: 24.r,
+              ),
+              title: Text(
+                'Delete Notification',
+                style: AppText.bodyBold.copyWith(color: AppColors.error),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _confirmDeleteSingle(ref, n);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -278,7 +376,7 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
               ),
               onTap: () {
                 Navigator.pop(ctx);
-                ref.read(_notifsProvider.notifier).markAllRead();
+                ref.read(notifsProvider.notifier).markAllRead();
               },
             ),
           ],
@@ -308,7 +406,7 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
         ? AppColors.primary
         : AppColors.seekPrimary;
 
-    final notifs = ref.watch(_notifsProvider);
+    final notifs = ref.watch(notifsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -344,54 +442,28 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                 ),
               ],
             )
-          : (_isSearching
-                ? AppBar(
-                    backgroundColor: AppColors.surface,
-                    elevation: 0,
-                    leading: IconButton(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowLeft01,
-                        color: AppColors.text,
-                        size: 24.r,
-                      ),
-                      onPressed: () => setState(() {
-                        _isSearching = false;
-                        _query = '';
-                      }),
+          : UJobAppBar(
+              title: 'Notifications',
+              showBack: true,
+              rightWidget: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedMoreVerticalCircle01,
+                      color: AppColors.muted,
+                      size: 24.r,
                     ),
-                    title: TextField(
-                      autofocus: true,
-                      onChanged: (v) => setState(() => _query = v),
-                      decoration: InputDecoration(
-                        hintText: 'Search...',
-                        border: InputBorder.none,
-                        hintStyle: AppText.body.copyWith(
-                          color: AppColors.muted,
-                        ),
-                      ),
-                    ),
-                  )
-                : UJobAppBar(
-                    title: 'Notifications',
-                    showBack: true,
-                    rightWidget: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: HugeIcon(
-                            icon: HugeIcons.strokeRoundedMoreVerticalCircle01,
-                            color: AppColors.muted,
-                            size: 24.r,
-                          ),
-                          onPressed: () =>
-                              _showMoreOptionsSheet(context, ref, primaryColor),
-                        ),
-                      ],
-                    ),
-                  )),
+                    onPressed: () =>
+                        _showMoreOptionsSheet(context, ref, primaryColor),
+                  ),
+                ],
+              ),
+            ),
       body: Column(
         children: [
-          if (!_isSearching && !_isSelectionMode) _buildTabs(primaryColor),
+          if (_isSearching) _buildSearchBar(),
+          if (!_isSelectionMode) _buildTabs(),
           Expanded(
             child: PageView.builder(
               controller: _pageController,
@@ -470,7 +542,8 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                               itemBuilder: (ctx, i) {
                                 final n = filtered[i];
                                 final isSelected = _selectedIds.contains(n.id);
-                                return _NotifCard(
+
+                                final card = _NotifCard(
                                   notif: n,
                                   icon: _iconFor(n.type),
                                   borderColor: _borderColor(
@@ -489,19 +562,48 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                                       });
                                     } else {
                                       ref
-                                          .read(_notifsProvider.notifier)
+                                          .read(notifsProvider.notifier)
                                           .markAsRead(n.id);
+
+                                      final isEmployer =
+                                          ref.read(activeRoleProvider) ==
+                                          'employer';
+                                      if (n.type == 'message') {
+                                        if (isEmployer) {
+                                          context.push(
+                                            '/conversations/1',
+                                            extra: {'name': 'Jim'},
+                                          );
+                                        } else {
+                                          context.push(
+                                            '/conversations/1',
+                                            extra: {
+                                              'name': 'Nexovia Solutions',
+                                            },
+                                          );
+                                        }
+                                      } else if (n.type == 'job') {
+                                        if (isEmployer) {
+                                          context.push('/employer/jobs/1');
+                                        } else {
+                                          context.push('/seeker/jobs/1');
+                                        }
+                                      } else if (n.type == 'application') {
+                                        if (isEmployer) {
+                                          context.push('/employer/applicants');
+                                        } else {
+                                          context.push('/seeker/applications');
+                                        }
+                                      }
                                     }
                                   },
                                   onLongPress: () {
                                     if (!_isSelectionMode)
-                                      _showMoreOptionsSheet(
-                                        context,
-                                        ref,
-                                        primaryColor,
-                                      );
+                                      _showSingleNotifOptions(context, ref, n);
                                   },
                                 );
+
+                                return card;
                               },
                             ),
                     ),
@@ -515,52 +617,96 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
     );
   }
 
-  Widget _buildTabs(Color primaryColor) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+  Widget _buildSearchBar() {
+    return Container(
+      color: AppColors.surface,
+      padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 10.h),
       child: Row(
-        children: List.generate(_tabs.length, (i) {
-          final lbl = _labels[i];
-          final active = _selectedTabIndex == i;
-          return Padding(
-            padding: EdgeInsets.only(right: 8.w),
-            child: InkWell(
-              onTap: () {
-                setState(() => _selectedTabIndex = i);
-                _pageController.animateToPage(
-                  i,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-              },
-              borderRadius: BorderRadius.circular(20.r),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: active ? primaryColor : AppColors.surface,
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(
-                    color: active ? primaryColor : AppColors.borderLight,
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _searchCtrl,
+              autofocus: true,
+              onChanged: (v) => setState(() => _query = v),
+              style: AppText.body,
+              decoration: InputDecoration(
+                hintText: 'Search notifications...',
+                hintStyle: AppText.body.copyWith(color: AppColors.muted),
+                filled: true,
+                fillColor: AppColors.bg,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 12.h,
+                ),
+                prefixIcon: Padding(
+                  padding: EdgeInsets.only(left: 12.w, right: 8.w),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedSearch01,
+                    color: AppColors.muted,
+                    size: 18.r,
                   ),
                 ),
-                child: Text(
-                  lbl,
-                  style: AppText.bodyBold.copyWith(
-                    color: active ? Colors.white : AppColors.text,
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 0,
+                  minHeight: 0,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: AppRadius.md,
+                  borderSide: BorderSide(color: AppColors.borderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: AppRadius.md,
+                  borderSide: BorderSide(color: AppColors.borderLight),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: AppRadius.md,
+                  borderSide: BorderSide(
+                    color: AppColors.primary,
+                    width: 1.5,
                   ),
                 ),
               ),
             ),
+          ),
+          SizedBox(width: 8.w),
+          TextButton(
+            onPressed: () => setState(() {
+              _isSearching = false;
+              _query = '';
+              _searchCtrl.clear();
+            }),
+            child: Text(
+              'Cancel',
+              style: AppText.bodyBold.copyWith(color: AppColors.muted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabs() {
+    return Container(
+      color: AppColors.surface,
+      padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 14.h),
+      child: UJobPillTabBar(
+        tabs: _labels,
+        selectedIndex: _selectedTabIndex,
+        onTabSelected: (i) {
+          setState(() => _selectedTabIndex = i);
+          _pageController.animateToPage(
+            i,
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
           );
-        }),
+        },
       ),
     );
   }
 }
 
 class _NotifCard extends StatelessWidget {
-  final _Notif notif;
+  final Notif notif;
   final dynamic icon;
   final Color borderColor;
   final Color primaryColor;

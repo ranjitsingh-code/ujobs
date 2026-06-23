@@ -17,6 +17,7 @@ import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
 import '../../../core/widgets/ujob_pill_tab_bar.dart';
+import '../../../core/widgets/ujob_text_field.dart';
 import 'employer_job_provider.dart';
 import '../dashboard/employer_dashboard_provider.dart';
 
@@ -40,19 +41,23 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
   ];
 
   late final PageController _pageController;
+  late final TextEditingController _searchCtrl;
   late int _selectedIndex;
   bool _isManaging = false;
+  String _query = '';
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+    _searchCtrl = TextEditingController();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -87,6 +92,8 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
               onSelected: _selectFilter,
               isManaging: _isManaging,
               onManageTap: () => setState(() => _isManaging = !_isManaging),
+              searchCtrl: _searchCtrl,
+              onSearchChanged: (v) => setState(() => _query = v),
             ),
             Expanded(
               child: PageView(
@@ -94,8 +101,11 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                 onPageChanged: _onPageChanged,
                 children: _statuses
                     .map(
-                      (status) =>
-                          _JobList(status: status, isManaging: _isManaging),
+                      (status) => _JobList(
+                        status: status,
+                        isManaging: _isManaging,
+                        query: _query,
+                      ),
                     )
                     .toList(),
               ),
@@ -142,12 +152,16 @@ class _JobsHeader extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final bool isManaging;
   final VoidCallback onManageTap;
+  final TextEditingController searchCtrl;
+  final ValueChanged<String> onSearchChanged;
 
   const _JobsHeader({
     required this.selectedIndex,
     required this.onSelected,
     required this.isManaging,
     required this.onManageTap,
+    required this.searchCtrl,
+    required this.onSearchChanged,
   });
 
   @override
@@ -188,7 +202,21 @@ class _JobsHeader extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 18.h),
+          SizedBox(height: 14.h),
+          UJobTextField(
+            hint: context.l10n.searchJobs,
+            controller: searchCtrl,
+            onChanged: onSearchChanged,
+            prefix: Padding(
+              padding: EdgeInsets.only(left: 12.w, right: 8.w),
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedSearch01,
+                color: AppColors.muted,
+                size: 20.r,
+              ),
+            ),
+          ),
+          SizedBox(height: 14.h),
           UJobPillTabBar(
             tabs: labels,
             selectedIndex: selectedIndex,
@@ -232,8 +260,13 @@ class _CompactPostJobButton extends StatelessWidget {
 class _JobList extends ConsumerWidget {
   final String? status;
   final bool isManaging;
+  final String query;
 
-  const _JobList({required this.status, required this.isManaging});
+  const _JobList({
+    required this.status,
+    required this.isManaging,
+    required this.query,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -245,7 +278,15 @@ class _JobList extends ConsumerWidget {
         message: context.l10n.failedLoadJobs,
         onRetry: () => ref.refresh(employerJobsProvider(status)),
       ),
-      data: (jobs) {
+      data: (allJobs) {
+        final jobs = query.isEmpty
+            ? allJobs
+            : allJobs.where((j) {
+                final q = query.toLowerCase();
+                return j.title.toLowerCase().contains(q) ||
+                    (j.location?.toLowerCase().contains(q) ?? false);
+              }).toList();
+
         if (jobs.isEmpty) {
           return UJobEmpty(
             title: context.l10n.noJobsFound,

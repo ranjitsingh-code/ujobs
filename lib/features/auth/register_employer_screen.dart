@@ -9,7 +9,13 @@ import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_dropdown_field.dart';
 import '../../core/widgets/ujob_terms_agreement.dart';
 import '../../core/widgets/ujob_text_field.dart';
+import '../../core/widgets/ujob_phone_input.dart';
+import '../../core/models/country.dart';
 
+import 'package:dio/dio.dart';
+import '../../core/api/api_endpoints.dart';
+import '../../core/providers/auth_provider.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../core/utils/l10n_extensions.dart';
 import '../../core/widgets/ujob_auth_links.dart';
 import '../../core/widgets/ujob_role_switch_card.dart';
@@ -30,9 +36,11 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
   final _firstCtrl = TextEditingController();
   final _lastCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   bool _acceptedTerms = false;
+  Country? _selectedPhoneCountry;
 
   // Step 2
   final _companyCtrl = TextEditingController();
@@ -66,6 +74,7 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
       _firstCtrl,
       _lastCtrl,
       _emailCtrl,
+      _phoneCtrl,
       _passCtrl,
       _confirmCtrl,
       _companyCtrl,
@@ -128,12 +137,61 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
       _loading = true;
       _error = null;
     });
-    // Simulate API success
-    await Future.delayed(const Duration(milliseconds: 1500));
 
-    if (mounted) {
-      setState(() => _loading = false);
-      context.go('/otp');
+    FocusManager.instance.primaryFocus?.unfocus();
+    EasyLoading.show(status: 'Registering...');
+
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final res = await dio.post(
+        Ep.registerEmployer,
+        data: {
+          'first_name': _firstCtrl.text.trim(),
+          'last_name': _lastCtrl.text.trim(),
+          'email': _emailCtrl.text.trim(),
+          'phone_code': _selectedPhoneCountry?.phoneCode ?? '',
+          'phone': _phoneCtrl.text.trim(),
+          'password': _passCtrl.text,
+          'company_name': _companyCtrl.text.trim(),
+          'company_city': _cityCtrl.text.trim(),
+          'company_country': _country,
+          'company_website': _websiteCtrl.text.trim(),
+          'is_non_limited': true, // Optional but good to pass based on JSON structure
+        },
+      );
+
+      final rawData = res.data as Map<String, dynamic>;
+      if (rawData['success'] == false) {
+        if (mounted) {
+          setState(() => _loading = false);
+        }
+        EasyLoading.showError(rawData['error']?['message']?.toString() ?? 'Registration failed.');
+        return;
+      }
+
+      final data = (rawData['data'] ?? rawData) as Map<String, dynamic>;
+      
+      final userId = data['user_id']?.toString() ?? data['user']?['id']?.toString() ?? '';
+
+      EasyLoading.showSuccess('Registration Successful!');
+
+      if (mounted) {
+        setState(() => _loading = false);
+        context.go('/otp', extra: userId);
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+      final msg = e.response?.data is Map 
+          ? (e.response!.data['error']?['message'] ?? 'A network error occurred.') 
+          : 'A network error occurred.';
+      EasyLoading.showError(msg);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+      EasyLoading.showError('An unexpected error occurred.');
     }
   }
 
@@ -183,6 +241,9 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
                         firstCtrl: _firstCtrl,
                         lastCtrl: _lastCtrl,
                         emailCtrl: _emailCtrl,
+                        phoneCtrl: _phoneCtrl,
+                        selectedPhoneCountry: _selectedPhoneCountry,
+                        onPhoneCountryChanged: (c) => _selectedPhoneCountry = c,
                         passCtrl: _passCtrl,
                         confirmCtrl: _confirmCtrl,
                         acceptedTerms: _acceptedTerms,
@@ -219,8 +280,11 @@ class _EmpStep1 extends StatelessWidget {
   final TextEditingController firstCtrl,
       lastCtrl,
       emailCtrl,
+      phoneCtrl,
       passCtrl,
       confirmCtrl;
+  final Country? selectedPhoneCountry;
+  final ValueChanged<Country?> onPhoneCountryChanged;
   final bool acceptedTerms;
   final ValueChanged<bool> onTermsChanged;
   final String? error;
@@ -231,6 +295,9 @@ class _EmpStep1 extends StatelessWidget {
     required this.firstCtrl,
     required this.lastCtrl,
     required this.emailCtrl,
+    required this.phoneCtrl,
+    required this.selectedPhoneCountry,
+    required this.onPhoneCountryChanged,
     required this.passCtrl,
     required this.confirmCtrl,
     required this.acceptedTerms,
@@ -289,7 +356,15 @@ class _EmpStep1 extends StatelessWidget {
             isRequired: true,
             isEmail: true,
           ),
-          // Phone field intentionally omitted until website registration requires it.
+          SizedBox(height: 16.h),
+          UJobPhoneInput(
+            label: l10n.phone,
+            hint: l10n.phoneHint,
+            phoneController: phoneCtrl,
+            initialCountry: selectedPhoneCountry,
+            onCountryCodeChanged: onPhoneCountryChanged,
+            isRequired: false,
+          ),
           SizedBox(height: 16.h),
           UJobTextField(
             label: l10n.password,
@@ -315,8 +390,8 @@ class _EmpStep1 extends StatelessWidget {
           UJobTermsAgreement(
             value: acceptedTerms,
             onChanged: onTermsChanged,
-            onTermsTap: () => context.push('/terms-and-conditions'),
-            onPrivacyTap: () => context.push('/privacy-policy'),
+            onTermsTap: () => context.push('/pages/terms'),
+            onPrivacyTap: () => context.push('/pages/privacy-policy'),
           ),
           if (error != null) ...[SizedBox(height: 16.h), _ErrorBox(error!)],
           SizedBox(height: 24.h),

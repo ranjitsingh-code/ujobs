@@ -995,16 +995,101 @@ class AppLocalizationsAr extends AppLocalizations {
   String get securitySection => 'الأمان';
 
   @override
+  String get otpVerificationSuccess => 'Verified Successfully!';
+
+  @override
+  String get otpResendSuccess => 'Code sent successfully!';
+
+  @override
+  String get otpErrorInvalid => 'تم إدخال رمز غير صالح.';
+
+  @override
   String get changePassword => 'تغيير كلمة المرور';
+
+  @override
+  String get employerChangePasswordSubtitle =>
+      'استخدم كلمة مرور قوية لحماية حسابك';
+
+  @override
+  String get seekerChangePasswordSubtitle =>
+      'استخدم كلمة مرور قوية تحتوي على أحرف وأرقام ورموز';
 
   @override
   String get changeEmail => 'تغيير البريد الإلكتروني';
 
   @override
+  String get changeEmailAddress => 'تغيير عنوان البريد الإلكتروني';
+
+  @override
+  String get changeEmailSubtitle => 'حدّث البريد الإلكتروني لتسجيل الدخول';
+
+  @override
+  String get newEmailAddress => 'عنوان البريد الإلكتروني الجديد';
+
+  @override
+  String currentValue(Object value) {
+    return 'الحالي: $value';
+  }
+
+  @override
+  String get sendVerificationCode => 'إرسال رمز التحقق';
+
+  @override
+  String get verificationCodeSent => 'تم إرسال رمز التحقق';
+
+  @override
+  String get requiredToVerifyYou => 'مطلوب للتحقق من هويتك';
+
+  @override
+  String get passwordMaskHint => '•••••••••••';
+
+  @override
   String get changePhone => 'تغيير رقم الهاتف';
 
   @override
+  String get changePhoneSubtitle => 'حدّث رقم هاتف التواصل';
+
+  @override
+  String get countryCode => 'رمز الدولة';
+
+  @override
+  String get localPhoneNumberHint => 'أدخل الرقم بدون رمز الدولة';
+
+  @override
   String get twoFactorAuth => 'المصادقة الثنائية';
+
+  @override
+  String get twoFactorAuthSubtitle => 'أضف طبقة أمان إضافية إلى حسابك';
+
+  @override
+  String get statusEnabled => 'الحالة: مفعّل';
+
+  @override
+  String get statusDisabled => 'الحالة: غير مفعّل';
+
+  @override
+  String get authenticatorAppLabel =>
+      'رمز OTP عبر البريد الإلكتروني (يُرسل إلى بريدك المسجّل)';
+
+  @override
+  String get confirm2FAEnable => 'تأكيد تفعيل المصادقة الثنائية';
+
+  @override
+  String get confirm2FADisable => 'تأكيد إلغاء تفعيل المصادقة الثنائية';
+
+  @override
+  String get enable2FADescription =>
+      'سيتم إرسال رمز OTP إلى بريدك الإلكتروني في كل مرة تسجّل فيها الدخول.';
+
+  @override
+  String get disable2FADescription =>
+      'لن تحتاج بعد الآن إلى إدخال رمز OTP عند تسجيل الدخول.';
+
+  @override
+  String get twoFAEnabledSuccess => 'تم تفعيل المصادقة الثنائية';
+
+  @override
+  String get twoFADisabledSuccess => 'تم إلغاء تفعيل المصادقة الثنائية';
 
   @override
   String get notificationsSection => 'الإشعارات';
@@ -1028,13 +1113,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get currentPassword => 'كلمة المرور الحالية';
 
   @override
+  String get currentPasswordHint => 'أدخل كلمة المرور الحالية';
+
+  @override
   String get newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get newPasswordHint => 'أدخل كلمة المرور الجديدة';
 
   @override
   String get confirmNewPassword => 'تأكيد كلمة المرور الجديدة';
 
   @override
+  String get confirmNewPasswordHint => 'أعد كتابة كلمة المرور الجديدة';
+
+  @override
   String get updatePassword => 'تحديث كلمة المرور';
+
+  @override
+  String get passwordUpdatedSuccess => 'تم تحديث كلمة المرور بنجاح';
+
+  @override
+  String get emailUpdatedSuccess => 'تم تحديث البريد الإلكتروني بنجاح';
+
+  @override
+  String get phoneUpdatedSuccess => 'تم تحديث رقم الهاتف بنجاح';
 
   @override
   String get deleteAccountTitle => 'حذف الحساب';
@@ -1396,16 +1499,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dynamicKey => 'العربية';
 
   @override
-  String get newJobApplication => 'New Job Application';
+  String get newJobApplication => 'طلب وظيفة جديد';
 
   @override
-  String get candidateMessages => 'Candidate Messages';
+  String get newJobApplicationSubtitle =>
+      'احصل على إشعار عندما يتقدم مرشح لإحدى وظائفك';
 
   @override
-  String get interviewResponses => 'Interview Responses';
+  String get candidateMessages => 'رسائل المرشحين';
 
   @override
-  String get marketingEmails => 'Marketing Emails';
+  String get candidateMessagesSubtitle =>
+      'استقبل رسائل إلكترونية عندما يراسلك المرشحون';
+
+  @override
+  String get interviewResponses => 'ردود المقابلات';
+
+  @override
+  String get interviewResponsesSubtitle =>
+      'احصل على إشعارات بتأكيدات وإلغاءات المقابلات';
+
+  @override
+  String get marketingEmails => 'رسائل تسويقية';
+
+  @override
+  String get marketingEmailsSubtitle => 'تحديثات المنتج ونصائح وعروض ترويجية';
+
+  @override
+  String get marketingTips => 'التسويق والنصائح';
+
+  @override
+  String get allowNotifications => 'السماح بالإشعارات';
+
+  @override
+  String get allowNotificationsSubtitle =>
+      'استقبل إشعارات فورية على هذا الجهاز';
+
+  @override
+  String get emailNotifications => 'إشعارات البريد الإلكتروني';
+
+  @override
+  String get emailNotificationsSubtitle =>
+      'اختر الرسائل الإلكترونية التي تريد تلقّيها';
+
+  @override
+  String get newJobRecommendations => 'توصيات وظائف جديدة';
 
   @override
   String get messageSound => 'Message Sound';
@@ -1414,10 +1552,54 @@ class AppLocalizationsAr extends AppLocalizations {
   String get popupNotification => 'Pop-up Notification';
 
   @override
-  String get publicProfile => 'Public Profile';
+  String get publicProfile => 'الملف الشخصي العام';
 
   @override
-  String get privateProfile => 'Private Profile';
+  String get publicProfileSubtitle =>
+      'ملف شركتك مرئي لجميع الباحثين عن عمل، بما فيهم غير المسجلين';
+
+  @override
+  String get privateProfile => 'الملف الشخصي الخاص';
+
+  @override
+  String get privacySection => 'الخصوصية';
+
+  @override
+  String get privacyPreferencesSection => 'الخصوصية والتفضيلات';
+
+  @override
+  String get companyProfileVisibility => 'ظهور ملف الشركة';
+
+  @override
+  String get companyProfileVisibilitySubtitle =>
+      'السماح لمحركات البحث بفهرسة صفحة شركتك';
+
+  @override
+  String get profileVisibility => 'ظهور الملف الشخصي';
+
+  @override
+  String get profileVisibilitySubtitle =>
+      'السماح لأصحاب العمل بالعثور على ملفك';
+
+  @override
+  String get showEmailOnProfile => 'إظهار البريد الإلكتروني في الملف';
+
+  @override
+  String get showEmailOnProfileSubtitle =>
+      'يمكن للمرشحين رؤية بريدك الإلكتروني';
+
+  @override
+  String get showPhoneOnProfile => 'إظهار الهاتف في الملف';
+
+  @override
+  String get showPhoneOnProfileSubtitle => 'يمكن للمرشحين رؤية رقم هاتفك';
+
+  @override
+  String get showSalaryExpectations => 'إظهار توقعات الراتب';
+
+  @override
+  String get showSalaryExpectationsSubtitle =>
+      'السماح لأصحاب العمل برؤية نطاق الراتب المتوقع';
 
   @override
   String get showEmailToCandidates => 'Show Email to Candidates';
@@ -1432,13 +1614,35 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dateFormat => 'Date Format';
 
   @override
-  String get exportJobsCsv => 'Export Jobs (CSV)';
+  String get downloadAccountData => 'تنزيل بيانات الحساب';
 
   @override
-  String get exportApplicantsCsv => 'Export Applicants (CSV)';
+  String get downloadAccountDataSubtitle => 'تصدير نسخة من بياناتك';
 
   @override
-  String get deleteMyAccount => 'Delete My Account';
+  String get exportDataDesc => 'قم بتنزيل بيانات وظائفك والمتقدمين كملفات CSV.';
+
+  @override
+  String get exportJobsCsv => 'تصدير الوظائف (CSV)';
+
+  @override
+  String get exportApplicantsCsv => 'تصدير المتقدمين (CSV)';
+
+  @override
+  String get contactUs => 'تواصل معنا';
+
+  @override
+  String get termsOfUse => 'شروط الاستخدام';
+
+  @override
+  String get deleteMyAccount => 'حذف حسابي';
+
+  @override
+  String get deleteAccountSubtitle => 'إزالة حسابك وجميع بياناتك نهائياً';
+
+  @override
+  String get deleteAccountDescription =>
+      'بعد حذف حسابك، ستتم إزالة جميع بياناتك بما في ذلك الوظائف والطلبات والإعدادات نهائياً. لا يمكن التراجع عن هذا الإجراء.';
 
   @override
   String get selectAll => 'Select All';
@@ -1457,6 +1661,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get searchApplicants => 'Search applicants...';
+
+  @override
+  String get searchJobs => 'ابحث عن وظائف...';
 
   @override
   String get totalJobs => 'Total Jobs';
@@ -1699,4 +1906,78 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get searchJobsCompanies => 'Search jobs, companies...';
+
+  @override
+  String get companyProfile => 'ملف الشركة';
+
+  @override
+  String get follow => 'متابعة';
+
+  @override
+  String get noDescriptionAvailable => 'لا يوجد وصف متاح.';
+
+  @override
+  String get companySize => 'حجم الشركة';
+
+  @override
+  String get noOpenPositions => 'لا توجد وظائف شاغرة.';
+
+  @override
+  String get errorLoadingJobs => 'خطأ في تحميل الوظائف';
+
+  @override
+  String viewsCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مشاهدات',
+      one: 'مشاهدة واحدة',
+      zero: 'لا توجد مشاهدات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get salary => 'الراتب';
+
+  @override
+  String get jobType => 'نوع الوظيفة';
+
+  @override
+  String get workplace => 'مكان العمل';
+
+  @override
+  String get notSpecified => 'غير محدد';
+
+  @override
+  String get companiesTab => 'الشركات';
+
+  @override
+  String get employerDirectory => 'دليل أصحاب العمل';
+
+  @override
+  String get browseCompanies => 'تصفح الشركات';
+
+  @override
+  String get exploreEmployersDesc =>
+      'استكشف أفضل أصحاب العمل الذين يوظفون الآن. ابحث عن مكان عملك المثالي.';
+
+  @override
+  String get searchCompanies => 'ابحث عن شركات...';
+
+  @override
+  String companiesFoundCount(int count) {
+    return '$count شركة';
+  }
+
+  @override
+  String openJobsCount(int count) {
+    return '$count وظيفة مفتوحة';
+  }
+
+  @override
+  String get verified => 'موثق';
+
+  @override
+  String get viewButton => 'عرض';
 }

@@ -10,13 +10,30 @@ import 'core/providers/role_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_colors.dart';
 // import 'core/firebase_options.dart';               // TODO: uncomment after flutterfire configure
 // import 'core/services/notification_service.dart';  // TODO: uncomment after flutterfire configure
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Configure EasyLoading aesthetics
+  EasyLoading.instance
+    ..displayDuration = const Duration(milliseconds: 2000)
+    ..indicatorType = EasyLoadingIndicatorType.fadingCircle
+    ..loadingStyle = EasyLoadingStyle.custom
+    ..indicatorSize = 45.0
+    ..radius = 16.0
+    ..progressColor = Colors.white
+    ..backgroundColor = AppColors.surface
+    ..indicatorColor = AppColors.primary
+    ..textColor = AppColors.text
+    ..maskColor = Colors.black.withValues(alpha: 0.5)
+    ..userInteractions = false
+    ..dismissOnTap = false;
 
   // ── Firebase setup (uncomment after running `flutterfire configure`) ──────
   // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -89,6 +106,7 @@ class UJobApp extends ConsumerWidget {
               ],
 
               routerConfig: router,
+              builder: EasyLoading.init(),
             ),
           ),
         );

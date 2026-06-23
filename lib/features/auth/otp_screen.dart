@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import '../../core/providers/auth_provider.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -15,7 +17,8 @@ import '../../core/utils/l10n_extensions.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String? email;
-  const OtpScreen({this.email, super.key});
+  final String? userId;
+  const OtpScreen({this.email, this.userId, super.key});
 
   @override
   ConsumerState<OtpScreen> createState() => _OtpScreenState();
@@ -133,17 +136,48 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
 
   Future<void> _verify() async {
     if (_otp.length < 6) {
-      setState(() => _error = context.l10n.otpErrorComplete);
+      final msg = context.l10n.otpErrorComplete;
+      setState(() => _error = msg);
+      EasyLoading.showError(msg);
       _shakeCtrl.forward(from: 0);
       return;
     }
+    
+    final userId = widget.userId;
+    if (userId == null || userId.isEmpty) {
+      final msg = 'User ID is missing.';
+      setState(() => _error = msg);
+      EasyLoading.showError(msg);
+      _shakeCtrl.forward(from: 0);
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
     });
-    await Future.delayed(const Duration(milliseconds: 800));
-    // API /auth/verify-otp has known 500 bug — treat as success
-    if (mounted) _skipToApp();
+
+    EasyLoading.show(status: 'Verifying...');
+
+    final (result, errorMsg) = await ref.read(authProvider.notifier).verifyOtp(userId, _otp);
+
+    if (!mounted) {
+      EasyLoading.dismiss();
+      return;
+    }
+
+    if (result == LoginResult.success) {
+      EasyLoading.showSuccess('OTP Verified!');
+      _skipToApp();
+    } else {
+      final finalError = errorMsg ?? context.l10n.otpErrorInvalid;
+      EasyLoading.showError(finalError);
+      setState(() {
+        _loading = false;
+        _error = finalError;
+      });
+      _shakeCtrl.forward(from: 0);
+    }
   }
 
   @override
@@ -236,9 +270,28 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                         ),
                       )
                     : GestureDetector(
-                        onTap: () {
-                          _startTimer();
-                          setState(() => _error = null);
+                        onTap: () async {
+                          final userId = widget.userId;
+                          if (userId == null || userId.isEmpty) {
+                            EasyLoading.showError('User ID is missing.');
+                            return;
+                          }
+
+                          EasyLoading.show(status: 'Resending...');
+                          final errorMsg = await ref.read(authProvider.notifier).resendOtp(userId);
+
+                          if (!mounted) {
+                            EasyLoading.dismiss();
+                            return;
+                          }
+
+                          if (errorMsg == null) {
+                            EasyLoading.showSuccess('Verification code resent.');
+                            _startTimer();
+                            setState(() => _error = null);
+                          } else {
+                            EasyLoading.showError(errorMsg);
+                          }
                         },
                         child: Text(
                           l10n.resendCodeLink,

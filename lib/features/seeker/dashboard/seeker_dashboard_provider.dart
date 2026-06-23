@@ -18,16 +18,16 @@ class SeekerDashboardData {
 
 final seekerDashboardProvider = FutureProvider.autoDispose<SeekerDashboardData>(
   (ref) async {
+    // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 500));
-    final meData = {'profile_completed': 80};
-    final appsData = [1, 2, 3];
-    final allJobs = ref.watch(demoEmployerJobsProvider);
-    final jobsData = allJobs.take(3).toList();
+
+    // Get mock jobs
+    final allJobs = ref.read(demoEmployerJobsProvider);
 
     return SeekerDashboardData(
-      profileCompletion: meData['profile_completed'] as int? ?? 0,
-      applicationsCount: appsData.length,
-      recommendedJobs: jobsData,
+      profileCompletion: 75,
+      applicationsCount: 3,
+      recommendedJobs: allJobs.take(5).toList(),
     );
   },
 );

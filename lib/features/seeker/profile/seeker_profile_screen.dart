@@ -12,6 +12,7 @@ import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_dropdown.dart';
 import '../../../core/widgets/ujob_rich_text_field.dart';
 import '../../../core/widgets/ujob_rich_text_editor.dart';
+import '../dashboard/seeker_dashboard_provider.dart';
 
 class SeekerProfileScreen extends ConsumerStatefulWidget {
   const SeekerProfileScreen({super.key});
@@ -25,7 +26,6 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
-  bool _showNumber = false;
 
   // Location
   final _countryCtrl = TextEditingController();
@@ -39,10 +39,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   final _skillsCtrl = TextEditingController();
   String? _expYears;
   String? _expMonths;
-  String? _expectedSalary;
-  String? _currency;
   String? _availability;
-  String? _profileVisibility;
 
   // Rich Text
   String _about = '';
@@ -153,13 +150,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
               controller: _phoneCtrl,
               keyboardType: TextInputType.phone,
             ),
-            _CheckboxTile(
-              label: 'Show my number to employers',
-              value: _showNumber,
-              onChanged: (v) {
-                if (v != null) setState(() => _showNumber = v);
-              },
-            ),
+
             SizedBox(height: 32.h),
             UJobButton(
               label: 'Save Changes',
@@ -303,37 +294,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: UJobDropdown(
-                    label: 'Expected Salary',
-                    value: _expectedSalary ?? '\$30k-\$50k',
-                    items: const [
-                      '\$30k-\$50k',
-                      '\$50k-\$80k',
-                      '\$80k-\$120k',
-                      '\$120k+',
-                    ],
-                    onChanged: (v) {
-                      if (v != null) setState(() => _expectedSalary = v);
-                    },
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: UJobDropdown(
-                    label: 'Currency',
-                    value: _currency ?? 'USD',
-                    items: const ['USD', 'EUR', 'GBP'],
-                    onChanged: (v) {
-                      if (v != null) setState(() => _currency = v);
-                    },
-                  ),
-                ),
-              ],
-            ),
+
             SizedBox(height: 16.h),
             UJobDropdown(
               label: 'Availability',
@@ -349,19 +310,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                 if (v != null) setState(() => _availability = v);
               },
             ),
-            SizedBox(height: 16.h),
-            UJobDropdown(
-              label: 'Profile Visibility',
-              value: _profileVisibility ?? 'Public',
-              items: const [
-                'Public',
-                'Private',
-                'Only to Employers I Apply To',
-              ],
-              onChanged: (v) {
-                if (v != null) setState(() => _profileVisibility = v);
-              },
-            ),
+
             SizedBox(height: 32.h),
             UJobButton(
               label: 'Save Changes',
@@ -435,6 +384,10 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dashboardAsync = ref.watch(seekerDashboardProvider);
+    final completenessPercentage = dashboardAsync.valueOrNull?.profileCompletion ?? 0;
+    final completenessFraction = completenessPercentage / 100.0;
+
     String fullName = '${_firstNameCtrl.text} ${_lastNameCtrl.text}'.trim();
     if (fullName.isEmpty) fullName = 'User';
 
@@ -449,7 +402,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
               name: fullName,
               headline: _headlineCtrl.text,
               email: 'azad@example.com',
-              completeness: 0.8,
+              completeness: completenessFraction,
               onEditImage: () {},
             ),
             Padding(
@@ -476,12 +429,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                           value: _lastNameCtrl.text,
                         ),
                         _DetailRow(label: 'Phone', value: _phoneCtrl.text),
-                        _DetailRow(
-                          label: 'Phone Visibility',
-                          value: _showNumber
-                              ? 'Visible to employers'
-                              : 'Hidden',
-                        ),
+
                       ],
                     ),
                   ),
@@ -512,17 +460,8 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               ? '$_expYears yrs $_expMonths mos'
                               : null,
                         ),
-                        _DetailRow(
-                          label: 'Expected Salary',
-                          value: (_expectedSalary != null && _currency != null)
-                              ? '$_expectedSalary $_currency'
-                              : null,
-                        ),
                         _DetailRow(label: 'Availability', value: _availability),
-                        _DetailRow(
-                          label: 'Visibility',
-                          value: _profileVisibility,
-                        ),
+
                         SizedBox(height: 8.h),
                         Text(
                           'About Me',

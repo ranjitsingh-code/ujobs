@@ -1,21 +1,23 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../storage/secure_storage.dart';
 import 'api_endpoints.dart';
 
 class DioClient {
-  static const _base = 'https://ujobapi.gidentex.com/api/v1';
-
   late final Dio dio;
 
   DioClient(SecureStorage storage) {
     dio = Dio(
       BaseOptions(
-        baseUrl: _base,
+        baseUrl: Ep.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Api-Key': const String.fromEnvironment('API_KEY', defaultValue: ''),
+        },
       ),
     );
 
@@ -25,6 +27,8 @@ class DioClient {
           final token = await storage.getAccessToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+            // Inject as Cookie as well to ensure compatibility with backend cookie session guards
+            options.headers['Cookie'] = 'session=$token';
           }
           handler.next(options);
         },
@@ -41,6 +45,14 @@ class DioClient {
             }
             // Refresh failed — clear tokens so app redirects to login
             await storage.clearAll();
+          } else if (error.response?.statusCode == 500) {
+            EasyLoading.showError('Server encountered an error. Please try again later.');
+          } else if (error.response?.statusCode == 503) {
+            EasyLoading.showError('Server is currently down for maintenance.');
+          } else if (error.type == DioExceptionType.connectionTimeout || 
+                     error.type == DioExceptionType.receiveTimeout || 
+                     error.type == DioExceptionType.connectionError) {
+            EasyLoading.showError('Unable to connect to the server. Please check your internet connection.');
           }
           handler.next(error);
         },
@@ -62,14 +74,23 @@ class DioClient {
     try {
       final refresh = await storage.getRefreshToken();
       if (refresh == null) return false;
+      
       final res = await Dio().post(
-        '$_base${Ep.refresh}',
-        data: {'refreshToken': refresh},
+        '${Ep.baseUrl}${Ep.refresh}',
+        options: Options(
+          headers: {
+            'X-Api-Key': const String.fromEnvironment('API_KEY', defaultValue: ''),
+            // Pass the refresh token in the Cookie header as the API expects
+            'Cookie': 'refreshToken=$refresh', 
+          },
+        ),
       );
       final data = res.data as Map<String, dynamic>;
+      final responseData = data['data'] ?? data;
+      
       await storage.saveTokens(
-        data['accessToken'] as String,
-        data['refreshToken'] as String,
+        responseData['accessToken'] as String,
+        responseData['refreshToken'] as String,
       );
       return true;
     } catch (_) {
