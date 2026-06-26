@@ -62,6 +62,6 @@ class AuthService {
   }
 
   Future<void> forgotPassword(String email) async {
-    await _client.dio.post(Ep.forgotPassword, data: {'email': email});
+    await _client.dio.post(Ep.forgotPasswordRequest, data: {'email': email});
   }
 }

@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "UJobs App",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define=API_KEY=jp_56a375680eef542027dc87979dee0f8c0e6c79940bdac564d21f48457d904ccc"
+      ]
+    }
+  ]
+}

@@ -1,26 +1,18 @@
 import re
 
-with open('lib/features/employer/company/company_profile_screen.dart', 'r') as f:
-    text = f.read()
+with open("lib/features/employer/jobs/my_jobs_screen.dart", "r") as f:
+    content = f.read()
 
-old_end = """                  SizedBox(height: 40.h),
-                ],
-              ),
-            ),
-    );
-  }"""
-
-new_end = """                  SizedBox(height: 40.h),
-                ],
-              ),
-            ),
-          ],
+content = content.replace("""          },
+        );
+        // Close RefreshIndicator
+        );
+      },""", """          },
         ),
-      ),
-    );
-  }"""
+        // Close RefreshIndicator
+        );
+      },""")
 
-text = text.replace(old_end, new_end)
+with open("lib/features/employer/jobs/my_jobs_screen.dart", "w") as f:
+    f.write(content)
 
-with open('lib/features/employer/company/company_profile_screen.dart', 'w') as f:
-    f.write(text)

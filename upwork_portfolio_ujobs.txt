@@ -1,0 +1,64 @@
+================================================================================
+UPWORK PORTFOLIO PROJECT DESCRIPTION
+Project: UJobs (JobPortal)
+================================================================================
+
+**Project Title:** 
+UJobs - Comprehensive Dual-Role Job Portal & Recruitment Application
+
+**Subtitle:** 
+A scalable, high-performance cross-platform mobile application connecting Employers with Job Seekers seamlessly.
+
+---
+
+### **Project Overview**
+
+**The Challenge:** 
+The goal was to create a unified, scalable mobile platform to bridge the gap between job seekers and employers. The primary challenge was engineering a complex "dual-role" architecture within a single application where the entire UI, navigation, and feature set drastically adapt based on the user's account type. The app needed to maintain a highly responsive, premium aesthetic across all device sizes while handling complex RESTful API integrations, real-time states, and robust local caching.
+
+**The Solution:** 
+I architected and developed a high-performance cross-platform application using Flutter and Riverpod. To solve the dual-role challenge, I implemented an advanced, dynamic routing system (via GoRouter with ShellRoutes) that instantly switches the app's environment based on secure local authentication states. To ensure future scalability, I built a modular design system of highly reusable custom widgets, ensuring rapid feature development and a consistent, state-of-the-art user experience.
+
+---
+
+### **Key Features & Functionality**
+
+* **Dynamic Dual-Role Architecture:** Separate, fully-featured dashboard environments for Job Seekers and Employers operating within the same lightweight codebase.
+* **Employer Suite:** Comprehensive tools to post and manage job listings, track applicant pipelines, review digital resumes, and manage public company profiles.
+* **Seeker Suite:** Advanced job discovery, one-tap application submission, real-time application tracking, and an interactive profile builder (skills, education, and experience).
+* **Premium UI/UX & Micro-interactions:** Implemented modern design patterns including skeleton "shimmer" loading states, responsive device scaling (ScreenUtil), notch-safe layouts, and global overlay animations (EasyLoading) for a frictionless user experience.
+* **Reactive Global State:** Utilized Riverpod to drive real-time UI updates, such as live notification badges, theme switching, and instantaneous authentication flows.
+* **Bilingual Localization:** Fully engineered with Internationalization (i18n) support, allowing seamless switching between English and Arabic layouts.
+* **Secure Data Management:** Integrated encrypted secure storage for sensitive API tokens alongside highly reliable SharedPreferences for persistent onboarding flows.
+* **Third-Party Integrations:** Configured Firebase Cloud Messaging (FCM) for push notifications and WebView integrations for external portals (e.g., Stripe payments).
+
+---
+
+### **Technologies & Skills Used**
+
+**Frameworks & Languages:** 
+* Flutter (Dart) 
+* Native iOS & Android Compilation
+
+**Core Architecture:** 
+* State Management: Riverpod (Notifier & FutureProviders)
+* Navigation: GoRouter (Deep linking & Shell Routing)
+* Networking: Dio, RESTful APIs, JSON Serialization
+
+**UI/UX & Tooling:** 
+* flutter_screenutil (Responsive scaling)
+* shimmer & loading_animation_widget (Modern loading states)
+* flutter_localizations (i18n)
+
+**Storage & Backend:** 
+* flutter_secure_storage (Encrypted KeyStore/Keychain)
+* shared_preferences (Local caching)
+* Firebase (Push Notifications)
+
+**Upwork Tag Skills:** 
+Mobile App Development, Flutter, Dart, Cross-Platform Development, UI/UX Implementation, RESTful API Integration, State Management, App Localization, Frontend Architecture.
+
+---
+
+### **Results/Impact**
+Delivered a robust, production-ready mobile application with a scalable architecture that allows developers to add new features with minimal code duplication. The application successfully handles complex user flows without UI freezing, utilizing optimized async operations and beautiful transition states to maintain a premium feel.

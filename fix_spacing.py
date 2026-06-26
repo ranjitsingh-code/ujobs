@@ -1,12 +1,10 @@
 import re
 
-with open('lib/features/employer/company/company_profile_screen.dart', 'r') as f:
+with open('lib/features/employer/applicants/applicant_detail_screen.dart', 'r') as f:
     text = f.read()
 
-old_padding = "padding: EdgeInsets.all(20.r),"
-new_padding = "padding: EdgeInsets.fromLTRB(20.r, 20.r, 20.r, _isExpanded ? 12.r : 20.r),"
+text = text.replace("if (applicant.resumeUrl != null) SizedBox(height: 24.h);", "")
+text = text.replace("if (applicant.resumeUrl != null) SizedBox(height: 24.h),\n        // Replaced by new logic above\n", "")
 
-text = text.replace(old_padding, new_padding)
-
-with open('lib/features/employer/company/company_profile_screen.dart', 'w') as f:
+with open('lib/features/employer/applicants/applicant_detail_screen.dart', 'w') as f:
     f.write(text)

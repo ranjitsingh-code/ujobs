@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/feature_flags_provider.dart';
+
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -7,7 +10,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/l10n_extensions.dart';
 
-class UJobEmployerJobCard extends StatelessWidget {
+class UJobEmployerJobCard extends ConsumerWidget {
   final Job job;
   final VoidCallback onTap;
   final VoidCallback? onMoreTap;
@@ -18,6 +21,7 @@ class UJobEmployerJobCard extends StatelessWidget {
   final VoidCallback? onResume;
   final VoidCallback? onPublish;
   final VoidCallback? onReopen;
+  final VoidCallback? onClose;
   final VoidCallback? onDelete;
 
   const UJobEmployerJobCard({
@@ -31,12 +35,18 @@ class UJobEmployerJobCard extends StatelessWidget {
     this.onResume,
     this.onPublish,
     this.onReopen,
+    this.onClose,
     this.onDelete,
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final featureFlags = ref.watch(featureFlagsProvider);
+    final bool jobApprovalRequired = featureFlags.maybeWhen(
+      data: (flags) => flags.jobApprovalRequired,
+      orElse: () => false,
+    );
     final l10n = context.l10n;
     final statusColor = _statusColor(job.status);
 
@@ -156,19 +166,19 @@ class UJobEmployerJobCard extends StatelessWidget {
                           icon: HugeIcons.strokeRoundedPauseCircle,
                           onTap: onPause!,
                         ),
-                      if (job.status == JobStatus.paused && onResume != null)
+                      if (!jobApprovalRequired && job.status == JobStatus.paused && onResume != null)
                         _ActionButton(
                           label: l10n.reactivateJob,
                           icon: HugeIcons.strokeRoundedPlay,
                           onTap: onResume!,
                         ),
-                      if (job.status == JobStatus.draft && onPublish != null)
+                      if (!jobApprovalRequired && job.status == JobStatus.draft && onPublish != null)
                         _ActionButton(
                           label: l10n.publishJob,
                           icon: HugeIcons.strokeRoundedSent,
                           onTap: onPublish!,
                         ),
-                      if (job.status == JobStatus.closed && onReopen != null)
+                      if (!jobApprovalRequired && job.status == JobStatus.closed && onReopen != null)
                         _ActionButton(
                           label: l10n.reopenJob,
                           icon: HugeIcons.strokeRoundedRefresh,
@@ -182,22 +192,20 @@ class UJobEmployerJobCard extends StatelessWidget {
                           icon: HugeIcons.strokeRoundedPencilEdit01,
                           onTap: onEdit!,
                         ),
+                      if (onClose != null && job.status != JobStatus.closed && job.status != JobStatus.rejected)
+                        _ActionButton(
+                          label: l10n.closeJob1,
+                          icon: HugeIcons.strokeRoundedAlert02,
+                          color: AppColors.text,
+                          onTap: onClose!,
+                        ),
                       if (onDelete != null)
-                        if (job.status == JobStatus.closed ||
-                            job.status == JobStatus.rejected)
-                          _ActionButton(
-                            label: l10n.delete,
-                            icon: HugeIcons.strokeRoundedDelete01,
-                            color: AppColors.error,
-                            onTap: onDelete!,
-                          )
-                        else
-                          _ActionButton(
-                            label: l10n.closeJob,
-                            icon: HugeIcons.strokeRoundedAlert02,
-                            color: AppColors.error,
-                            onTap: onDelete!,
-                          ),
+                        _ActionButton(
+                          label: l10n.delete,
+                          icon: HugeIcons.strokeRoundedDelete01,
+                          color: AppColors.error,
+                          onTap: onDelete!,
+                        ),
                     ],
                   ),
                 )

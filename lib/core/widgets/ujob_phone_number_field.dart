@@ -6,68 +6,12 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/l10n_extensions.dart';
 import 'ujob_text_field.dart';
-
-class _Country {
-  final String name;
-  final String dialCode;
-  final String flag;
-  const _Country(this.name, this.dialCode, this.flag);
-}
-
-const _kCountries = [
-  _Country('United Kingdom', '+44', '🇬🇧'),
-  _Country('Ireland', '+353', '🇮🇪'),
-  _Country('United States', '+1', '🇺🇸'),
-  _Country('Canada', '+1', '🇨🇦'),
-  _Country('United Arab Emirates', '+971', '🇦🇪'),
-  _Country('Saudi Arabia', '+966', '🇸🇦'),
-  _Country('Qatar', '+974', '🇶🇦'),
-  _Country('Kuwait', '+965', '🇰🇼'),
-  _Country('Bahrain', '+973', '🇧🇭'),
-  _Country('Oman', '+968', '🇴🇲'),
-  _Country('Egypt', '+20', '🇪🇬'),
-  _Country('Jordan', '+962', '🇯🇴'),
-  _Country('Lebanon', '+961', '🇱🇧'),
-  _Country('Iraq', '+964', '🇮🇶'),
-  _Country('Turkey', '+90', '🇹🇷'),
-  _Country('India', '+91', '🇮🇳'),
-  _Country('Pakistan', '+92', '🇵🇰'),
-  _Country('Bangladesh', '+880', '🇧🇩'),
-  _Country('Sri Lanka', '+94', '🇱🇰'),
-  _Country('Philippines', '+63', '🇵🇭'),
-  _Country('Singapore', '+65', '🇸🇬'),
-  _Country('Malaysia', '+60', '🇲🇾'),
-  _Country('Indonesia', '+62', '🇮🇩'),
-  _Country('Australia', '+61', '🇦🇺'),
-  _Country('New Zealand', '+64', '🇳🇿'),
-  _Country('Nigeria', '+234', '🇳🇬'),
-  _Country('Ghana', '+233', '🇬🇭'),
-  _Country('Kenya', '+254', '🇰🇪'),
-  _Country('South Africa', '+27', '🇿🇦'),
-  _Country('Ethiopia', '+251', '🇪🇹'),
-  _Country('Germany', '+49', '🇩🇪'),
-  _Country('France', '+33', '🇫🇷'),
-  _Country('Italy', '+39', '🇮🇹'),
-  _Country('Spain', '+34', '🇪🇸'),
-  _Country('Netherlands', '+31', '🇳🇱'),
-  _Country('Belgium', '+32', '🇧🇪'),
-  _Country('Portugal', '+351', '🇵🇹'),
-  _Country('Poland', '+48', '🇵🇱'),
-  _Country('Sweden', '+46', '🇸🇪'),
-  _Country('Norway', '+47', '🇳🇴'),
-  _Country('Denmark', '+45', '🇩🇰'),
-  _Country('Finland', '+358', '🇫🇮'),
-  _Country('Switzerland', '+41', '🇨🇭'),
-  _Country('Brazil', '+55', '🇧🇷'),
-  _Country('Mexico', '+52', '🇲🇽'),
-  _Country('Argentina', '+54', '🇦🇷'),
-  _Country('China', '+86', '🇨🇳'),
-  _Country('Japan', '+81', '🇯🇵'),
-  _Country('South Korea', '+82', '🇰🇷'),
-];
+import '../models/country.dart';
 
 class UJobPhoneNumberField extends StatefulWidget {
   final String label;
+  final bool isRequired;
+  final List<Country>? countries;
   final TextEditingController controller;
   final String initialDialCode;
   final ValueChanged<String?>? onCountryCodeChanged;
@@ -77,6 +21,8 @@ class UJobPhoneNumberField extends StatefulWidget {
 
   const UJobPhoneNumberField({
     required this.label,
+    this.isRequired = false,
+    this.countries,
     required this.controller,
     this.initialDialCode = '+44',
     this.onCountryCodeChanged,
@@ -91,20 +37,66 @@ class UJobPhoneNumberField extends StatefulWidget {
 }
 
 class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
-  late _Country _selected;
+  late Country _selected;
   final _focusNode = FocusNode();
   bool _focused = false;
 
   @override
   void initState() {
     super.initState();
-    _selected = _kCountries.firstWhere(
-      (c) => c.dialCode == widget.initialDialCode,
-      orElse: () => _kCountries.first,
+    final fallback = Country(
+      id: 0,
+      name: 'United Kingdom',
+      iso2: 'GB',
+      phoneCode: '44',
+      flag: '🇬🇧',
     );
+    final active = widget.countries != null && widget.countries!.isNotEmpty
+        ? widget.countries!
+        : [fallback];
+
+    String norm = widget.initialDialCode ?? '+44';
+    if (!norm.startsWith('+')) norm = '+' + norm;
+
+    _selected = active.firstWhere((c) {
+      final cDial = c.phoneCode.startsWith('+')
+          ? c.phoneCode
+          : '+' + c.phoneCode;
+      return cDial == norm;
+    }, orElse: () => active.first);
     _focusNode.addListener(() {
       if (mounted) setState(() => _focused = _focusNode.hasFocus);
     });
+  }
+
+  @override
+  void didUpdateWidget(UJobPhoneNumberField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialDialCode != oldWidget.initialDialCode ||
+        widget.countries != oldWidget.countries) {
+      final fallback = Country(
+        id: 0,
+        name: 'United Kingdom',
+        iso2: 'GB',
+        phoneCode: '44',
+        flag: '🇬🇧',
+      );
+      final active = widget.countries != null && widget.countries!.isNotEmpty
+          ? widget.countries!
+          : [fallback];
+
+      String norm = widget.initialDialCode ?? '+44';
+      if (!norm.startsWith('+')) norm = '+' + norm;
+
+      setState(() {
+        _selected = active.firstWhere((c) {
+          final cDial = c.phoneCode.startsWith('+')
+              ? c.phoneCode
+              : '+' + c.phoneCode;
+          return cDial == norm;
+        }, orElse: () => _selected);
+      });
+    }
   }
 
   @override
@@ -122,10 +114,25 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       builder: (ctx) => _CountryPickerSheet(
+        countries: widget.countries != null && widget.countries!.isNotEmpty
+            ? widget.countries!
+            : [
+                Country(
+                  id: 0,
+                  name: 'United Kingdom',
+                  iso2: 'GB',
+                  phoneCode: '44',
+                  flag: '🇬🇧',
+                ),
+              ],
         selected: _selected,
         onSelect: (country) {
           setState(() => _selected = country);
-          widget.onCountryCodeChanged?.call(country.dialCode);
+          widget.onCountryCodeChanged?.call(
+            (country.phoneCode.startsWith('+')
+                ? country.phoneCode
+                : '+' + country.phoneCode),
+          );
           Navigator.pop(ctx);
         },
       ),
@@ -141,7 +148,10 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label.isNotEmpty) ...[
-          Text(widget.label, style: AppText.label.copyWith(color: AppColors.muted)),
+          Text(
+            widget.label,
+            style: AppText.label.copyWith(color: AppColors.muted),
+          ),
           SizedBox(height: 6.h),
         ],
         Container(
@@ -165,14 +175,17 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
                 onTap: () => _showCountryPicker(context),
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14.w,
+                    vertical: 14.h,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(_selected.flag, style: TextStyle(fontSize: 18.sp)),
-                      SizedBox(width: 6.w),
                       Text(
-                        _selected.dialCode,
+                        (_selected.phoneCode.startsWith('+')
+                            ? _selected.phoneCode
+                            : '+' + _selected.phoneCode),
                         style: AppText.bodyBold.copyWith(color: AppColors.text),
                       ),
                       SizedBox(width: 4.w),
@@ -226,10 +239,12 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
 }
 
 class _CountryPickerSheet extends StatefulWidget {
-  final _Country selected;
-  final ValueChanged<_Country> onSelect;
+  final List<Country> countries;
+  final Country selected;
+  final ValueChanged<Country> onSelect;
 
   const _CountryPickerSheet({
+    required this.countries,
     required this.selected,
     required this.onSelect,
   });
@@ -240,7 +255,13 @@ class _CountryPickerSheet extends StatefulWidget {
 
 class _CountryPickerSheetState extends State<_CountryPickerSheet> {
   final _searchCtrl = TextEditingController();
-  List<_Country> _filtered = _kCountries;
+  late List<Country> _filtered;
+
+  @override
+  void initState() {
+    super.initState();
+    _filtered = widget.countries;
+  }
 
   @override
   void dispose() {
@@ -251,10 +272,13 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
   void _onSearch(String q) {
     final query = q.toLowerCase();
     setState(() {
-      _filtered = _kCountries
-          .where((c) =>
-              c.name.toLowerCase().contains(query) ||
-              c.dialCode.contains(query))
+      _filtered = widget.countries
+          .where(
+            (c) =>
+                c.name.toLowerCase().contains(query) ||
+                (c.phoneCode.startsWith('+') ? c.phoneCode : '+' + c.phoneCode)
+                    .contains(query),
+          )
           .toList();
     });
   }
@@ -313,16 +337,20 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                     c.name,
                     style: AppText.body.copyWith(
                       color: isSelected ? AppColors.primary : AppColors.text,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
                     ),
                   ),
                   trailing: Text(
-                    c.dialCode,
+                    (c.phoneCode.startsWith('+')
+                        ? c.phoneCode
+                        : '+' + c.phoneCode),
                     style: AppText.body.copyWith(
                       color: isSelected ? AppColors.primary : AppColors.muted,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
                     ),
                   ),
                   onTap: () => widget.onSelect(c),

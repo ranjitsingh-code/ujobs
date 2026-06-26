@@ -30,6 +30,7 @@ class PostJobState {
   final String salaryMax;
   final String description;
   final String responsibilities;
+  final String requirements;
 
   // Step 2: Requirements
   final String education;
@@ -46,6 +47,8 @@ class PostJobState {
 
   // Step 4: Application
   final String applyVia;
+  final String applicationEmail;
+  final String applicationUrl;
   final String resumeRequirement;
   final String coverLetterRequirement;
   final String deadline;
@@ -68,6 +71,7 @@ class PostJobState {
     this.salaryMax = '',
     this.description = '',
     this.responsibilities = '',
+    this.requirements = '',
     this.education = 'No requirement',
     this.experience = '',
     this.requiredSkills = '',
@@ -77,9 +81,11 @@ class PostJobState {
     this.ageMin = '',
     this.ageMax = '',
     this.benefits = const [],
-    this.applyVia = 'Job Portal',
-    this.resumeRequirement = 'Required',
-    this.coverLetterRequirement = 'Optional',
+    this.applyVia = '',
+    this.applicationEmail = '',
+    this.applicationUrl = '',
+    this.resumeRequirement = '',
+    this.coverLetterRequirement = '',
     this.deadline = '',
     this.screeningQuestions = const [],
   });
@@ -99,6 +105,7 @@ class PostJobState {
     String? salaryMax,
     String? description,
     String? responsibilities,
+    String? requirements,
     String? education,
     String? experience,
     String? requiredSkills,
@@ -109,6 +116,8 @@ class PostJobState {
     String? ageMax,
     List<String>? benefits,
     String? applyVia,
+    String? applicationEmail,
+    String? applicationUrl,
     String? resumeRequirement,
     String? coverLetterRequirement,
     String? deadline,
@@ -129,6 +138,7 @@ class PostJobState {
       salaryMax: salaryMax ?? this.salaryMax,
       description: description ?? this.description,
       responsibilities: responsibilities ?? this.responsibilities,
+      requirements: requirements ?? this.requirements,
       education: education ?? this.education,
       experience: experience ?? this.experience,
       requiredSkills: requiredSkills ?? this.requiredSkills,
@@ -139,6 +149,8 @@ class PostJobState {
       ageMax: ageMax ?? this.ageMax,
       benefits: benefits ?? this.benefits,
       applyVia: applyVia ?? this.applyVia,
+      applicationEmail: applicationEmail ?? this.applicationEmail,
+      applicationUrl: applicationUrl ?? this.applicationUrl,
       resumeRequirement: resumeRequirement ?? this.resumeRequirement,
       coverLetterRequirement:
           coverLetterRequirement ?? this.coverLetterRequirement,

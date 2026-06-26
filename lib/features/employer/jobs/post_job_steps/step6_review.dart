@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/ujob_rich_text_editor.dart';
 import '../../../../core/widgets/ujob_rich_text_display.dart';
+import '../../../../core/providers/job_form_options_provider.dart';
+import '../../../../core/providers/categories_provider.dart';
 import '../post_job_wizard_provider.dart';
 
 class Step6Review extends ConsumerWidget {
@@ -44,6 +45,24 @@ class Step6Review extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(postJobWizardProvider);
+    final optionsAsync = ref.watch(jobFormOptionsProvider);
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final options = optionsAsync.valueOrNull;
+    final categories = categoriesAsync.valueOrNull;
+    
+    if (options == null || categories == null) return const SizedBox();
+
+    String getLabel(List list, String value) {
+      try {
+        return list.firstWhere((e) => e.value == value).label;
+      } catch (_) {
+        return value;
+      }
+    }
+    
+    final categoryName = state.category == 'Other' ? state.customCategory : 
+        (categories.where((c) => c.id.toString() == state.category).firstOrNull?.name ?? state.category);
+
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
@@ -74,7 +93,7 @@ class Step6Review extends ConsumerWidget {
                   '${state.city}${state.city.isNotEmpty && state.country.isNotEmpty ? ', ' : ''}${state.country}',
                 ),
                 _buildSummaryRow('Employment Type', state.employmentType),
-                _buildSummaryRow('Workplace', state.workplaceType),
+                _buildSummaryRow('Workplace', getLabel(options.workplaceTypes, state.workplaceType)),
                 _buildSummaryRow('Vacancies', state.openings),
                 _buildSummaryRow(
                   'Salary',
@@ -82,15 +101,15 @@ class Step6Review extends ConsumerWidget {
                       ? '${state.currency} ${state.salaryMin} - ${state.salaryMax}'
                       : 'Not specified',
                 ),
-                _buildSummaryRow('Min Education', state.education),
+                _buildSummaryRow('Min Education', getLabel(options.minimumEducationLevels, state.education)),
                 if (state.experience.isNotEmpty)
                   _buildSummaryRow('Experience', '${state.experience} years'),
                 if (state.languages.isNotEmpty)
-                  _buildSummaryRow('Languages', state.languages.join(', ')),
+                  _buildSummaryRow('Languages', state.languages.where((e) => e.trim().isNotEmpty).map((e) => e.trim()).join(', ')),
                 if (state.certifications.isNotEmpty)
                   _buildSummaryRow(
                     'Certifications',
-                    state.certifications.join(', '),
+                    state.certifications.where((e) => e.trim().isNotEmpty).map((e) => e.trim()).join(', '),
                   ),
                 if (state.ageMin.isNotEmpty || state.ageMax.isNotEmpty)
                   _buildSummaryRow(
@@ -100,11 +119,13 @@ class Step6Review extends ConsumerWidget {
                 if (state.preferredSkills.isNotEmpty)
                   _buildSummaryRow(
                     'Preferred Skills',
-                    state.preferredSkills.join(', '),
+                    state.preferredSkills.where((e) => e.trim().isNotEmpty).map((e) => e.trim()).join(', '),
                   ),
-                _buildSummaryRow('Apply Via', state.applyVia),
-                _buildSummaryRow('Resume', state.resumeRequirement),
-                _buildSummaryRow('Cover Letter', state.coverLetterRequirement),
+                _buildSummaryRow('Apply Via', getLabel(options.applicationMethods, state.applyVia)),
+                if (state.applyVia == 'email') _buildSummaryRow('Email', state.applicationEmail),
+                if (state.applyVia == 'external') _buildSummaryRow('URL', state.applicationUrl),
+                _buildSummaryRow('Resume', getLabel(options.resumeRequirements, state.resumeRequirement)),
+                _buildSummaryRow('Cover Letter', getLabel(options.coverLetterPolicies, state.coverLetterRequirement)),
                 _buildSummaryRow('Deadline', state.deadline),
               ],
             ),
@@ -157,7 +178,7 @@ class Step6Review extends ConsumerWidget {
           // Description Preview
           if (state.description.isNotEmpty ||
               state.responsibilities.isNotEmpty ||
-              state.requiredSkills.isNotEmpty) ...[
+              state.requirements.isNotEmpty) ...[
             Text('Description Preview', style: AppText.heading3),
             SizedBox(height: 12.h),
             Container(
@@ -182,7 +203,7 @@ class Step6Review extends ConsumerWidget {
                     SizedBox(height: 4.h),
                     UJobRichTextDisplay(content: state.description),
                     if (state.responsibilities.isNotEmpty ||
-                        state.requiredSkills.isNotEmpty)
+                        state.requirements.isNotEmpty)
                       SizedBox(height: 16.h),
                   ],
                   if (state.responsibilities.isNotEmpty) ...[
@@ -195,18 +216,18 @@ class Step6Review extends ConsumerWidget {
                     ),
                     SizedBox(height: 4.h),
                     UJobRichTextDisplay(content: state.responsibilities),
-                    if (state.requiredSkills.isNotEmpty) SizedBox(height: 16.h),
+                    if (state.requirements.isNotEmpty) SizedBox(height: 16.h),
                   ],
-                  if (state.requiredSkills.isNotEmpty) ...[
+                  if (state.requirements.isNotEmpty) ...[
                     Text(
-                      'Required Skills',
+                      'Requirements',
                       style: AppText.bodyMedium.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppColors.text,
                       ),
                     ),
                     SizedBox(height: 4.h),
-                    UJobRichTextDisplay(content: state.requiredSkills),
+                    UJobRichTextDisplay(content: state.requirements),
                   ],
                 ],
               ),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_quill_delta_from_html/flutter_quill_delta_from_html.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -38,6 +39,12 @@ class _UJobRichTextEditorState extends State<UJobRichTextEditor> {
     try {
       return Document.fromJson(jsonDecode(value));
     } catch (e) {
+      if (value.contains('<') && value.contains('>')) {
+        try {
+          final delta = HtmlToDelta().convert(value);
+          return Document.fromDelta(delta);
+        } catch (_) {}
+      }
       final doc = Document();
       doc.insert(0, value);
       return doc;
@@ -186,6 +193,12 @@ String getPlainTextFromQuillJson(String jsonStr) {
     final doc = Document.fromJson(jsonDecode(jsonStr));
     return doc.toPlainText().trim();
   } catch (e) {
+    if (jsonStr.contains('<') && jsonStr.contains('>')) {
+      try {
+        final delta = HtmlToDelta().convert(jsonStr);
+        return Document.fromDelta(delta).toPlainText().trim();
+      } catch (_) {}
+    }
     return jsonStr;
   }
 }

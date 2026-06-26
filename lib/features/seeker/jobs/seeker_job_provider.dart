@@ -1,6 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/job.dart';
+import '../../../core/api/dio_client.dart';
+import 'seeker_job_service.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../../employer/jobs/employer_job_provider.dart';
+
+final seekerJobServiceProvider = Provider((ref) {
+  return SeekerJobService(ref.watch(dioClientProvider));
+});
 
 class JobFilter {
   final String? search;
@@ -221,7 +228,5 @@ final seekerJobDetailProvider = FutureProvider.family<Job, int>((
   ref,
   id,
 ) async {
-  await Future.delayed(const Duration(milliseconds: 300));
-  final allJobs = ref.watch(demoEmployerJobsProvider);
-  return allJobs.firstWhere((j) => j.id == id, orElse: () => allJobs.first);
+  return ref.read(seekerJobServiceProvider).getJobDetails(id);
 });

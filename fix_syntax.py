@@ -1,57 +1,27 @@
 import re
 
-with open('lib/features/employer/company/company_profile_screen.dart', 'r') as f:
+with open('lib/features/employer/dashboard/employer_dashboard_screen.dart', 'r') as f:
     text = f.read()
 
-text = text.replace("bodySm", "caption")
+target = """                                  if (context.mounted) {
+                                    Navigator.pop(ctx);
+                                  }
+                                },
+                              ),
+                            );
+                          } : null,
+                          onDelete: () {"""
 
-old_end = """                  SizedBox(height: 40.h),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }"""
+replacement = """                                  if (context.mounted) {
+                                    Navigator.pop(ctx);
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                          onDelete: () {"""
 
-new_end = """                  SizedBox(height: 40.h),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }"""
+text = text.replace(target, replacement)
 
-# Actually, the original file has:
-#                 ],
-#               ),
-#             ),
-#           ],
-#         ),
-#       ),
-#     );
-
-old_end2 = """                  SizedBox(height: 40.h),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }"""
-
-new_end2 = """                  SizedBox(height: 40.h),
-                ],
-              ),
-            ),
-    );
-  }"""
-
-text = text.replace(old_end2, new_end2)
-
-with open('lib/features/employer/company/company_profile_screen.dart', 'w') as f:
+with open('lib/features/employer/dashboard/employer_dashboard_screen.dart', 'w') as f:
     f.write(text)

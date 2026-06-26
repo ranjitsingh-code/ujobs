@@ -15,6 +15,7 @@ class UJobDropdownField<T> extends StatelessWidget {
   final List<(String label, T value)> options;
   final ValueChanged<T?> onChanged;
   final String? errorText;
+  final bool isRequired;
 
   const UJobDropdownField({
     required this.label,
@@ -23,6 +24,7 @@ class UJobDropdownField<T> extends StatelessWidget {
     this.value,
     this.hint,
     this.errorText,
+    this.isRequired = false,
     super.key,
   });
 
@@ -255,11 +257,13 @@ class UJobCountryDropdown extends ConsumerWidget {
   final String? value;
   final ValueChanged<String?> onChanged;
   final String? errorText;
+  final bool isRequired;
 
   const UJobCountryDropdown({
     required this.onChanged,
     this.value,
     this.errorText,
+    this.isRequired = false,
     super.key,
   });
 
@@ -271,8 +275,9 @@ class UJobCountryDropdown extends ConsumerWidget {
     return countriesAsync.when(
       data: (countries) {
         return UJobDropdownField<String>(
-          label: l10n.country,
+          label: l10n.country ?? '',
           hint: l10n.countryHint,
+          isRequired: isRequired,
           value: value,
           errorText: errorText,
           onChanged: onChanged,
@@ -282,7 +287,7 @@ class UJobCountryDropdown extends ConsumerWidget {
         );
       },
       loading: () => UJobDropdownField<String>(
-        label: l10n.country,
+        label: l10n.country ?? '',
         hint: 'Loading countries...',
         value: value,
         errorText: errorText,
@@ -290,7 +295,7 @@ class UJobCountryDropdown extends ConsumerWidget {
         options: const [],
       ),
       error: (_, __) => UJobDropdownField<String>(
-        label: l10n.country,
+        label: l10n.country ?? '',
         hint: 'Failed to load countries',
         value: value,
         errorText: errorText,

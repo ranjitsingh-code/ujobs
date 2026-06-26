@@ -1,97 +1,55 @@
-with open('lib/core/models/company_profile.dart', 'r') as f:
-    text = f.read()
+import re
 
-new_model = """class CompanyProfile {
-  final String id;
-  final String name;
-  final String? logo;
-  final String? industry;
-  final String? size;
-  final String? workType;
-  final String? website;
-  final String? description;
-  final String? contactPersonName;
-  final String? contactEmail;
-  final String? contactPhone;
-  final bool showContactInfo;
-  final String? address;
-  final String? city;
-  final String? postcode;
-  final String? country;
-  final String? linkedInUrl;
-  final String? facebookUrl;
-  
-  final int activeJobs;
-  final int applicants;
+with open("lib/core/models/company_profile.dart", "r") as f:
+    content = f.read()
 
-  const CompanyProfile({
-    required this.id,
-    required this.name,
-    this.logo,
-    this.industry,
-    this.size,
-    this.workType,
-    this.website,
-    this.description,
-    this.contactPersonName,
-    this.contactEmail,
-    this.contactPhone,
-    this.showContactInfo = false,
-    this.address,
-    this.city,
-    this.postcode,
-    this.country,
-    this.linkedInUrl,
-    this.facebookUrl,
-    this.activeJobs = 0,
-    this.applicants = 0,
-  });
+# Add profileStatus
+content = content.replace("final String? industryCategoryId;\n", "final String? industryCategoryId;\n  final int profileStatus;\n")
+content = content.replace("this.industryCategoryId,\n", "this.industryCategoryId,\n    this.profileStatus = 0,\n")
+content = content.replace("id: json['id']?.toString() ?? '',\n", "id: json['id']?.toString() ?? '',\n      profileStatus: json['profile_status'] is int ? json['profile_status'] : int.tryParse(json['profile_status']?.toString() ?? '0') ?? 0,\n")
 
-  CompanyProfile copyWith({
-    String? name,
-    String? logo,
-    String? industry,
-    String? size,
-    String? workType,
-    String? website,
-    String? description,
-    String? contactPersonName,
-    String? contactEmail,
-    String? contactPhone,
-    bool? showContactInfo,
-    String? address,
-    String? city,
-    String? postcode,
-    String? country,
-    String? linkedInUrl,
-    String? facebookUrl,
-  }) {
-    return CompanyProfile(
-      id: id,
-      name: name ?? this.name,
-      logo: logo ?? this.logo,
-      industry: industry ?? this.industry,
-      size: size ?? this.size,
-      workType: workType ?? this.workType,
-      website: website ?? this.website,
-      description: description ?? this.description,
-      contactPersonName: contactPersonName ?? this.contactPersonName,
-      contactEmail: contactEmail ?? this.contactEmail,
-      contactPhone: contactPhone ?? this.contactPhone,
-      showContactInfo: showContactInfo ?? this.showContactInfo,
-      address: address ?? this.address,
-      city: city ?? this.city,
-      postcode: postcode ?? this.postcode,
-      country: country ?? this.country,
-      linkedInUrl: linkedInUrl ?? this.linkedInUrl,
-      facebookUrl: facebookUrl ?? this.facebookUrl,
-      activeJobs: activeJobs,
-      applicants: applicants,
-    );
-  }
-}
-"""
+with open("lib/core/models/company_profile.dart", "w") as f:
+    f.write(content)
 
-text = new_model
-with open('lib/core/models/company_profile.dart', 'w') as f:
-    f.write(text)
+with open("lib/features/employer/dashboard/employer_dashboard_provider.dart", "r") as f:
+    content2 = f.read()
+
+provider_old = """final companyProfileCompletenessProvider = Provider<double>((ref) {
+  final profile = ref.watch(companyProfileProvider);
+  int filled = 0;
+  int total = 16;
+
+  if (profile.name.isNotEmpty) filled++;
+  if (profile.logo != null && profile.logo!.isNotEmpty) filled++;
+  if (profile.industry != null && profile.industry!.isNotEmpty) filled++;
+  if (profile.description != null && profile.description!.isNotEmpty) filled++;
+  if (profile.website != null && profile.website!.isNotEmpty) filled++;
+  if (profile.contactPersonName != null &&
+      profile.contactPersonName!.isNotEmpty)
+    filled++;
+  if (profile.contactEmail != null && profile.contactEmail!.isNotEmpty)
+    filled++;
+  if (profile.contactPhone != null && profile.contactPhone!.isNotEmpty)
+    filled++;
+  if (profile.address != null && profile.address!.isNotEmpty) filled++;
+  if (profile.city != null && profile.city!.isNotEmpty) filled++;
+  if (profile.postcode != null && profile.postcode!.isNotEmpty) filled++;
+  if (profile.country != null && profile.country!.isNotEmpty) filled++;
+  if (profile.size != null && profile.size!.isNotEmpty) filled++;
+  if (profile.workType != null && profile.workType!.isNotEmpty) filled++;
+  if (profile.linkedInUrl != null && profile.linkedInUrl!.isNotEmpty) filled++;
+  if (profile.facebookUrl != null && profile.facebookUrl!.isNotEmpty) filled++;
+
+  return filled / total.toDouble();
+});"""
+
+provider_new = """final companyProfileCompletenessProvider = Provider<double>((ref) {
+  final profile = ref.watch(companyProfileProvider);
+  return profile.profileStatus / 100.0;
+});"""
+
+content2 = content2.replace(provider_old, provider_new)
+
+with open("lib/features/employer/dashboard/employer_dashboard_provider.dart", "w") as f:
+    f.write(content2)
+

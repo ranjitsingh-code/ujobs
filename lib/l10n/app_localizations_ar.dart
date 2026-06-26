@@ -505,11 +505,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resetPasswordTitle => 'إعادة تعيين كلمة المرور';
 
   @override
-  String get resetPasswordSub =>
-      'أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين';
+  String get resetPasswordSub => 'أدخل بريدك الإلكتروني وسنرسل لك رمز التحقق';
 
   @override
   String get sendResetLink => 'إرسال رابط الإعادة';
+
+  @override
+  String get sendOtpBtn => 'إرسال رمز التحقق';
 
   @override
   String get errorEnterEmail => 'أدخل عنوان بريدك الإلكتروني';
@@ -1002,6 +1004,42 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get otpErrorInvalid => 'تم إدخال رمز غير صالح.';
+
+  @override
+  String get auditLog => 'سجل التدقيق';
+
+  @override
+  String get auditLogSubtitle => 'مراجعة أمان حسابك وأحداث تسجيل الدخول';
+
+  @override
+  String get ipAddress => 'عنوان IP';
+
+  @override
+  String get deviceBrowser => 'الجهاز / المتصفح';
+
+  @override
+  String get noAuditLogs => 'لم يتم العثور على سجلات.';
+
+  @override
+  String get walletAndBilling => 'المحفظة والفواتير';
+
+  @override
+  String get walletBalance => 'رصيد المحفظة';
+
+  @override
+  String get transactions => 'المعاملات';
+
+  @override
+  String get paymentHistory => 'سجل الدفع';
+
+  @override
+  String get invoice => 'الفاتورة';
+
+  @override
+  String get noTransactions => 'لا توجد معاملات.';
+
+  @override
+  String get noPayments => 'لا يوجد سجل دفع.';
 
   @override
   String get changePassword => 'تغيير كلمة المرور';

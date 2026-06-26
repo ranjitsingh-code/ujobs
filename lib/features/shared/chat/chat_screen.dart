@@ -1,3 +1,5 @@
+import 'package:go_router/go_router.dart';
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,10 +19,7 @@ import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_pdf_viewer.dart';
-import '../../../core/widgets/ujob_pdf_viewer_screen.dart';
-import '../../../core/widgets/ujob_snack_bar.dart';
 import '../../../core/providers/role_provider.dart';
-import '../../employer/applicants/applicant_detail_screen.dart';
 import 'conversation_provider.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
 
@@ -355,13 +354,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           onTap: () {
             final isEmployer = ref.read(activeRoleProvider.notifier).isEmployer;
             if (isEmployer) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      ApplicantDetailScreen(applicantId: widget.otherId),
-                ),
-              );
+              context.push('/employer/applicants/${widget.otherId}');
             } else {
               _showUserDetailsSheet();
             }

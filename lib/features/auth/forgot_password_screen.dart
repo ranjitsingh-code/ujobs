@@ -12,8 +12,10 @@ import '../../core/widgets/ujob_auth_header.dart';
 import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_text_field.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import '../../core/widgets/ujob_toast.dart';
 
 import '../../core/utils/l10n_extensions.dart';
+import '../../core/utils/api_error_parser.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -97,15 +99,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
           _loading = false;
           _sent = true;
         });
+        UJobToast.success(context, 'Success', sub: 'OTP has been sent to your email.');
         _successCtrl.forward();
       }
     } on DioException catch (e) {
       if (mounted) {
         setState(() {
           _loading = false;
-          _error = e.response?.data is Map 
-              ? (e.response!.data['error']?['message'] ?? 'A network error occurred.') 
-              : 'A network error occurred.';
+          _error = parseApiError(e);
         });
       }
     } catch (e) {
@@ -124,12 +125,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     final newPass = _newPassCtrl.text;
 
     if (code.isEmpty || newPass.isEmpty) {
-      EasyLoading.showError(context.l10n.errorRequiredField);
+      UJobToast.error(context, 'Error', sub: context.l10n.errorRequiredField);
       return;
     }
 
     FocusManager.instance.primaryFocus?.unfocus();
-    EasyLoading.show(status: 'Resetting Password...');
+    setState(() => _loading = true);
 
     try {
       final dio = ref.read(dioClientProvider).dio;
@@ -144,21 +145,23 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
       final rawData = res.data as Map<String, dynamic>;
       if (rawData['success'] == false) {
-        EasyLoading.showError(rawData['error']?['message']?.toString() ?? 'Failed to reset password.');
+        if (mounted) setState(() => _loading = false);
+        UJobToast.error(context, 'Reset Failed', sub: rawData['error']?['message']?.toString() ?? 'Failed to reset password.');
         return;
       }
 
-      EasyLoading.showSuccess('Password reset successfully!');
+      if (mounted) setState(() => _loading = false);
+      UJobToast.success(context, 'Success', sub: 'Password reset successfully!');
       if (mounted) {
         context.go('/login');
       }
     } on DioException catch (e) {
-      final msg = e.response?.data is Map 
-          ? (e.response!.data['error']?['message'] ?? 'A network error occurred.') 
-          : 'A network error occurred.';
-      EasyLoading.showError(msg);
+      final msg = parseApiError(e); 
+      if (mounted) setState(() => _loading = false);
+      UJobToast.error(context, 'Error', sub: msg);
     } catch (e) {
-      EasyLoading.showError('An unexpected error occurred.');
+      if (mounted) setState(() => _loading = false);
+      UJobToast.error(context, 'Error', sub: 'An unexpected error occurred.');
     }
   }
 
@@ -179,6 +182,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                     email: _emailCtrl.text.trim(),
                     codeCtrl: _codeCtrl,
                     newPassCtrl: _newPassCtrl,
+                    loading: _loading,
                     onBack: () => setState(() => _sent = false),
                     onSubmit: _submitReset,
                     ctrl: _successCtrl,
@@ -243,7 +247,7 @@ class _FormView extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
         UJobButton(
-          label: l10n.sendResetLink,
+          label: l10n.sendOtpBtn,
           onTap: onSubmit,
           isLoading: loading,
         ),
@@ -256,6 +260,7 @@ class _FormView extends StatelessWidget {
 class _ResetView extends StatelessWidget {
   final String email;
   final TextEditingController codeCtrl, newPassCtrl;
+  final bool loading;
   final VoidCallback onBack, onSubmit;
   final AnimationController ctrl;
   final Animation<double> scale, fade;
@@ -265,6 +270,7 @@ class _ResetView extends StatelessWidget {
     required this.email,
     required this.codeCtrl,
     required this.newPassCtrl,
+    required this.loading,
     required this.onBack,
     required this.onSubmit,
     required this.ctrl,
@@ -308,7 +314,11 @@ class _ResetView extends StatelessWidget {
             isRequired: true,
           ),
           SizedBox(height: 24.h),
-          UJobButton(label: 'Reset Password', onTap: onSubmit),
+          UJobButton(
+            label: l10n.resetPasswordTitle, 
+            onTap: onSubmit,
+            isLoading: loading,
+          ),
           SizedBox(height: 24.h),
         ],
       ),

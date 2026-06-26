@@ -13,6 +13,7 @@ import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_checkbox.dart';
 import '../../core/widgets/ujob_logo.dart';
 import '../../core/widgets/ujob_text_field.dart';
+import '../../core/widgets/ujob_toast.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final String initialRole;
@@ -28,6 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _passwordCtrl = TextEditingController();
   late String _role;
   bool _rememberMe = false;
+  bool _loading = false;
 
   late final AnimationController _seqCtrl;
   late final Animation<double> _cardFade;
@@ -88,8 +90,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     } else {
       if (mounted) {
         setState(() {
-          _emailCtrl.text = 'john.doe@example.com';
-          _passwordCtrl.text = 'SecurePass123!';
+          _emailCtrl.text = _role == 'employer'
+              ? 'nexoviasolutions@gmail.com'
+              : 'mdazadhossain95@gmail.com';
+          _passwordCtrl.text = 'Azad613051@';
         });
       }
     }
@@ -128,16 +132,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     // Dismiss keyboard
     FocusManager.instance.primaryFocus?.unfocus();
 
-    EasyLoading.show(status: 'Logging in...');
+    setState(() => _loading = true);
     final (result, userId) = await ref
         .read(authProvider.notifier)
         .login(_emailCtrl.text.trim(), _passwordCtrl.text, _role);
-    EasyLoading.dismiss();
+        
+    if (mounted) setState(() => _loading = false);
 
     if (!mounted) return;
 
     switch (result) {
       case LoginResult.success:
+        UJobToast.success(
+          context,
+          'Login Successful',
+          sub: 'Welcome back!',
+        );
         final storage = ref.read(secureStorageProvider);
         if (_rememberMe) {
           await storage.saveRememberMe(_emailCtrl.text.trim(), _passwordCtrl.text);
@@ -166,13 +176,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         break;
 
       case LoginResult.suspended:
-        setState(() {
-          _passError = 'Account suspended or pending verification.';
-        });
+        if (mounted) context.go('/suspended');
+        break;
+
+      case LoginResult.locked:
+        UJobToast.error(context, 'Account Locked', sub: userId ?? 'Too many failed attempts.');
+        if (mounted) context.go('/locked', extra: userId);
         break;
 
       case LoginResult.error:
-        EasyLoading.showError(userId ?? 'A network error occurred. Please try again.');
+        UJobToast.error(context, 'Login Failed', sub: userId ?? 'A network error occurred. Please try again.');
         break;
     }
   }
@@ -277,8 +290,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                     currentEmail == 'mdazadhossain95@gmail.com' ||
                                     currentEmail == 'nexoviasolutions@gmail.com' ||
                                     currentEmail == 'john.doe@example.com') {
-                                  _emailCtrl.text = 'john.doe@example.com';
-                                  _passwordCtrl.text = 'SecurePass123!';
+                                  _emailCtrl.text = r == 'employer'
+                                      ? 'nexoviasolutions@gmail.com'
+                                      : 'mdazadhossain95@gmail.com';
+                                  _passwordCtrl.text = 'Azad613051@';
                                 }
                               });
                             },
@@ -343,7 +358,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   ],
                                 ),
                                 SizedBox(height: 16.h),
-                                UJobButton(label: l10n.logIn, onTap: _login),
+                                UJobButton(label: l10n.logIn, onTap: _login, isLoading: _loading),
                               ],
                             ),
                           ),

@@ -15,12 +15,19 @@ import '../../../core/widgets/ujob_rich_text_editor.dart';
 import '../../../core/widgets/ujob_rich_text_display.dart';
 import '../../../core/utils/job_action_helpers.dart';
 import '../../../core/models/job.dart';
+import '../../../core/widgets/ujob_toast.dart';
+import '../dashboard/employer_dashboard_provider.dart';
+import 'package:dio/dio.dart';
+import '../../../core/utils/api_error_parser.dart';
 import 'employer_job_provider.dart';
+import '../../../core/providers/feature_flags_provider.dart';
+
 import 'post_job_screen.dart';
 
 class EmployerJobDetailScreen extends ConsumerWidget {
   final int jobId;
-  const EmployerJobDetailScreen({required this.jobId, super.key});
+  final Job? jobData;
+  const EmployerJobDetailScreen({required this.jobId, this.jobData, super.key});
 
   Widget _buildSummaryRow(String label, String value) {
     if (value.isEmpty) return const SizedBox.shrink();
@@ -54,6 +61,11 @@ class EmployerJobDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final jobAsync = ref.watch(employerJobDetailProvider(jobId));
+    final featureFlags = ref.watch(featureFlagsProvider);
+    final bool jobApprovalRequired = featureFlags.maybeWhen(
+      data: (flags) => flags.jobApprovalRequired,
+      orElse: () => false,
+    );
 
     return Scaffold(
       appBar: UJobAppBar(title: 'Job Details', rightWidget: null),
@@ -63,9 +75,18 @@ class EmployerJobDetailScreen extends ConsumerWidget {
           message: 'Failed to load job details',
           onRetry: () => ref.refresh(employerJobDetailProvider(jobId)),
         ),
-        data: (job) => ListView(
-          padding: AppSpacing.pagePad,
-          children: [
+        data: (job) => RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            ref.invalidate(employerJobDetailProvider(jobId));
+            try {
+              await ref.read(employerJobDetailProvider(jobId).future);
+            } catch (_) {}
+          },
+          child: ListView(
+            padding: AppSpacing.pagePad,
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
             Text(job.title, style: AppText.heading2),
             SizedBox(height: 8.h),
             Row(children: [_StatusBadge(status: job.status.name)]),
@@ -94,9 +115,11 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                   if (job.salaryMin != null)
                     _buildSummaryRow(
                       'Salary',
-                      job.salaryMax != null
+                      (job.salaryMax != null
                           ? '${job.salaryMin} - ${job.salaryMax}'
-                          : job.salaryMin!,
+                          : job.salaryMin!) +
+                          (job.salaryCurrency != null ? ' ${job.salaryCurrency}' : '') +
+                          (job.salaryPeriod != null ? ' / ${job.salaryPeriod}' : ''),
                     ),
                   if (job.experienceLevel != null &&
                       job.experienceLevel!.isNotEmpty)
@@ -106,8 +129,7 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                     ),
                   if (job.education != null)
                     _buildSummaryRow('Min Education', job.education!),
-                  if (job.languages != null && job.languages!.isNotEmpty)
-                    _buildSummaryRow('Languages', job.languages!.join(', ')),
+
                   if (job.certifications != null &&
                       job.certifications!.isNotEmpty)
                     _buildSummaryRow(
@@ -119,12 +141,7 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                       'Age Limit',
                       '${job.ageMin ?? 'Any'} - ${job.ageMax ?? 'Any'}',
                     ),
-                  if (job.preferredSkills != null &&
-                      job.preferredSkills!.isNotEmpty)
-                    _buildSummaryRow(
-                      'Preferred Skills',
-                      job.preferredSkills!.join(', '),
-                    ),
+
                   if (job.applyVia != null)
                     _buildSummaryRow('Apply Via', job.applyVia!),
                   if (job.resumeRequirement != null)
@@ -245,6 +262,83 @@ class EmployerJobDetailScreen extends ConsumerWidget {
               ),
               SizedBox(height: 32.h),
             ],
+            if (job.preferredSkills != null && job.preferredSkills!.isNotEmpty) ...[
+              Text('Preferred Skills', style: AppText.heading3),
+              SizedBox(height: 12.h),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(color: AppColors.borderLight),
+                ),
+                child: Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: job.preferredSkills!
+                      .map(
+                        (s) => Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 6.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: AppRadius.pill,
+                          ),
+                          child: Text(
+                            s,
+                            style: AppText.bodyMedium.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              SizedBox(height: 24.h),
+            ],
+
+            if (job.languages != null && job.languages!.isNotEmpty) ...[
+              Text('Languages Required', style: AppText.heading3),
+              SizedBox(height: 12.h),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14.r),
+                  border: Border.all(color: AppColors.borderLight),
+                ),
+                child: Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: job.languages!
+                      .map(
+                        (l) => Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 6.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: AppRadius.pill,
+                          ),
+                          child: Text(
+                            l,
+                            style: AppText.bodyMedium.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+              SizedBox(height: 24.h),
+            ],
 
             if (job.screeningQuestions != null &&
                 job.screeningQuestions!.isNotEmpty) ...[
@@ -275,7 +369,7 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                             : 12.h,
                       ),
                       child: Text(
-                        '${idx + 1}. ${q['text']}',
+                        '${idx + 1}. ${q['question_text'] ?? q['text'] ?? q['question'] ?? 'Unknown'}',
                         style: AppText.bodyMedium.copyWith(
                           color: AppColors.text,
                         ),
@@ -288,7 +382,7 @@ class EmployerJobDetailScreen extends ConsumerWidget {
             ],
 
             // 1. PRIMARY ACTIONS
-            if (job.status == JobStatus.draft) ...[
+            if (!jobApprovalRequired && job.status == JobStatus.draft) ...[
               UJobButton(
                 label: context.l10n.publishJob1,
                 icon: HugeIcon(
@@ -299,9 +393,19 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                 onTap: () {
                   JobActionHelpers.confirmPublish(
                     context,
-                    () => ref
-                        .read(demoEmployerJobsProvider.notifier)
-                        .updateStatus(job.id, JobStatus.active),
+                    () async {
+                      try {
+                        await ref.read(employerJobServiceProvider).updateJobStatus(job.id, JobStatus.active.name);
+                        ref.invalidate(employerJobsProvider);
+                        ref.invalidate(employerDashboardProvider);
+                        ref.invalidate(employerJobDetailProvider(jobId));
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        if (context.mounted) UJobToast.error(context, 'Error', sub: e is DioException ? parseApiError(e) : 'Failed to publish job');
+                      }
+                    },
                   );
                 },
               ),
@@ -328,7 +432,7 @@ class EmployerJobDetailScreen extends ConsumerWidget {
             ],
 
             // 2. SECONDARY ACTIONS (Resume, Re-open)
-            if (job.status == JobStatus.paused) ...[
+            if (!jobApprovalRequired && job.status == JobStatus.paused) ...[
               UJobButton(
                 label: context.l10n.republishJob,
                 outlined: true,
@@ -341,15 +445,25 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                 onTap: () {
                   JobActionHelpers.confirmResume(
                     context,
-                    () => ref
-                        .read(demoEmployerJobsProvider.notifier)
-                        .updateStatus(job.id, JobStatus.active),
+                    () async {
+                      try {
+                        await ref.read(employerJobServiceProvider).updateJobStatus(job.id, JobStatus.active.name);
+                        ref.invalidate(employerJobsProvider);
+                        ref.invalidate(employerDashboardProvider);
+                        if (context.mounted) {
+                          UJobToast.success(context, 'Success', sub: 'Job republished');
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        if (context.mounted) UJobToast.error(context, 'Error', sub: e is DioException ? parseApiError(e) : 'Failed to republish job');
+                      }
+                    },
                   );
                 },
               ),
               SizedBox(height: 12.h),
             ],
-            if (job.status == JobStatus.closed) ...[
+            if (!jobApprovalRequired && job.status == JobStatus.closed) ...[
               UJobButton(
                 label: context.l10n.reopenJob1,
                 outlined: true,
@@ -362,9 +476,19 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                 onTap: () {
                   JobActionHelpers.confirmReopen(
                     context,
-                    () => ref
-                        .read(demoEmployerJobsProvider.notifier)
-                        .updateStatus(job.id, JobStatus.active),
+                    () async {
+                      try {
+                        await ref.read(employerJobServiceProvider).updateJobStatus(job.id, JobStatus.active.name);
+                        ref.invalidate(employerJobsProvider);
+                        ref.invalidate(employerDashboardProvider);
+                        if (context.mounted) {
+                          UJobToast.success(context, 'Success', sub: 'Job reopened');
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        if (context.mounted) UJobToast.error(context, 'Error', sub: e is DioException ? parseApiError(e) : 'Failed to reopen job');
+                      }
+                    },
                   );
                 },
               ),
@@ -414,9 +538,19 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                 onTap: () {
                   JobActionHelpers.confirmPause(
                     context,
-                    () => ref
-                        .read(demoEmployerJobsProvider.notifier)
-                        .updateStatus(job.id, JobStatus.paused),
+                    () async {
+                      try {
+                        await ref.read(employerJobServiceProvider).updateJobStatus(job.id, JobStatus.paused.name);
+                        ref.invalidate(employerJobsProvider);
+                        ref.invalidate(employerDashboardProvider);
+                        if (context.mounted) {
+                          UJobToast.success(context, 'Success', sub: 'Job paused');
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        if (context.mounted) UJobToast.error(context, 'Error', sub: e is DioException ? parseApiError(e) : 'Failed to pause job');
+                      }
+                    },
                   );
                 },
               ),
@@ -424,17 +558,14 @@ class EmployerJobDetailScreen extends ConsumerWidget {
             ],
 
             // 5. DESTRUCTIVE ACTIONS
-            if (job.status == JobStatus.active ||
-                job.status == JobStatus.paused ||
-                job.status == JobStatus.pending ||
-                job.status == JobStatus.draft) ...[
+            if (job.status != JobStatus.closed && job.status != JobStatus.rejected) ...[
               UJobButton(
                 label: context.l10n.closeJob1,
                 outlined: true,
-                color: AppColors.error,
+                color: AppColors.text,
                 icon: HugeIcon(
                   icon: HugeIcons.strokeRoundedAlert02,
-                  color: AppColors.error,
+                  color: AppColors.text,
                   size: 20.r,
                 ),
                 onTap: () {
@@ -443,30 +574,39 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                     builder: (ctx) => UJobAlertDialog(
                       icon: HugeIcon(
                         icon: HugeIcons.strokeRoundedAlert02,
-                        color: AppColors.error,
+                        color: AppColors.text,
                         size: 32.r,
                       ),
-                      iconBgColor: AppColors.error,
+                      iconBgColor: AppColors.text,
                       title: 'Close Job',
                       description:
                           'Are you sure you want to close this job? You will no longer receive new applications.',
                       cancelText: 'Cancel',
                       confirmText: 'Close Job',
-                      onConfirm: () {
-                        ref
-                            .read(demoEmployerJobsProvider.notifier)
-                            .updateStatus(jobId, JobStatus.closed);
-                        Navigator.pop(ctx);
-                        Navigator.pop(context);
+                      onConfirm: () async {
+                        try {
+                          await ref.read(employerJobServiceProvider).updateJobStatus(jobId, JobStatus.closed.name);
+                          ref.invalidate(employerJobsProvider);
+                          ref.invalidate(employerDashboardProvider);
+                          if (context.mounted) {
+                            Navigator.pop(ctx);
+                            Navigator.pop(context);
+                            UJobToast.success(context, 'Success', sub: 'Job closed');
+                          }
+                        } catch (e) {
+                            if (context.mounted) {
+                              Navigator.pop(ctx);
+                              UJobToast.error(context, 'Error', sub: e is DioException ? parseApiError(e) : 'Failed to close job');
+                            }
+                          }
                       },
                     ),
                   );
                 },
               ),
+              SizedBox(height: 12.h),
             ],
-            if (job.status == JobStatus.closed ||
-                job.status == JobStatus.rejected) ...[
-              UJobButton(
+            UJobButton(
                 label: context.l10n.deleteJob,
                 outlined: true,
                 color: AppColors.error,
@@ -489,18 +629,32 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                       description:
                           'Are you sure you want to permanently delete this job?',
                       cancelText: 'Cancel',
-                      confirmText: 'Delete',
-                      onConfirm: () {
-                        Navigator.pop(ctx);
-                        Navigator.pop(context);
+                      confirmText: 'Delete Job',
+                      confirmColor: AppColors.error,
+                      onConfirm: () async {
+                        try {
+                          await ref.read(employerJobServiceProvider).deleteJob(job.id);
+                          ref.invalidate(employerJobsProvider);
+                          ref.invalidate(employerDashboardProvider);
+                          if (context.mounted) {
+                            Navigator.pop(ctx);
+                            Navigator.pop(context);
+                            UJobToast.success(context, 'Success', sub: 'Job deleted');
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            Navigator.pop(ctx);
+                            UJobToast.error(context, 'Error', sub: e is DioException ? parseApiError(e) : 'Failed to delete job');
+                          }
+                        }
                       },
                     ),
                   );
                 },
               ),
-            ],
           ],
         ),
+      ),
       ),
     );
   }

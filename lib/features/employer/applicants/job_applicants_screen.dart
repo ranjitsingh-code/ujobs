@@ -1,3 +1,6 @@
+import 'package:go_router/go_router.dart';
+
+import "../../../core/widgets/ujob_loading.dart";
 import 'package:flutter/material.dart';
 import '../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,12 +63,17 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final allApplicants = ref.watch(employerApplicantsProvider);
+    final applicantsAsync = ref.watch(jobApplicantsProvider(widget.job.id));
 
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: const UJobAppBar(title: 'View Applicants'),
-      body: NestedScrollView(
+      body: applicantsAsync.when(
+        loading: () => const Center(child: UJobSpinner()),
+        error: (error, _) => Center(child: Text('Error loading applicants')),
+        data: (fetchedApplicants) {
+          final allApplicants = fetchedApplicants.map((a) => a.copyWith(targetJobTitle: widget.job.title)).toList();
+          return NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverToBoxAdapter(
@@ -91,25 +99,6 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen>
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            if (widget.job.location != null &&
-                                widget.job.location!.isNotEmpty) ...[
-                              SizedBox(width: 8.w),
-                              Container(
-                                width: 4.w,
-                                height: 4.h,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.muted,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              SizedBox(width: 8.w),
-                              Text(
-                                widget.job.location!,
-                                style: AppText.body.copyWith(
-                                  color: AppColors.muted,
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ],
@@ -172,15 +161,14 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen>
         body: TabBarView(
           controller: _tabController,
           children: _tabs.map((tab) {
-            // Filter applicants by job, tab and search query
+            // Filter applicants by tab and search query
             final filtered = allApplicants.where((a) {
-              final matchesJob = a.targetJobTitle == widget.job.title;
               final matchesTab =
                   tab == 'All' || a.status.toLowerCase() == tab.toLowerCase();
               final matchesSearch =
                   _searchQuery.isEmpty ||
                   a.name.toLowerCase().contains(_searchQuery);
-              return matchesJob && matchesTab && matchesSearch;
+              return matchesTab && matchesSearch;
             }).toList();
 
             if (filtered.isEmpty) {
@@ -226,19 +214,15 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen>
                 return UJobApplicantCard(
                   applicant: applicant,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ApplicantDetailScreen(applicantId: applicant.id),
-                      ),
-                    );
+                    context.push('/employer/applicants/${applicant.id}');
                   },
                 );
               },
             );
           }).toList(),
         ),
+      );
+      },
       ),
     );
   }

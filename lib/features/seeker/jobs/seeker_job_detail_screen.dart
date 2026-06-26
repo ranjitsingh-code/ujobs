@@ -431,17 +431,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                             children: [
                               Text('Job Description', style: AppText.heading3),
                               SizedBox(height: 12.h),
-                              job.description!.startsWith('{')
-                                  ? UJobRichTextDisplay(
-                                      content: job.description!,
-                                    )
-                                  : Text(
-                                      job.description!,
-                                      style: AppText.body.copyWith(
-                                        color: AppColors.text2,
-                                        height: 1.5,
-                                      ),
-                                    ),
+                              UJobRichTextDisplay(content: job.description!),
                             ],
                           ),
                         ),
@@ -517,7 +507,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                         ),
                                         Expanded(
                                           child: Text(
-                                            q['question'] ?? '',
+                                            q['question_text'] ?? q['text'] ?? q['question'] ?? '',
                                             style: AppText.body.copyWith(
                                               color: AppColors.text,
                                             ),
@@ -628,13 +618,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                   style: AppText.heading3,
                                 ),
                                 SizedBox(height: 12.h),
-                                Text(
-                                  job.responsibilities!,
-                                  style: AppText.body.copyWith(
-                                    color: AppColors.text2,
-                                    height: 1.5,
-                                  ),
-                                ),
+                                UJobRichTextDisplay(content: job.responsibilities!),
                               ],
                             ),
                           ),
@@ -656,13 +640,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                   style: AppText.heading3,
                                 ),
                                 SizedBox(height: 12.h),
-                                Text(
-                                  job.requiredSkills!,
-                                  style: AppText.body.copyWith(
-                                    color: AppColors.text2,
-                                    height: 1.5,
-                                  ),
-                                ),
+                                UJobRichTextDisplay(content: job.requiredSkills!),
                               ],
                             ),
                           ),

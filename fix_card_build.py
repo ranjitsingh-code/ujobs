@@ -1,0 +1,16 @@
+import re
+
+with open('lib/core/widgets/ujob_employer_job_card.dart', 'r') as f:
+    text = f.read()
+
+pat_stat = r"@override\n  Widget build\(BuildContext context, WidgetRef ref\) \{\n    final featureFlags = ref.watch\(featureFlagsProvider\);\n    final bool jobApprovalRequired = featureFlags.maybeWhen\(\n      data: \(flags\) => flags.jobApprovalRequired,\n      orElse: \(\) => false,\n    \);\n    return Row\("
+rep_stat = r"@override\n  Widget build(BuildContext context) {\n    return Row("
+text = re.sub(pat_stat, rep_stat, text)
+
+pat_action = r"@override\n  Widget build\(BuildContext context, WidgetRef ref\) \{\n    final featureFlags = ref.watch\(featureFlagsProvider\);\n    final bool jobApprovalRequired = featureFlags.maybeWhen\(\n      data: \(flags\) => flags.jobApprovalRequired,\n      orElse: \(\) => false,\n    \);\n    return Expanded\("
+rep_action = r"@override\n  Widget build(BuildContext context) {\n    return Expanded("
+text = re.sub(pat_action, rep_action, text)
+
+with open('lib/core/widgets/ujob_employer_job_card.dart', 'w') as f:
+    f.write(text)
+

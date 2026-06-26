@@ -3,12 +3,14 @@ import '../../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/widgets/ujob_text_field.dart';
+import '../../../../core/widgets/ujob_loading.dart';
 import '../../../../core/widgets/ujob_dropdown_field.dart';
 import '../../../../core/widgets/ujob_autocomplete_tag_input.dart';
 import '../../../../core/widgets/ujob_rich_text_editor.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/providers/job_form_options_provider.dart';
 import '../post_job_wizard_provider.dart';
 
 class Step2Requirements extends ConsumerWidget {
@@ -18,6 +20,14 @@ class Step2Requirements extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(postJobWizardProvider);
     final notifier = ref.read(postJobWizardProvider.notifier);
+    
+    final optionsAsync = ref.watch(jobFormOptionsProvider);
+    final options = optionsAsync.valueOrNull;
+    
+    if (options == null) {
+      return UJobLoading(count: 3);
+    }
+
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
@@ -26,14 +36,8 @@ class Step2Requirements extends ConsumerWidget {
         children: [
           UJobDropdownField<String>.simple(
             label: context.l10n.minimumEducation,
-            value: state.education,
-            options: const [
-              ('No requirement', 'No requirement'),
-              ('High School', 'High School'),
-              ('Bachelor\'s Degree', 'Bachelor\'s Degree'),
-              ('Master\'s Degree', 'Master\'s Degree'),
-              ('PhD', 'PhD'),
-            ],
+            value: state.education.isEmpty && options.minimumEducationLevels.isNotEmpty ? options.minimumEducationLevels.first.value : state.education,
+            options: options.minimumEducationLevels.map((e) => (e.label, e.value)).toList(),
             onChanged: (val) {
               if (val != null)
                 notifier.updateField(state.copyWith(education: val));
@@ -57,13 +61,13 @@ class Step2Requirements extends ConsumerWidget {
           GestureDetector(
             onTap: () => showUJobRichTextEditor(
               context: context,
-              title: 'Required Skills',
-              initialValue: state.requiredSkills,
+              title: 'Requirements',
+              initialValue: state.requirements,
               onSave: (val) =>
-                  notifier.updateField(state.copyWith(requiredSkills: val)),
+                  notifier.updateField(state.copyWith(requirements: val)),
             ),
             child: UJobTextField(
-              label: context.l10n.requiredSkills,
+              label: 'Requirements',
               hint: context.l10n.tapToOpenEditor,
               minLines: 5,
               maxLines: 10,
@@ -74,14 +78,14 @@ class Step2Requirements extends ConsumerWidget {
                 size: 20.r,
               ),
               controller: TextEditingController(
-                text: getPlainTextFromQuillJson(state.requiredSkills),
+                text: getPlainTextFromQuillJson(state.requirements),
               ),
               onTap: () => showUJobRichTextEditor(
                 context: context,
-                title: 'Required Skills',
-                initialValue: state.requiredSkills,
+                title: 'Requirements',
+                initialValue: state.requirements,
                 onSave: (val) =>
-                    notifier.updateField(state.copyWith(requiredSkills: val)),
+                    notifier.updateField(state.copyWith(requirements: val)),
               ),
             ),
           ),
@@ -91,20 +95,7 @@ class Step2Requirements extends ConsumerWidget {
             label: context.l10n.preferredSkills,
             hint: context.l10n.typeToSearchOrAddASkill,
             tags: state.preferredSkills,
-            suggestions: const [
-              'Flutter',
-              'Dart',
-              'Python',
-              'Data Analysis',
-              'React',
-              'Node.js',
-              'UI/UX Design',
-              'Java',
-              'Swift',
-              'Kotlin',
-              'Go',
-              'C++',
-            ],
+            suggestions: options.preferredSkillsList.map((s) => s.name).toList(),
             onChanged: (tags) =>
                 notifier.updateField(state.copyWith(preferredSkills: tags)),
           ),
@@ -123,16 +114,12 @@ class Step2Requirements extends ConsumerWidget {
           UJobTextField(
             label: context.l10n.languagesRequired,
             hint: context.l10n.egEnglishHindi,
-            controller: TextEditingController(text: state.languages.join(', '))
+            controller: TextEditingController(text: state.languages.join(','))
               ..selection = TextSelection.collapsed(
-                offset: state.languages.join(', ').length,
+                offset: state.languages.join(',').length,
               ),
             onChanged: (val) {
-              final list = val
-                  .split(',')
-                  .map((e) => e.trim())
-                  .where((e) => e.isNotEmpty)
-                  .toList();
+              final list = val.split(',').toList();
               notifier.updateField(state.copyWith(languages: list));
             },
           ),
@@ -142,16 +129,12 @@ class Step2Requirements extends ConsumerWidget {
             label: context.l10n.certifications,
             hint: context.l10n.egAwsPmpCfa,
             controller:
-                TextEditingController(text: state.certifications.join(', '))
+                TextEditingController(text: state.certifications.join(','))
                   ..selection = TextSelection.collapsed(
-                    offset: state.certifications.join(', ').length,
+                    offset: state.certifications.join(',').length,
                   ),
             onChanged: (val) {
-              final list = val
-                  .split(',')
-                  .map((e) => e.trim())
-                  .where((e) => e.isNotEmpty)
-                  .toList();
+              final list = val.split(',').toList();
               notifier.updateField(state.copyWith(certifications: list));
             },
           ),

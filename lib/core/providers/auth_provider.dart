@@ -1,16 +1,19 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/dio_client.dart';
 import '../api/api_endpoints.dart';
 import '../models/user.dart';
+import '../models/company_profile.dart';
 import 'role_provider.dart';
+import '../utils/api_error_parser.dart';
+import '../../features/employer/dashboard/employer_dashboard_provider.dart';
 
 final dioClientProvider = Provider<DioClient>((ref) {
-  final storage = ref.watch(secureStorageProvider);
-  return DioClient(storage);
+  return DioClient(ref);
 });
 
-enum LoginResult { success, requiresOtp, invalidCredentials, suspended, error }
+enum LoginResult { success, requiresOtp, invalidCredentials, suspended, locked, error }
 
 class AuthNotifier extends AsyncNotifier<User?> {
   @override
@@ -27,7 +30,8 @@ class AuthNotifier extends AsyncNotifier<User?> {
 
     try {
       final dio = ref.read(dioClientProvider).dio;
-      final res = await dio.get(Ep.me);
+      final apiEndpoint = savedRole == 'employer' ? Ep.employerMe : Ep.me;
+      final res = await dio.get(apiEndpoint);
       final data = (res.data['data'] ?? res.data) as Map<String, dynamic>;
       final user = User.fromJson(data);
 
@@ -37,8 +41,17 @@ class AuthNotifier extends AsyncNotifier<User?> {
         return null;
       }
 
+      if (savedRole == 'employer' && data['companies'] != null && (data['companies'] as List).isNotEmpty) {
+        final companyData = data['companies'][0] as Map<String, dynamic>;
+        Future.microtask(() {
+          ref.read(companyProfileProvider.notifier).state = CompanyProfile.fromJson(companyData);
+        });
+      }
+
       if (user.role != null) {
         ref.read(activeRoleProvider.notifier).setRole(user.role!);
+      } else if (savedRole != null) {
+        return user.copyWith(role: savedRole);
       }
       return user;
     } catch (_) {
@@ -114,19 +127,12 @@ class AuthNotifier extends AsyncNotifier<User?> {
       return (LoginResult.success, null);
     } catch (e, st) {
       state = AsyncError(e, st);
-      if (e is DioException && e.response?.data is Map<String, dynamic>) {
-        final errorData = e.response!.data as Map<String, dynamic>;
-        final code = errorData['error']?['code'];
-        if (code == 'INVALID_CREDENTIALS') return (LoginResult.invalidCredentials, null);
-        if (code == 'ACCOUNT_SUSPENDED') return (LoginResult.suspended, null);
-        final message = errorData['error']?['message']?.toString();
-        // Extract validation details if available
-        final details = errorData['error']?['details'];
-        String? detailMsg;
-        if (details is Map) {
-          detailMsg = details.values.expand((v) => v is List ? v : [v]).join(', ');
-        }
-        return (LoginResult.error, detailMsg ?? message ?? 'An unexpected error occurred.');
+      if (e is DioException) {
+        final err = parseApiErrorDetail(e);
+        if (err.code == 'INVALID_CREDENTIALS') return (LoginResult.invalidCredentials, null);
+        if (err.code == 'ACCOUNT_SUSPENDED') return (LoginResult.suspended, null);
+        if (err.code == 'ACCOUNT_LOCKED') return (LoginResult.locked, err.message);
+        return (LoginResult.error, err.message);
       }
       return (LoginResult.error, 'A network error occurred. Please try again.');
     }
@@ -174,20 +180,11 @@ class AuthNotifier extends AsyncNotifier<User?> {
       return (LoginResult.success, null);
     } catch (e, st) {
       state = AsyncError(e, st);
-      if (e is DioException && e.response != null) {
-        if (e.response!.statusCode == 423) {
-          // Explicitly handle 423 Account Locked
-          return (
-            LoginResult.error,
-            'Account locked due to too many failed OTP attempts — try again later'
-          );
-        }
-        
-        if (e.response?.data is Map<String, dynamic>) {
-          final errorData = e.response!.data as Map<String, dynamic>;
-          final message = errorData['error']?['message']?.toString();
-          return (LoginResult.error, message ?? 'An unexpected error occurred.');
-        }
+      if (e is DioException) {
+        final err = parseApiErrorDetail(e);
+        if (err.code == 'ACCOUNT_SUSPENDED') return (LoginResult.suspended, err.message);
+        if (err.code == 'ACCOUNT_LOCKED') return (LoginResult.locked, err.message);
+        return (LoginResult.error, err.message);
       }
       return (LoginResult.error, 'A network error occurred. Please try again.');
     }
@@ -207,21 +204,22 @@ class AuthNotifier extends AsyncNotifier<User?> {
       }
       return null;
     } catch (e) {
-      if (e is DioException && e.response?.data is Map<String, dynamic>) {
-        final errorData = e.response!.data as Map<String, dynamic>;
-        return errorData['error']?['message']?.toString() ?? 'An unexpected error occurred.';
+      if (e is DioException) {
+        return parseApiError(e);
       }
       return 'A network error occurred. Please try again.';
     }
   }
 
-  Future<void> logout() async {
+  Future<void> logout({bool localOnly = false}) async {
     state = const AsyncLoading();
-    try {
-      final dio = ref.read(dioClientProvider).dio;
-      await dio.post(Ep.logout);
-    } catch (_) {
-      // Even if API fails, we still want to clear local session
+    if (!localOnly) {
+      try {
+        final dio = ref.read(dioClientProvider).dio;
+        await dio.post(Ep.logout);
+      } catch (_) {
+        // Even if API fails, we still want to clear local session
+      }
     }
     await ref.read(secureStorageProvider).clearAll();
     ref.read(activeRoleProvider.notifier).setRole('employer');

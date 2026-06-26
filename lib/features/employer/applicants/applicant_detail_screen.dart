@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../../core/widgets/ujob_rich_text_display.dart';
 import '../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,14 +15,19 @@ import '../../../core/widgets/ujob_avatar.dart';
 import '../../../core/widgets/ujob_stage_stepper.dart';
 import '../../../core/widgets/ujob_pdf_viewer_screen.dart';
 import '../../../core/widgets/ujob_button.dart';
+import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'employer_applicant_provider.dart';
+import '../../../core/providers/feature_flags_provider.dart';
 
 class ApplicantDetailScreen extends ConsumerStatefulWidget {
-  final String applicantId;
+  final Applicant? applicant;
+  final String? applicantId;
 
-  const ApplicantDetailScreen({super.key, required this.applicantId});
+  const ApplicantDetailScreen({super.key, this.applicant, this.applicantId})
+      : assert(applicant != null || applicantId != null);
 
   @override
   ConsumerState<ApplicantDetailScreen> createState() =>
@@ -46,19 +52,47 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final applicants = ref.watch(employerApplicantsProvider);
-    final applicant = applicants.firstWhere(
-      (a) => a.id == widget.applicantId,
-      orElse: () => applicants.first,
+    final featureFlags = ref.watch(featureFlagsProvider);
+    final bool isChatEnabled = featureFlags.maybeWhen(
+      data: (flags) => flags.chat,
+      orElse: () => false,
     );
 
+    Applicant initialApplicant;
+    if (widget.applicant != null) {
+      initialApplicant = widget.applicant!;
+    } else {
+      final asyncApplicants = ref.watch(employerApplicantsProvider);
+      final applicants = asyncApplicants.value ?? [];
+      if (applicants.isEmpty) {
+        return const Scaffold(body: UJobLoading(count: 1));
+      }
+      initialApplicant = applicants.firstWhere(
+        (a) => a.id == widget.applicantId,
+        orElse: () => applicants.first,
+      );
+    }
+
+    final asyncApplicant = ref.watch(singleApplicantProvider(initialApplicant));
+    
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: const UJobAppBar(title: 'Applicant Profile'),
-      body: Column(
+      body: asyncApplicant.when(
+        loading: () => UJobLoading(count: 1),
+        error: (err, stack) => Center(child: Text('Failed to load applicant details')),
+        data: (applicant) => Column(
         children: [
           Expanded(
-            child: NestedScrollView(
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async {
+                ref.invalidate(singleApplicantProvider(initialApplicant));
+                try {
+                  await ref.read(singleApplicantProvider(initialApplicant).future);
+                } catch (_) {}
+              },
+              child: NestedScrollView(
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
                   SliverToBoxAdapter(
@@ -158,83 +192,85 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                                       );
                                     },
                                   ),
-                                  SizedBox(height: 12.h),
-                                  InkWell(
-                                    borderRadius: BorderRadius.circular(20.r),
-                                    onTap: () {
-                                      void handleMessage() {
-                                        if (!applicant.hasMessaged) {
-                                          ref
-                                              .read(
-                                                employerApplicantsProvider
-                                                    .notifier,
-                                              )
-                                              .markAsMessaged(applicant.id);
+                                  if (isChatEnabled) ...[
+                                    SizedBox(height: 12.h),
+                                    InkWell(
+                                      borderRadius: BorderRadius.circular(20.r),
+                                      onTap: () {
+                                        void handleMessage() {
+                                          if (!applicant.hasMessaged) {
+                                            ref
+                                                .read(
+                                                  employerApplicantsProvider
+                                                      .notifier,
+                                                )
+                                                .markAsMessaged(applicant.id);
+                                          }
+                                          context.push(
+                                            '/conversations/conv-${applicant.id}',
+                                            extra: {
+                                              'name': applicant.name,
+                                              'initials': applicant.initials,
+                                              'avatar': null,
+                                            },
+                                          );
                                         }
-                                        context.push(
-                                          '/conversations/conv-${applicant.id}',
-                                          extra: {
-                                            'name': applicant.name,
-                                            'initials': applicant.initials,
-                                            'avatar': null,
-                                          },
-                                        );
-                                      }
 
-                                      if (applicant.hasMessaged) {
-                                        handleMessage();
-                                      } else {
-                                        _showConfirmationDialog(
-                                          context: context,
-                                          title: 'Message Applicant',
-                                          description:
-                                              'Do you want to send a message to ${applicant.name}?',
-                                          confirmText: 'Message',
-                                          color: AppColors.primary,
-                                          icon: HugeIcon(
-                                            icon: HugeIcons
-                                                .strokeRoundedMessage01,
+                                        if (applicant.hasMessaged) {
+                                          handleMessage();
+                                        } else {
+                                          _showConfirmationDialog(
+                                            context: context,
+                                            title: 'Message Applicant',
+                                            description:
+                                                'Do you want to send a message to ${applicant.name}?',
+                                            confirmText: 'Message',
                                             color: AppColors.primary,
-                                            size: 28.r,
-                                          ),
-                                          onConfirm: handleMessage,
-                                        );
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12.w,
-                                        vertical: 6.h,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          20.r,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          HugeIcon(
-                                            icon: HugeIcons
-                                                .strokeRoundedMessage01,
-                                            color: AppColors.primary,
-                                            size: 16.r,
-                                          ),
-                                          SizedBox(width: 6.w),
-                                          Text(
-                                            'Message',
-                                            style: AppText.small.copyWith(
+                                            icon: HugeIcon(
+                                              icon: HugeIcons
+                                                  .strokeRoundedMessage01,
                                               color: AppColors.primary,
-                                              fontWeight: FontWeight.bold,
+                                              size: 28.r,
                                             ),
+                                            onConfirm: handleMessage,
+                                          );
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 12.w,
+                                          vertical: 6.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withValues(
+                                            alpha: 0.1,
                                           ),
-                                        ],
+                                          borderRadius: BorderRadius.circular(
+                                            20.r,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            HugeIcon(
+                                              icon: HugeIcons
+                                                  .strokeRoundedMessage01,
+                                              color: AppColors.primary,
+                                              size: 16.r,
+                                            ),
+                                            SizedBox(width: 6.w),
+                                            Text(
+                                              'Message',
+                                              style: AppText.small.copyWith(
+                                                color: AppColors.primary,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
                             ],
@@ -285,11 +321,13 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                 ],
               ),
             ),
+            ),
           ),
 
           // Sticky Bottom Bar
           _buildStickyBottomBar(applicant),
         ],
+      ),
       ),
     );
   }
@@ -298,153 +336,93 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
     return ListView(
       padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 20.w),
       children: [
-        _buildSectionCard(
-          'Resume',
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(12.r),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+        if (applicant.resumeUrl != null)
+          _buildSectionCard(
+            'Resume',
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedPdf01,
+                    color: AppColors.error,
+                    size: 28.r,
+                  ),
                 ),
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedPdf01,
-                  color: AppColors.error,
-                  size: 28.r,
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'job_resume_md_azad_hossain_tutul.pdf',
-                      style: AppText.bodyBold,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      '1.4 MB',
-                      style: AppText.small.copyWith(color: AppColors.muted),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedEye,
-                  color: AppColors.primary,
-                  size: 24.r,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UJobPdfViewerScreen(
-                        title: '${applicant.name} - Resume',
-                        pdfUrl:
-                            'assets/images/job_resume_md_azad_hossain_tutul.pdf',
-                        isAsset: true,
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        applicant.resumeUrl!.split('/').last,
+                        style: AppText.bodyBold,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(width: 8.w),
-              IconButton(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedDownload04,
-                  color: AppColors.primary,
-                  size: 24.r,
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (dialogCtx) => UJobAlertDialog(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedDownload04,
-                        color: AppColors.primary,
-                        size: 32.r,
+                      SizedBox(height: 4.h),
+                      Text(
+                        'PDF Document',
+                        style: AppText.small.copyWith(color: AppColors.muted),
                       ),
-                      iconBgColor: AppColors.primary,
-                      confirmColor: AppColors.primary,
-                      title: 'Download Resume',
-                      description:
-                          'Do you want to download this resume to your device?',
-                      confirmText: 'Download',
-                      onConfirm: () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        Navigator.pop(dialogCtx);
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Downloading resume...',
-                              style: AppText.body.copyWith(color: Colors.white),
-                            ),
-                            backgroundColor: AppColors.primary,
-                            behavior: SnackBarBehavior.floating,
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedEye,
+                    color: AppColors.primary,
+                    size: 24.r,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UJobPdfViewerScreen(
+                          title: '${applicant.name} - Resume',
+                          pdfUrl: applicant.resumeUrl!,
+                          isAsset: false,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(width: 8.w),
+                IconButton(
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedDownload04,
+                    color: AppColors.primary,
+                    size: 24.r,
+                  ),
+                  onPressed: () async {
+                    final url = Uri.parse(applicant.resumeUrl!);
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Could not launch download URL.',
+                            style: AppText.body.copyWith(color: Colors.white),
                           ),
-                        );
-                        try {
-                          final byteData = await rootBundle.load(
-                            'assets/images/job_resume_md_azad_hossain_tutul.pdf',
-                          );
-                          final directory =
-                              await getApplicationDocumentsDirectory();
-                          final file = File(
-                            '${directory.path}/job_resume_md_azad_hossain_tutul.pdf',
-                          );
-                          await file.writeAsBytes(
-                            byteData.buffer.asUint8List(
-                              byteData.offsetInBytes,
-                              byteData.lengthInBytes,
-                            ),
-                          );
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Resume successfully downloaded to your device!',
-                                style: AppText.body.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                              backgroundColor: AppColors.success,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        } catch (e) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Failed to download resume.',
-                                style: AppText.body.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                              backgroundColor: AppColors.error,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  );
-                },
-              ),
-            ],
+                          backgroundColor: AppColors.error,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-
-        if (applicant.about != null)
+                if (applicant.about != null)
           _buildSectionCard(
             'About',
-            Text(
-              applicant.about!,
-              style: AppText.body.copyWith(color: AppColors.text2, height: 1.6),
-            ),
+            UJobRichTextDisplay(content: applicant.about!),
           ),
 
         _buildSectionCard(
@@ -639,6 +617,15 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                                     color: AppColors.muted,
                                   ),
                                 ),
+                                if (ed['period']?.isNotEmpty == true) ...[
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    ed['period'] ?? '',
+                                    style: AppText.small.copyWith(
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -723,10 +710,7 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                 ),
               ],
             ),
-            child: Text(
-              applicant.coverLetter!,
-              style: AppText.body.copyWith(color: AppColors.text2, height: 1.6),
-            ),
+            child: UJobRichTextDisplay(content: applicant.coverLetter!),
           ),
         ] else
           Center(
@@ -854,10 +838,23 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                       color: AppColors.error,
                       size: 28.r,
                     ),
-                    onConfirm: () {
-                      ref
-                          .read(employerApplicantsProvider.notifier)
-                          .updateStatus(applicant.id, 'Rejected');
+                    onConfirm: () async {
+                      try {
+                        await ref
+                            .read(employerApplicantsProvider.notifier)
+                            .updateStatus(applicant.id, 'Rejected');
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Applicant rejected.')),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Failed to update stage.')),
+                          );
+                        }
+                      }
                     },
                   );
                 },
@@ -884,10 +881,23 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                       color: AppColors.primary,
                       size: 28.r,
                     ),
-                    onConfirm: () {
-                      ref
-                          .read(employerApplicantsProvider.notifier)
-                          .updateStatus(applicant.id, nextStageValue!);
+                    onConfirm: () async {
+                      try {
+                        await ref
+                            .read(employerApplicantsProvider.notifier)
+                            .updateStatus(applicant.id, nextStageValue!);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Applicant moved to $nextStageValue!')),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Failed to update stage.')),
+                          );
+                        }
+                      }
                     },
                   );
                 },

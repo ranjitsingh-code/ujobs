@@ -12,13 +12,17 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/ujob_auth_header.dart';
 import '../../core/widgets/ujob_button.dart';
-
+import '../../core/widgets/ujob_toast.dart';
+import 'package:dio/dio.dart';
+import '../../core/api/api_endpoints.dart';
+import '../../core/api/dio_client.dart';
 import '../../core/utils/l10n_extensions.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String? email;
   final String? userId;
-  const OtpScreen({this.email, this.userId, super.key});
+  final bool isEmailChange;
+  const OtpScreen({this.email, this.userId, this.isEmailChange = false, super.key});
 
   @override
   ConsumerState<OtpScreen> createState() => _OtpScreenState();
@@ -138,16 +142,55 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
     if (_otp.length < 6) {
       final msg = context.l10n.otpErrorComplete;
       setState(() => _error = msg);
-      EasyLoading.showError(msg);
+      UJobToast.error(context, 'Invalid OTP', sub: msg);
       _shakeCtrl.forward(from: 0);
       return;
     }
     
+    if (widget.isEmailChange) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+
+      try {
+        await ref.read(dioClientProvider).dio.post(
+          Ep.empEmailVerifyOtp,
+          data: {'code': _otp},
+        );
+
+        if (!mounted) return;
+        UJobToast.success(context, 'Email Updated', sub: 'Your email has been changed successfully.');
+        context.pop(); // Go back to settings screen
+      } on DioException catch (e) {
+        if (!mounted) return;
+        final msg = e.response?.data?['error']?['message'] ?? 
+                    e.response?.data?['message'] ?? 
+                    'Invalid or expired OTP';
+        UJobToast.error(context, 'Verification Failed', sub: msg);
+        setState(() {
+          _loading = false;
+          _error = msg;
+        });
+        _shakeCtrl.forward(from: 0);
+      } catch (_) {
+        if (!mounted) return;
+        final msg = context.l10n.error;
+        UJobToast.error(context, 'Verification Failed', sub: msg);
+        setState(() {
+          _loading = false;
+          _error = msg;
+        });
+        _shakeCtrl.forward(from: 0);
+      }
+      return;
+    }
+
     final userId = widget.userId;
     if (userId == null || userId.isEmpty) {
       final msg = 'User ID is missing.';
       setState(() => _error = msg);
-      EasyLoading.showError(msg);
+      UJobToast.error(context, 'Error', sub: msg);
       _shakeCtrl.forward(from: 0);
       return;
     }
@@ -157,21 +200,28 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
       _error = null;
     });
 
-    EasyLoading.show(status: 'Verifying...');
-
     final (result, errorMsg) = await ref.read(authProvider.notifier).verifyOtp(userId, _otp);
 
     if (!mounted) {
-      EasyLoading.dismiss();
       return;
     }
 
     if (result == LoginResult.success) {
-      EasyLoading.showSuccess('OTP Verified!');
+      UJobToast.success(
+        context,
+        'OTP Verified',
+        sub: 'You have successfully logged in.',
+      );
       _skipToApp();
+    } else if (result == LoginResult.locked) {
+      setState(() => _loading = false);
+      UJobToast.error(context, 'Account Locked', sub: errorMsg ?? 'Too many failed attempts.');
+      if (mounted) context.go('/locked', extra: errorMsg);
+    } else if (result == LoginResult.suspended) {
+      if (mounted) context.go('/suspended');
     } else {
       final finalError = errorMsg ?? context.l10n.otpErrorInvalid;
-      EasyLoading.showError(finalError);
+      UJobToast.error(context, 'Verification Failed', sub: finalError);
       setState(() {
         _loading = false;
         _error = finalError;
@@ -273,24 +323,25 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                         onTap: () async {
                           final userId = widget.userId;
                           if (userId == null || userId.isEmpty) {
-                            EasyLoading.showError('User ID is missing.');
+                            UJobToast.error(context, 'Error', sub: 'User ID is missing.');
                             return;
                           }
 
-                          EasyLoading.show(status: 'Resending...');
+                          setState(() => _loading = true);
                           final errorMsg = await ref.read(authProvider.notifier).resendOtp(userId);
 
                           if (!mounted) {
-                            EasyLoading.dismiss();
                             return;
                           }
+                          
+                          setState(() => _loading = false);
 
                           if (errorMsg == null) {
-                            EasyLoading.showSuccess('Verification code resent.');
+                            UJobToast.success(context, 'Success', sub: 'Verification code resent.');
                             _startTimer();
                             setState(() => _error = null);
                           } else {
-                            EasyLoading.showError(errorMsg);
+                            UJobToast.error(context, 'Resend Failed', sub: errorMsg);
                           }
                         },
                         child: Text(

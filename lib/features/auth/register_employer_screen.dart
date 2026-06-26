@@ -9,16 +9,19 @@ import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_dropdown_field.dart';
 import '../../core/widgets/ujob_terms_agreement.dart';
 import '../../core/widgets/ujob_text_field.dart';
-import '../../core/widgets/ujob_phone_input.dart';
-import '../../core/models/country.dart';
+import '../../core/widgets/ujob_company_autocomplete.dart';
+
 
 import 'package:dio/dio.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/providers/auth_provider.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../core/utils/l10n_extensions.dart';
+import '../../core/utils/api_error_parser.dart';
 import '../../core/widgets/ujob_auth_links.dart';
 import '../../core/widgets/ujob_role_switch_card.dart';
+import '../../core/providers/role_provider.dart';
+import '../../core/widgets/ujob_toast.dart';
 
 class RegisterEmployerScreen extends ConsumerStatefulWidget {
   const RegisterEmployerScreen({super.key});
@@ -36,11 +39,9 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
   final _firstCtrl = TextEditingController();
   final _lastCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   bool _acceptedTerms = false;
-  Country? _selectedPhoneCountry;
 
   // Step 2
   final _companyCtrl = TextEditingController();
@@ -74,7 +75,6 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
       _firstCtrl,
       _lastCtrl,
       _emailCtrl,
-      _phoneCtrl,
       _passCtrl,
       _confirmCtrl,
       _companyCtrl,
@@ -139,7 +139,6 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
     });
 
     FocusManager.instance.primaryFocus?.unfocus();
-    EasyLoading.show(status: 'Registering...');
 
     try {
       final dio = ref.read(dioClientProvider).dio;
@@ -149,8 +148,6 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
           'first_name': _firstCtrl.text.trim(),
           'last_name': _lastCtrl.text.trim(),
           'email': _emailCtrl.text.trim(),
-          'phone_code': _selectedPhoneCountry?.phoneCode ?? '',
-          'phone': _phoneCtrl.text.trim(),
           'password': _passCtrl.text,
           'company_name': _companyCtrl.text.trim(),
           'company_city': _cityCtrl.text.trim(),
@@ -165,33 +162,40 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
         if (mounted) {
           setState(() => _loading = false);
         }
-        EasyLoading.showError(rawData['error']?['message']?.toString() ?? 'Registration failed.');
+        UJobToast.error(context, 'Registration Failed', sub: rawData['error']?['message']?.toString() ?? 'Registration failed.');
         return;
       }
 
       final data = (rawData['data'] ?? rawData) as Map<String, dynamic>;
       
-      final userId = data['user_id']?.toString() ?? data['user']?['id']?.toString() ?? '';
+      final userId = data['user_id']?.toString() ?? data['id']?.toString() ?? data['user']?['id']?.toString() ?? '';
 
-      EasyLoading.showSuccess('Registration Successful!');
+      UJobToast.success(context, 'Success', sub: 'Registration Successful!');
 
       if (mounted) {
         setState(() => _loading = false);
-        context.go('/otp', extra: userId);
+        if (data['requires_otp'] == true) {
+          context.go('/otp', extra: userId);
+        } else {
+          final token = data['accessToken']?.toString() ?? '';
+          if (token.isNotEmpty) {
+            await ref.read(secureStorageProvider).saveTokens(token, '');
+            ref.read(activeRoleProvider.notifier).setRole('employer');
+          }
+          context.go('/employer');
+        }
       }
     } on DioException catch (e) {
       if (mounted) {
         setState(() => _loading = false);
       }
-      final msg = e.response?.data is Map 
-          ? (e.response!.data['error']?['message'] ?? 'A network error occurred.') 
-          : 'A network error occurred.';
-      EasyLoading.showError(msg);
+      final msg = parseApiError(e);
+      UJobToast.error(context, 'Error', sub: msg);
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
       }
-      EasyLoading.showError('An unexpected error occurred.');
+      UJobToast.error(context, 'Error', sub: 'An unexpected error occurred.');
     }
   }
 
@@ -241,9 +245,6 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
                         firstCtrl: _firstCtrl,
                         lastCtrl: _lastCtrl,
                         emailCtrl: _emailCtrl,
-                        phoneCtrl: _phoneCtrl,
-                        selectedPhoneCountry: _selectedPhoneCountry,
-                        onPhoneCountryChanged: (c) => _selectedPhoneCountry = c,
                         passCtrl: _passCtrl,
                         confirmCtrl: _confirmCtrl,
                         acceptedTerms: _acceptedTerms,
@@ -280,11 +281,8 @@ class _EmpStep1 extends StatelessWidget {
   final TextEditingController firstCtrl,
       lastCtrl,
       emailCtrl,
-      phoneCtrl,
       passCtrl,
       confirmCtrl;
-  final Country? selectedPhoneCountry;
-  final ValueChanged<Country?> onPhoneCountryChanged;
   final bool acceptedTerms;
   final ValueChanged<bool> onTermsChanged;
   final String? error;
@@ -295,9 +293,6 @@ class _EmpStep1 extends StatelessWidget {
     required this.firstCtrl,
     required this.lastCtrl,
     required this.emailCtrl,
-    required this.phoneCtrl,
-    required this.selectedPhoneCountry,
-    required this.onPhoneCountryChanged,
     required this.passCtrl,
     required this.confirmCtrl,
     required this.acceptedTerms,
@@ -357,15 +352,7 @@ class _EmpStep1 extends StatelessWidget {
             isEmail: true,
           ),
           SizedBox(height: 16.h),
-          UJobPhoneInput(
-            label: l10n.phone,
-            hint: l10n.phoneHint,
-            phoneController: phoneCtrl,
-            initialCountry: selectedPhoneCountry,
-            onCountryCodeChanged: onPhoneCountryChanged,
-            isRequired: false,
-          ),
-          SizedBox(height: 16.h),
+
           UJobTextField(
             label: l10n.password,
             hint: l10n.passwordCreateHint,
@@ -453,12 +440,22 @@ class _EmpStep2 extends StatelessWidget {
             style: AppText.small.copyWith(color: AppColors.muted),
           ),
           SizedBox(height: 24.h),
-          UJobTextField(
+          UJobCompanyAutocomplete(
             label: l10n.companyNameLabel,
             hint: l10n.companyNameHint,
             controller: companyCtrl,
-            textInputAction: TextInputAction.next,
             isRequired: true,
+            onCompanySelected: (company) {
+              if (company != null) {
+                if (company.location != null && cityCtrl.text.isEmpty) {
+                  final parts = company.location!.split(',');
+                  cityCtrl.text = parts[0].trim();
+                }
+                if (company.website != null && websiteCtrl.text.isEmpty) {
+                  websiteCtrl.text = company.website!;
+                }
+              }
+            },
           ),
           SizedBox(height: 16.h),
           UJobTextField(

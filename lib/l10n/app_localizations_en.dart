@@ -503,11 +503,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetPasswordTitle => 'Reset password';
 
   @override
-  String get resetPasswordSub =>
-      'Enter your email and we\'ll send you a reset link';
+  String get resetPasswordSub => 'Enter your email and we\'ll send you an OTP';
 
   @override
   String get sendResetLink => 'Send reset link';
+
+  @override
+  String get sendOtpBtn => 'Send OTP';
 
   @override
   String get errorEnterEmail => 'Enter your email address';
@@ -1004,6 +1006,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get otpErrorInvalid => 'Invalid code entered.';
 
   @override
+  String get auditLog => 'Audit Log';
+
+  @override
+  String get auditLogSubtitle =>
+      'Review your account security and login events';
+
+  @override
+  String get ipAddress => 'IP Address';
+
+  @override
+  String get deviceBrowser => 'Device / Browser';
+
+  @override
+  String get noAuditLogs => 'No audit logs found.';
+
+  @override
+  String get walletAndBilling => 'Wallet & Billing';
+
+  @override
+  String get walletBalance => 'Wallet Balance';
+
+  @override
+  String get transactions => 'Transactions';
+
+  @override
+  String get paymentHistory => 'Payment History';
+
+  @override
+  String get invoice => 'Invoice';
+
+  @override
+  String get noTransactions => 'No transactions found.';
+
+  @override
+  String get noPayments => 'No payment history found.';
+
+  @override
   String get changePassword => 'Change Password';
 
   @override
@@ -1105,7 +1144,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get jobRecommendations => 'Job Recommendations';
 
   @override
-  String get accountSection => 'ACCOUNT';
+  String get accountSection => 'Account';
 
   @override
   String get deleteAccount => 'Delete Account';

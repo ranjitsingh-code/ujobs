@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_button.dart';
+import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
@@ -102,7 +103,7 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
     final job = jobAsync.valueOrNull;
 
     if (job == null)
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: UJobLoading(count: 1));
 
     final steps = <ApplyStep>[];
     if (job.coverLetterRequirement != 'Disabled') {

@@ -6,24 +6,30 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/animated_page_wrapper.dart';
+import '../../core/providers/feature_flags_provider.dart';
 
 class EmployerShell extends ConsumerWidget {
   final Widget child;
   const EmployerShell({required this.child, super.key});
 
-  int _indexFromPath(String path) {
-    if (path.startsWith('/employer/jobs')) return 1;
-    if (path.startsWith('/employer/applicants')) return 2;
-    if (path.startsWith('/employer/messages')) return 3;
-    if (path.startsWith('/employer/profile')) return 4;
-    if (path.startsWith('/employer/settings')) return 4;
-    return 0;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).matchedLocation;
-    final currentIndex = _indexFromPath(location);
+    final featureFlagsState = ref.watch(featureFlagsProvider);
+    final featureFlags = featureFlagsState.valueOrNull ?? const FeatureFlags();
+
+    final tabs = [
+      ('/employer', HugeIcons.strokeRoundedHome01, context.l10n.dashboard),
+      ('/employer/jobs', HugeIcons.strokeRoundedBriefcase01, context.l10n.jobsTab),
+      ('/employer/applicants', HugeIcons.strokeRoundedUserGroup, context.l10n.applicants),
+      if (featureFlags.chat)
+        ('/employer/messages', HugeIcons.strokeRoundedBubbleChat, context.l10n.messages),
+      ('/employer/profile', HugeIcons.strokeRoundedUser, context.l10n.accountSection),
+    ];
+
+    // Calculate current index based on matching the longest path prefix
+    int currentIndex = tabs.indexWhere((t) => location.startsWith(t.$1) && t.$1 != '/employer');
+    if (currentIndex == -1) currentIndex = 0; // fallback to dashboard if no exact match
 
     return Scaffold(
       body: AnimatedPageWrapper(child: child),
@@ -32,92 +38,14 @@ class EmployerShell extends ConsumerWidget {
         selectedFontSize: 10,
         unselectedFontSize: 10,
         currentIndex: currentIndex,
-        onTap: (i) {
-          switch (i) {
-            case 0:
-              context.go('/employer');
-              break;
-            case 1:
-              context.go('/employer/jobs');
-              break;
-            case 2:
-              context.go('/employer/applicants');
-              break;
-            case 3:
-              context.go('/employer/messages');
-              break;
-            case 4:
-              context.go('/employer/profile');
-              break;
-          }
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedHome01,
-              color: AppColors.muted2,
-              size: 22,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedHome01,
-              color: AppColors.primary,
-              size: 22,
-            ),
-            label: context.l10n.dashboard,
-          ),
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedBriefcase01,
-              color: AppColors.muted2,
-              size: 22,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedBriefcase01,
-              color: AppColors.primary,
-              size: 22,
-            ),
-            label: context.l10n.jobsTab,
-          ),
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedUserGroup,
-              color: AppColors.muted2,
-              size: 22,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedUserGroup,
-              color: AppColors.primary,
-              size: 22,
-            ),
-            label: context.l10n.applicants,
-          ),
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedBubbleChat,
-              color: AppColors.muted2,
-              size: 22,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedBubbleChat,
-              color: AppColors.primary,
-              size: 22,
-            ),
-            label: context.l10n.messages,
-          ),
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedUser,
-              color: AppColors.muted2,
-              size: 22,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedUser,
-              color: AppColors.primary,
-              size: 22,
-            ),
-            label: context.l10n.accountSection,
-          ),
-        ],
+        onTap: (i) => context.go(tabs[i].$1),
+        items: tabs.map((t) {
+          return BottomNavigationBarItem(
+            icon: HugeIcon(icon: t.$2, color: AppColors.muted2, size: 22),
+            activeIcon: HugeIcon(icon: t.$2, color: AppColors.primary, size: 22),
+            label: t.$3,
+          );
+        }).toList(),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'company.dart';
 
 enum JobStatus { active, pending, paused, closed, draft, rejected }
@@ -7,11 +8,14 @@ class Job {
   final String title;
   final String description;
   final String? category;
+  final String? categoryId;
   final String employmentType; // e.g., full_time, part_time
   final String workplaceType; // e.g., remote, onsite, hybrid
   final String? location;
   final String? salaryMin;
   final String? salaryMax;
+  final String? salaryCurrency;
+  final String? salaryPeriod;
   final String? experienceLevel;
   final JobStatus status;
   final Company? company;
@@ -41,11 +45,14 @@ class Job {
     required this.title,
     required this.description,
     this.category,
+    this.categoryId,
     required this.employmentType,
     required this.workplaceType,
     this.location,
     this.salaryMin,
     this.salaryMax,
+    this.salaryCurrency,
+    this.salaryPeriod,
     this.experienceLevel,
     this.status = JobStatus.pending,
     this.company,
@@ -76,15 +83,20 @@ class Job {
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       category: json['categories'] != null ? (json['categories']['name'] as String?) : json['category'] as String?,
+      categoryId: json['category_id']?.toString() ?? json['categories']?['id']?.toString(),
       employmentType: json['employment_type'] as String? ?? '',
       workplaceType: json['workplace_type'] as String? ?? '',
-      location: json['location'] as String?,
+      location: (json['location'] ?? json['city'])?.toString(),
       salaryMin: json['salary_min']?.toString(),
       salaryMax: json['salary_max']?.toString(),
-      experienceLevel: json['experience_level'] as String?,
+      salaryCurrency: json['salary_currency'] as String?,
+      salaryPeriod: json['salary_period'] as String?,
+      experienceLevel: (json['experience_level'] ?? json['experience_min_years'])?.toString(),
       status: _parseStatus(json['status'] as String?),
       company: (json['companies'] ?? json['company']) != null
-          ? Company.fromJson(json['companies'] ?? json['company'])
+          ? Company.fromJson((json['companies'] ?? json['company']) is List
+              ? ((json['companies'] ?? json['company']) as List).first
+              : (json['companies'] ?? json['company']))
           : null,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])
@@ -95,7 +107,11 @@ class Job {
         'views_count',
         'view_count',
         'views',
-      ]),
+      ]) > 0 ? _parseCount(json, const [
+        'views_count',
+        'view_count',
+        'views',
+      ]) : _parseApplicantCount(json),
       closesAt: _parseDate(json, const [
         'application_deadline',
         'closes_at',
@@ -104,28 +120,20 @@ class Job {
         'deadline',
       ]),
       responsibilities: json['responsibilities'] as String?,
-      requiredSkills: json['required_skills'] as String?,
-      preferredSkills: (json['preferred_skills'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList(),
-      benefits: (json['benefits'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList(),
-      education: json['education'] as String?,
-      openings: json['openings']?.toString(),
-      applyVia: json['apply_via'] as String?,
-      resumeRequirement: json['resume_requirement'] as String?,
-      coverLetterRequirement: json['cover_letter_requirement'] as String?,
-      languages: (json['languages'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList(),
-      certifications: (json['certifications'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList(),
+      requiredSkills: (json['required_skills'] ?? json['requirements']) as String?,
+      preferredSkills: _parseStringList(json['preferred_skills']),
+      benefits: _parseStringList(json['benefits']),
+      education: (json['education'] ?? json['min_education']) as String?,
+      openings: (json['openings'] ?? json['vacancies'])?.toString(),
+      applyVia: (json['apply_via'] ?? json['application_method']) as String?,
+      resumeRequirement: (json['resume_requirement'] ?? json['resume_required']) as String?,
+      coverLetterRequirement: (json['cover_letter_requirement'] ?? json['cover_letter_policy']) as String?,
+      languages: _parseStringList(json['languages'] ?? json['languages_required']),
+      certifications: _parseStringList(json['certifications'] ?? json['certifications_required']),
       ageMin: json['age_min']?.toString(),
       ageMax: json['age_max']?.toString(),
-      screeningQuestions: (json['screening_questions'] as List<dynamic>?)
-          ?.map((e) => e as Map<String, dynamic>)
+      screeningQuestions: ((json['screening_questions'] ?? json['job_screening_questions']) as List<dynamic>?)
+          ?.map((e) => Map<String, dynamic>.from(e as Map))
           .toList(),
     );
   }
@@ -172,6 +180,7 @@ class Job {
     String? title,
     String? description,
     String? category,
+    String? categoryId,
     String? employmentType,
     String? workplaceType,
     String? location,
@@ -205,11 +214,14 @@ class Job {
       title: title ?? this.title,
       description: description ?? this.description,
       category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       employmentType: employmentType ?? this.employmentType,
       workplaceType: workplaceType ?? this.workplaceType,
       location: location ?? this.location,
       salaryMin: salaryMin ?? this.salaryMin,
       salaryMax: salaryMax ?? this.salaryMax,
+      salaryCurrency: salaryCurrency ?? this.salaryCurrency,
+      salaryPeriod: salaryPeriod ?? this.salaryPeriod,
       experienceLevel: experienceLevel ?? this.experienceLevel,
       status: status ?? this.status,
       company: company ?? this.company,
@@ -237,9 +249,11 @@ class Job {
   }
 
   static int _parseApplicantCount(Map<String, dynamic> json) {
+    if (json['_count'] is Map && json['_count']['applications'] != null) {
+      return int.tryParse(json['_count']['applications'].toString()) ?? 0;
+    }
     return _parseCount(json, const [
       'applicants_count',
-      '_count.applications',
       'applicant_count',
       'applications_count',
     ]);
@@ -259,5 +273,24 @@ class Job {
       value ??= json[key];
     }
     return value == null ? null : DateTime.tryParse('$value');
+  }
+
+  static List<String>? _parseStringList(dynamic value) {
+    if (value == null) return null;
+    if (value is List) {
+      return value.map((e) => e.toString()).toList();
+    }
+    if (value is String) {
+      if (value.trim().startsWith('[')) {
+        try {
+          final decoded = jsonDecode(value);
+          if (decoded is List) {
+            return decoded.map((e) => e.toString()).toList();
+          }
+        } catch (_) {}
+      }
+      return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    }
+    return null;
   }
 }

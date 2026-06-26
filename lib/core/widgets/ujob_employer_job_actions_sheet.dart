@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/feature_flags_provider.dart';
+
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -16,7 +19,7 @@ Future<void> showUJobEmployerJobActionsSheet({
   VoidCallback? onResume,
   VoidCallback? onPublish,
   VoidCallback? onReopen,
-  VoidCallback? onDelete,
+  VoidCallback? onClose, VoidCallback? onDelete,
 }) async {
   await showModalBottomSheet(
     context: context,
@@ -62,6 +65,12 @@ Future<void> showUJobEmployerJobActionsSheet({
               Navigator.pop(ctx);
               onReopen();
             },
+      onClose: onClose == null
+          ? null
+          : () {
+              Navigator.pop(ctx);
+              onClose();
+            },
       onDelete: onDelete == null
           ? null
           : () {
@@ -72,7 +81,7 @@ Future<void> showUJobEmployerJobActionsSheet({
   );
 }
 
-class _UJobEmployerJobActionsSheet extends StatelessWidget {
+class _UJobEmployerJobActionsSheet extends ConsumerWidget {
   final Job job;
   final VoidCallback? onEdit;
   final VoidCallback? onViewApplicants;
@@ -80,6 +89,7 @@ class _UJobEmployerJobActionsSheet extends StatelessWidget {
   final VoidCallback? onResume;
   final VoidCallback? onPublish;
   final VoidCallback? onReopen;
+  final VoidCallback? onClose;
   final VoidCallback? onDelete;
 
   const _UJobEmployerJobActionsSheet({
@@ -90,11 +100,17 @@ class _UJobEmployerJobActionsSheet extends StatelessWidget {
     this.onResume,
     this.onPublish,
     this.onReopen,
+    this.onClose,
     this.onDelete,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final featureFlags = ref.watch(featureFlagsProvider);
+    final bool jobApprovalRequired = featureFlags.maybeWhen(
+      data: (flags) => flags.jobApprovalRequired,
+      orElse: () => false,
+    );
     final l10n = context.l10n;
 
     return Column(
@@ -135,41 +151,39 @@ class _UJobEmployerJobActionsSheet extends StatelessWidget {
             label: l10n.pauseJob,
             onTap: onPause!,
           ),
-        if (onResume != null && job.status == JobStatus.paused)
+        if (!jobApprovalRequired && onResume != null && job.status == JobStatus.paused)
           _ActionTile(
             icon: HugeIcons.strokeRoundedPlay,
             label: l10n.reactivateJob,
             onTap: onResume!,
           ),
-        if (onPublish != null && job.status == JobStatus.draft)
+        if (!jobApprovalRequired && onPublish != null && job.status == JobStatus.draft)
           _ActionTile(
             icon: HugeIcons.strokeRoundedSent,
             label: l10n.publishJob,
             onTap: onPublish!,
           ),
-        if (onReopen != null && job.status == JobStatus.closed)
+        if (!jobApprovalRequired && onReopen != null && job.status == JobStatus.closed)
           _ActionTile(
             icon: HugeIcons.strokeRoundedRefresh,
             label: l10n.reopenJob,
             onTap: onReopen!,
           ),
         Divider(height: 1.h, color: AppColors.borderLight),
+        if (onClose != null && job.status != JobStatus.closed && job.status != JobStatus.rejected)
+          _ActionTile(
+            icon: HugeIcons.strokeRoundedAlert02,
+            label: context.l10n.closeJob1,
+            color: AppColors.text,
+            onTap: onClose!,
+          ),
         if (onDelete != null)
-          if (job.status == JobStatus.closed ||
-              job.status == JobStatus.rejected)
-            _ActionTile(
-              icon: HugeIcons.strokeRoundedDelete01,
-              label: l10n.delete,
-              color: AppColors.error,
-              onTap: onDelete!,
-            )
-          else
-            _ActionTile(
-              icon: HugeIcons.strokeRoundedAlert02,
-              label: l10n.closeJob,
-              color: AppColors.error,
-              onTap: onDelete!,
-            ),
+          _ActionTile(
+            icon: HugeIcons.strokeRoundedDelete01,
+            label: l10n.delete,
+            color: AppColors.error,
+            onTap: onDelete!,
+          ),
         SizedBox(height: 24.h),
       ],
     );

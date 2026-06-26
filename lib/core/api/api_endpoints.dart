@@ -1,5 +1,6 @@
 class Ep {
-  static const String baseUrl = 'https://ujobapi.gidentex.com/api/v1';
+  static const String baseUrl = 'https://ujobapi.gidentex.com/api/v1/mobile';
+  static const String sharedBaseUrl = 'https://ujobapi.gidentex.com/api/v1';
   static const String webUrl = 'https://ujobs.com';
 
   // Auth
@@ -17,6 +18,8 @@ class Ep {
 
   // Employer
   static const employerMe = '/employer/me';
+  static const empMe = '/employer/me';
+  static const empDashboard = '/employer/dashboard';
   static const employerJobs = '/employer/jobs';
   static String employerJob(String id) => '/employer/jobs/$id';
   static String applicants(String jobId) =>
@@ -25,6 +28,10 @@ class Ep {
   static String empCompany(String id) =>
       '/employer/company/$id'; // PUT only — GET from /employer/me
   static const empSettings = '/employer/settings';
+  static const empPreferences = '/employer/settings/preferences';
+  static const empEmailRequestOtp = '/employer/settings/email/request-otp';
+  static const empEmailVerifyOtp = '/employer/settings/email/verify-otp';
+  static const empPhone = '/employer/settings/phone';
   static const empPassword = '/employer/settings/password';
   static const emp2FA = '/employer/settings/2fa';
   static const empAuditLog = '/employer/settings/audit-log';
@@ -39,6 +46,8 @@ class Ep {
   static const empPayments = '/employer/payments';
   static const empSavedCandidates =
       '/employer/saved-candidates'; // ⚠️ returns 500
+  static const employerFeatureFlags = '/employer/features';
+  static const publicJobFormOptions = '/public/job-form-options';
 
   // Seeker — NOTE: /seeker/profile (404), /seeker/dashboard (404) — use /seeker/me
   static const seekerMe = '/seeker/me'; // GET + PUT
@@ -50,6 +59,8 @@ class Ep {
   static const seekerMatching = '/seeker/matching-jobs';
   static const seekerNotifications = '/seeker/notifications';
   static const seekUnreadCount = '/seeker/notifications/unread-count';
+  static const empMarkAllRead = '/employer/notifications/read-all';
+  static const seekMarkAllRead = '/seeker/notifications/read-all';
   static String seekNotifRead(String id) => '/seeker/notifications/$id/read';
   static String saveJob(String id) => '/seeker/jobs/$id/save';
   static String applyJob(String id) => '/seeker/jobs/$id/apply';

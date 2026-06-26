@@ -4,11 +4,18 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../storage/secure_storage.dart';
 import 'api_endpoints.dart';
+import 'dart:convert';
+import 'package:go_router/go_router.dart';
+import '../router/app_router.dart';
+import '../providers/role_provider.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DioClient {
   late final Dio dio;
 
-  DioClient(SecureStorage storage) {
+  DioClient(Ref ref) {
+    final storage = ref.read(secureStorageProvider);
     dio = Dio(
       BaseOptions(
         baseUrl: Ep.baseUrl,
@@ -16,7 +23,7 @@ class DioClient {
         receiveTimeout: const Duration(seconds: 15),
         headers: {
           'Content-Type': 'application/json',
-          'X-Api-Key': const String.fromEnvironment('API_KEY', defaultValue: ''),
+          'X-Api-Key': const String.fromEnvironment('API_KEY', defaultValue: 'jp_56a375680eef542027dc87979dee0f8c0e6c79940bdac564d21f48457d904ccc'),
         },
       ),
     );
@@ -27,23 +34,11 @@ class DioClient {
           final token = await storage.getAccessToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
-            // Inject as Cookie as well to ensure compatibility with backend cookie session guards
-            options.headers['Cookie'] = 'session=$token';
           }
           handler.next(options);
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            final refreshed = await _refreshToken(storage);
-            if (refreshed) {
-              final token = await storage.getAccessToken();
-              error.requestOptions.headers['Authorization'] = 'Bearer $token';
-              try {
-                final retry = await dio.fetch(error.requestOptions);
-                return handler.resolve(retry);
-              } catch (_) {}
-            }
-            // Refresh failed — clear tokens so app redirects to login
             await storage.clearAll();
           } else if (error.response?.statusCode == 500) {
             EasyLoading.showError('Server encountered an error. Please try again later.');
@@ -53,6 +48,8 @@ class DioClient {
                      error.type == DioExceptionType.receiveTimeout || 
                      error.type == DioExceptionType.connectionError) {
             EasyLoading.showError('Unable to connect to the server. Please check your internet connection.');
+          } else if (error.response?.statusCode == 423) {
+            // Let the API caller handle the 423 Locked response
           }
           handler.next(error);
         },
@@ -62,39 +59,16 @@ class DioClient {
     if (kDebugMode) {
       dio.interceptors.add(
         PrettyDioLogger(
-          requestHeader: false,
+          requestHeader: true,
           requestBody: true,
           responseBody: true,
+          responseHeader: false,
+          error: true,
+          compact: true,
+          maxWidth: 90,
         ),
       );
     }
   }
 
-  Future<bool> _refreshToken(SecureStorage storage) async {
-    try {
-      final refresh = await storage.getRefreshToken();
-      if (refresh == null) return false;
-      
-      final res = await Dio().post(
-        '${Ep.baseUrl}${Ep.refresh}',
-        options: Options(
-          headers: {
-            'X-Api-Key': const String.fromEnvironment('API_KEY', defaultValue: ''),
-            // Pass the refresh token in the Cookie header as the API expects
-            'Cookie': 'refreshToken=$refresh', 
-          },
-        ),
-      );
-      final data = res.data as Map<String, dynamic>;
-      final responseData = data['data'] ?? data;
-      
-      await storage.saveTokens(
-        responseData['accessToken'] as String,
-        responseData['refreshToken'] as String,
-      );
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
 }

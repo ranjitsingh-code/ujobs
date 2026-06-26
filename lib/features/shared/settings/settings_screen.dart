@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/feature_flags_provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -18,6 +21,8 @@ import '../../../core/widgets/ujob_phone_number_field.dart';
 import '../../../core/widgets/ujob_radio_card.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_toast.dart';
+import '../../employer/settings/employer_settings_provider.dart';
+
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -47,23 +52,113 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _profileVisible = true;
   bool _showSalaryExpectations = false;
 
+  // Additional Employer Prefs
+  bool _notifSecurity = true;
+  bool _notifBrowser = false;
+  bool _showEmailToCandidates = false;
+  bool _showPhoneToCandidates = false;
+  String _language = 'en';
+  String _timezone = 'UTC';
+  String _dateFormat = 'DD/MM/YYYY';
+
+  bool _hasInitializedPrefs = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(authProvider).valueOrNull;
+      if (user != null) {
+        setState(() {
+          _twoFa = user.twoFactorEnabled;
+        });
+      }
+    });
+  }
+
+  Future<void> _updateEmployerPref(String key, dynamic value) async {
+    try {
+      // The local setState inside the ToggleTile's onChanged has already updated the UI instantly.
+      // We just quietly sync the change to the backend here without rebuilding the entire screen!
+      await ref.read(employerSettingsServiceProvider).updatePreferences({key: value});
+      
+      if (mounted) {
+        UJobToast.success(
+          context, 
+          'Update Successful',
+          sub: 'Your preferences have been successfully updated.'
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        UJobToast.error(
+          context, 
+          'Update Failed',
+          sub: 'Failed to update preference. Please try again.'
+        );
+      }
+      // If we wanted to revert local state on failure, we could re-read from the provider
+      // but for now, we just show the error toast.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final role = ref.watch(activeRoleProvider);
     final isEmployer = role == 'employer';
+    final featureFlagsAsync = ref.watch(featureFlagsProvider);
+    final featureFlags = featureFlagsAsync.valueOrNull;
+
+    if (isEmployer) {
+      final settingsAsync = ref.watch(employerSettingsProvider);
+      if (settingsAsync.isLoading) {
+         return Scaffold(
+           backgroundColor: AppColors.background,
+           appBar: UJobAppBar(title: l10n.settings, showBack: true, backgroundColor: AppColors.background),
+           body: const Center(child: CircularProgressIndicator()),
+         );
+      } else if (settingsAsync.hasValue && !_hasInitializedPrefs) {
+         final prefs = settingsAsync.value!.prefs;
+         WidgetsBinding.instance.addPostFrameCallback((_) {
+           if (mounted) {
+             setState(() {
+               _emailNewJobApplication = prefs.notifNewApplication;
+               _emailCandidateMessage = prefs.notifMessages;
+               _emailInterviewResponse = prefs.notifInterview;
+               _emailMarketing = prefs.notifMarketing;
+               _visibilityMode = prefs.companyProfilePublic ? 'public' : 'private';
+               
+               _notifSecurity = prefs.notifSecurity;
+               _notifBrowser = prefs.notifBrowser;
+               _showEmailToCandidates = prefs.showEmailToCandidates;
+               _showPhoneToCandidates = prefs.showPhoneToCandidates;
+               _language = prefs.language;
+               _timezone = prefs.timezone;
+               _dateFormat = prefs.dateFormat;
+               
+               // Read 2FA from settings user payload if available
+               final userPayload = settingsAsync.value!.user;
+               if (userPayload.containsKey('two_factor_enabled') || userPayload.containsKey('two_factor_authentication')) {
+                 _twoFa = (userPayload['two_factor_enabled'] ?? userPayload['two_factor_authentication']) == true;
+               }
+
+               _hasInitializedPrefs = true;
+             });
+           }
+         });
+      }
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: isEmployer
-          ? null
-          : UJobAppBar(
-              title: l10n.settings,
-              showBack: true,
-              backgroundColor: AppColors.background,
-            ),
+      appBar: UJobAppBar(
+        title: l10n.settings,
+        showBack: true,
+        backgroundColor: AppColors.background,
+      ),
       body: SafeArea(
-        top: isEmployer,
+        top: false,
         bottom: false,
         child: ListView(
           padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 120.h),
@@ -92,17 +187,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     fieldLabel: l10n.newEmailAddress,
                     buttonLabel: l10n.sendVerificationCode,
                     type: TextInputType.emailAddress,
-                  ),
-                ),
-                _NavTile(
-                  label: l10n.changePhone,
-                  subtitle: l10n.changePhoneSubtitle,
-                  onTap: () => _showChangeFieldSheet(
-                    context: context,
-                    title: l10n.changePhone,
-                    fieldLabel: l10n.phone,
-                    buttonLabel: l10n.save,
-                    type: TextInputType.phone,
                   ),
                 ),
                 Padding(
@@ -165,8 +249,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ],
                   ),
                 ),
+                _NavTile(
+                  label: l10n.auditLog,
+                  subtitle: l10n.auditLogSubtitle,
+                  showBorder: false,
+                  onTap: () {
+                    if (isEmployer) {
+                      context.push('/employer/settings/audit-log');
+                    } else {
+                      context.push('/seeker/settings/audit-log');
+                    }
+                  },
+                ),
               ],
             ),
+
+            if (isEmployer && featureFlags?.plansWallet == true) ...[
+              SizedBox(height: 24.h),
+              _SectionTitle('BILLING'),
+              _SectionContainer(
+                children: [
+                  _NavTile(
+                    label: l10n.walletAndBilling,
+                    subtitle: 'Manage balance and view payment history',
+                    showBorder: false,
+                    onTap: () {
+                      context.push('/employer/wallet');
+                    },
+                  ),
+                ],
+              ),
+            ],
 
             SizedBox(height: 24.h),
 
@@ -174,40 +287,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _SectionTitle('NOTIFICATIONS'),
             _SectionContainer(
               children: [
-                _NavTile(
-                  label: l10n.emailNotifications,
-                  subtitle: l10n.emailNotificationsSubtitle,
-                  showArrow: false,
-                  showBorder: true,
-                  onTap: () {},
-                ),
                 if (isEmployer) ...[
                   _ToggleTile(
                     label: l10n.newJobApplication,
                     subtitle: l10n.newJobApplicationSubtitle,
                     value: _emailNewJobApplication,
-                    onChanged: (v) =>
-                        setState(() => _emailNewJobApplication = v),
+                    onChanged: (v) {
+                        setState(() => _emailNewJobApplication = v);
+                        _updateEmployerPref('notif_new_application', v);
+                    },
                   ),
-                  _ToggleTile(
-                    label: l10n.candidateMessages,
-                    subtitle: l10n.candidateMessagesSubtitle,
-                    value: _emailCandidateMessage,
-                    onChanged: (v) =>
-                        setState(() => _emailCandidateMessage = v),
-                  ),
+                  if (featureFlags?.chat == true)
+                    _ToggleTile(
+                      label: l10n.candidateMessages,
+                      subtitle: l10n.candidateMessagesSubtitle,
+                      value: _emailCandidateMessage,
+                      onChanged: (v) {
+                          setState(() => _emailCandidateMessage = v);
+                          _updateEmployerPref('notif_messages', v);
+                      },
+                    ),
                   _ToggleTile(
                     label: l10n.interviewResponses,
                     subtitle: l10n.interviewResponsesSubtitle,
                     value: _emailInterviewResponse,
-                    onChanged: (v) =>
-                        setState(() => _emailInterviewResponse = v),
+                    onChanged: (v) {
+                        setState(() => _emailInterviewResponse = v);
+                        _updateEmployerPref('notif_interview', v);
+                    },
+                  ),
+                  _ToggleTile(
+                    label: 'Security Alerts',
+                    subtitle: 'Login attempts and password changes',
+                    value: _notifSecurity,
+                    onChanged: (v) {
+                       setState(() => _notifSecurity = v);
+                       _updateEmployerPref('notif_security', v);
+                    },
                   ),
                   _ToggleTile(
                     label: l10n.marketingEmails,
                     subtitle: l10n.marketingEmailsSubtitle,
                     value: _emailMarketing,
-                    onChanged: (v) => setState(() => _emailMarketing = v),
+                    onChanged: (v) {
+                       setState(() => _emailMarketing = v);
+                       _updateEmployerPref('notif_marketing', v);
+                    },
+                  ),
+                  _ToggleTile(
+                    label: 'Push Notifications',
+                    subtitle: 'Receive notifications on this device',
+                    value: _notifBrowser,
+                    onChanged: (v) {
+                       setState(() => _notifBrowser = v);
+                       _updateEmployerPref('notif_browser', v);
+                    },
                   ),
                 ] else ...[
                   _ToggleTile(
@@ -245,25 +379,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             if (isEmployer) ...[
               _SectionContainer(
                 children: [
-                  _NavTile(
-                    label: l10n.companyProfileVisibility,
-                    subtitle: 'Control who can see your company profile',
-                    showArrow: false,
-                    showBorder: false,
-                    onTap: () {},
+                  _ToggleTile(
+                    label: l10n.publicProfile,
+                    subtitle: l10n.publicProfileSubtitle,
+                    value: _visibilityMode == 'public',
+                    onChanged: (v) {
+                       setState(() => _visibilityMode = v ? 'public' : 'private');
+                       _updateEmployerPref('company_profile_public', v);
+                    },
+                  ),
+                  _ToggleTile(
+                    label: 'Show Email to Candidates',
+                    subtitle: 'Display email on public profile',
+                    value: _showEmailToCandidates,
+                    onChanged: (v) {
+                       setState(() => _showEmailToCandidates = v);
+                       _updateEmployerPref('show_email_to_candidates', v);
+                    },
+                  ),
+                  _ToggleTile(
+                    label: 'Show Phone to Candidates',
+                    subtitle: 'Display phone on public profile',
+                    value: _showPhoneToCandidates,
+                    onChanged: (v) {
+                       setState(() => _showPhoneToCandidates = v);
+                       _updateEmployerPref('show_phone_to_candidates', v);
+                    },
                   ),
                 ],
-              ),
-              SizedBox(height: 8.h),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 0),
-                child: UJobRadioCard(
-                  title: l10n.publicProfile,
-                  subtitle: l10n.publicProfileSubtitle,
-                  value: 'public',
-                  groupValue: _visibilityMode,
-                  onChanged: (v) => setState(() => _visibilityMode = v),
-                ),
               ),
             ] else ...[
               _SectionContainer(
@@ -290,37 +433,57 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SizedBox(height: 24.h),
 
             if (isEmployer) ...[
-              // ================= ACCOUNT DATA =================
-              _SectionTitle('ACCOUNT DATA'),
+              // ================= GENERAL PREFERENCES =================
+              _SectionTitle('GENERAL PREFERENCES'),
               _SectionContainer(
                 children: [
-                  _NavTile(
-                    label: l10n.downloadAccountData,
-                    subtitle: l10n.downloadAccountDataSubtitle,
-                    showArrow: false,
-                    showBorder: false,
+                  _ValueTile(
+                    label: 'Language',
+                    value: _language.toUpperCase(),
+                    onTap: () {
+                      // Show language picker logic
+                    },
+                  ),
+                  _ValueTile(
+                    label: 'Timezone',
+                    value: _timezone,
                     onTap: () {},
+                  ),
+                  _ValueTile(
+                    label: 'Date Format',
+                    value: _dateFormat,
+                    onTap: () {},
+                    showBorder: false,
                   ),
                 ],
               ),
-              SizedBox(height: 8.h),
+              SizedBox(height: 24.h),
+
+              // ================= DOWNLOAD ACCOUNT DATA =================
+              _SectionTitle(l10n.downloadAccountData.toUpperCase()),
               _SectionContainer(
                 children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 12.h),
-                    child: Text(
-                      l10n.exportDataDesc,
-                      style: AppText.small.copyWith(color: AppColors.muted),
-                    ),
-                  ),
                   _NavTile(
-                    label: l10n.exportJobsCsv,
-                    onTap: () {},
+                    label: l10n.exportJobsCsv, 
+                    showArrow: true,
+                    showBorder: true,
+                    onTap: () {
+                      final url = ref.read(employerSettingsProvider).valueOrNull?.exportUrls['jobs_csv'];
+                      if (url != null) {
+                        launchUrlString(url, mode: LaunchMode.externalApplication);
+                      }
+                    }
                   ),
                   _NavTile(
                     label: l10n.exportApplicantsCsv,
-                    onTap: () {},
+                    showArrow: true,
                     showBorder: false,
+                    onTap: () {
+                      final url = ref.read(employerSettingsProvider).valueOrNull?.exportUrls['applicants_csv'];
+                      if (url != null) {
+                        launchUrlString(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
                   ),
                 ],
               ),
@@ -331,28 +494,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _SectionTitle('ABOUT & SUPPORT'),
             _SectionContainer(
               children: [
-                ref.watch(cmsPagesListProvider).when(
-                  data: (pages) {
-                    return Column(
-                      children: pages.asMap().entries.map((entry) {
-                        final isLast = entry.key == pages.length - 1;
-                        return _NavTile(
-                          label: entry.value.title,
-                          onTap: () => context.push('/pages/${entry.value.slug}'),
-                          showBorder: !isLast,
+                ref
+                    .watch(cmsPagesListProvider)
+                    .when(
+                      data: (pages) {
+                        return Column(
+                          children: pages.asMap().entries.map((entry) {
+                            final isLast = entry.key == pages.length - 1;
+                            return _NavTile(
+                              label: entry.value.title,
+                              onTap: () =>
+                                  context.push('/pages/${entry.value.slug}'),
+                              showBorder: !isLast,
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
-                    );
-                  },
-                  loading: () => const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  error: (err, _) => const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('Failed to load pages.'),
-                  ),
-                ),
+                      },
+                      loading: () => const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (err, _) => const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('Failed to load pages.'),
+                      ),
+                    ),
               ],
             ),
 
@@ -391,8 +557,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle: 'Log out of this session',
                     textColor: AppColors.error,
                     showArrow: false,
-                    showBorder: false,
+                    showBorder: true,
                     onTap: () => _showSignOutDialog(context),
+                  ),
+                  _NavTile(
+                    label: 'Sign Out All Devices',
+                    subtitle: 'Revoke access on all logged-in devices',
+                    textColor: AppColors.error,
+                    showArrow: false,
+                    showBorder: false,
+                    onTap: () => _showSignOutAllDialog(context),
                   ),
                 ],
               ),
@@ -458,23 +632,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               setSheetState(() => loading = true);
 
               try {
-                await ref
-                    .read(dioClientProvider)
-                    .dio
-                    .patch(
-                      isEmployer ? Ep.empPassword : Ep.seekPassword,
-                      data: {
-                        'current_password': current,
-                        'new_password': next,
-                        'password_confirmation': confirm,
-                      },
-                    );
+                if (isEmployer) {
+                  await ref.read(dioClientProvider).dio.put(
+                    Ep.empPassword,
+                    data: {
+                      'current_password': current,
+                      'new_password': next,
+                    },
+                  );
+                } else {
+                  await ref.read(dioClientProvider).dio.patch(
+                    Ep.seekPassword,
+                    data: {
+                      'current_password': current,
+                      'new_password': next,
+                      'password_confirmation': confirm,
+                    },
+                  );
+                }
 
                 if (!sheetContext.mounted) return;
                 Navigator.pop(sheetContext);
                 if (mounted) {
-                  UJobToast.success(context, l10n.passwordUpdatedSuccess);
+                  UJobToast.success(
+                    context, 
+                    l10n.passwordUpdatedSuccess,
+                    sub: 'You can now log in with your new password.',
+                  );
                 }
+              } on DioException catch (e) {
+                if (!sheetContext.mounted) return;
+                setSheetState(() {
+                  loading = false;
+                  submitError = e.response?.data?['error']?['message'] ?? 
+                                e.response?.data?['message'] ?? 
+                                l10n.error;
+                });
+                if (mounted) UJobToast.error(context, l10n.error, sub: submitError!);
               } catch (_) {
                 if (!sheetContext.mounted) return;
                 setSheetState(() {
@@ -519,8 +713,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   isPassword: true,
                   textInputAction: TextInputAction.done,
                   isRequired: true,
-                  isConfirmPassword: true,
-                  matchValue: newCtrl.text,
                 ),
                 if (submitError != null) ...[
                   SizedBox(height: 12.h),
@@ -605,26 +797,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               setSheetState(() => loading = true);
 
               try {
-                await ref
-                    .read(dioClientProvider)
-                    .dio
-                    .patch(
-                      isEmployer ? Ep.empSettings : Ep.seekSettings,
-                      data: {
-                        fieldKey: phoneValue,
-                        if (isEmail) 'current_password': passwordCtrl.text,
-                      },
-                    );
+                if (isEmployer && isEmail) {
+                  await ref.read(dioClientProvider).dio.post(
+                    Ep.empEmailRequestOtp,
+                    data: {
+                      'new_email': value,
+                      'current_password': passwordCtrl.text,
+                    },
+                  );
+                } else {
+                  await ref
+                      .read(dioClientProvider)
+                      .dio
+                      .patch(
+                        isEmployer ? Ep.empSettings : Ep.seekSettings,
+                        data: {
+                          fieldKey: phoneValue,
+                          if (isEmail) 'current_password': passwordCtrl.text,
+                        },
+                      );
+                }
 
                 if (!sheetContext.mounted) return;
                 Navigator.pop(sheetContext);
                 if (mounted) {
                   if (isEmail) {
-                    context.push('/otp', extra: {'email': value});
+                    final success = await context.push<bool>('/change-email-otp', extra: {'email': currentEmail});
+                    if (success == true) {
+                      ref.invalidate(authProvider);
+                    }
                   } else {
-                    UJobToast.success(context, successMessage);
+                    ref.invalidate(authProvider);
+                    UJobToast.success(context, successMessage, sub: 'Your contact info has been updated.');
                   }
                 }
+              } on DioException catch (e) {
+                if (!sheetContext.mounted) return;
+                setSheetState(() {
+                  loading = false;
+                  submitError = e.response?.data?['error']?['message'] ?? 
+                                e.response?.data?['message'] ?? 
+                                l10n.error;
+                });
+                if (mounted) UJobToast.error(context, l10n.error, sub: submitError!);
               } catch (_) {
                 if (!sheetContext.mounted) return;
                 setSheetState(() {
@@ -735,25 +950,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Future<void> submit() async {
               final password = passwordCtrl.text.trim();
               setSheetState(() {
-                passwordError =
-                    password.isEmpty ? l10n.errorRequiredField : null;
+                passwordError = password.isEmpty
+                    ? l10n.errorRequiredField
+                    : null;
                 submitError = null;
               });
               if (passwordError != null) return;
 
               setSheetState(() => loading = true);
               try {
-                await ref.read(dioClientProvider).dio.patch(
-                  isEmployer ? Ep.emp2FA : Ep.seek2FA,
-                  data: {'enabled': enable, 'current_password': password},
-                );
+                await ref
+                    .read(dioClientProvider)
+                    .dio
+                    .post(
+                      isEmployer ? Ep.emp2FA : Ep.seek2FA,
+                      data: {'enable': enable, 'current_password': password},
+                    );
                 if (!sheetContext.mounted) return;
                 Navigator.pop(sheetContext);
                 if (mounted) {
                   setState(() => _twoFa = enable);
+                  ref.invalidate(authProvider);
                   UJobToast.success(
                     context,
-                    enable ? l10n.twoFAEnabledSuccess : l10n.twoFADisabledSuccess,
+                    enable
+                        ? l10n.twoFAEnabledSuccess
+                        : l10n.twoFADisabledSuccess,
                   );
                 }
               } catch (_) {
@@ -786,7 +1008,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
                 SizedBox(height: 24.h),
                 UJobButton(
-                  label: enable ? l10n.confirm2FAEnable : l10n.confirm2FADisable,
+                  label: enable
+                      ? l10n.confirm2FAEnable
+                      : l10n.confirm2FADisable,
                   onTap: submit,
                   isLoading: loading,
                 ),
@@ -797,8 +1021,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       },
     );
   }
-
-
 
   void _showDeleteDialog(BuildContext context) {
     showDialog(
@@ -815,9 +1037,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         confirmText: context.l10n.delete,
         confirmColor: AppColors.error,
         cancelText: context.l10n.cancel,
-        onConfirm: () => Navigator.pop(ctx),
+        onConfirm: () {
+          Navigator.pop(ctx);
+          _deleteAccount(context);
+        },
       ),
     );
+  }
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    // Show a loading overlay so the user can't interact while deleting
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final isEmployer = ref.read(activeRoleProvider) == 'employer';
+      
+      if (isEmployer) {
+        await ref.read(dioClientProvider).dio.delete('/employer/settings/account');
+      } else {
+        // Fallback for seeker if it exists, otherwise just ignore for now
+        await ref.read(dioClientProvider).dio.delete('/seeker/settings/account');
+      }
+
+      if (!context.mounted) return;
+      
+      // Pop the loading overlay
+      Navigator.pop(context);
+
+      // Successfully deleted on backend, now clear local state
+      ref.read(authProvider.notifier).logout(localOnly: true);
+      
+      // Restart the app from the splash screen
+      context.go('/');
+
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.pop(context); // Pop the loading overlay
+      UJobToast.error(
+        context, 
+        'Failed to delete account', 
+        sub: 'Please try again or contact support.'
+      );
+    }
   }
 
   void _showSignOutDialog(BuildContext context) {
@@ -844,8 +1109,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _signOut(BuildContext context) {
+    // Standard sign out logic (calls the normal logout endpoint)
     ref.read(authProvider.notifier).logout();
     context.go('/role-picker');
+  }
+
+  void _showSignOutAllDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => UJobAlertDialog(
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedLogout01,
+          color: AppColors.error,
+          size: 32.r,
+        ),
+        iconBgColor: AppColors.error,
+        title: 'Sign Out All Devices',
+        description: 'This will revoke all active sessions across all devices. You will be logged out of this device immediately.',
+        confirmText: 'Sign Out All',
+        confirmColor: AppColors.error,
+        cancelText: context.l10n.cancel,
+        onConfirm: () {
+          Navigator.pop(ctx);
+          _signOutAll(context);
+        },
+      ),
+    );
+  }
+
+  Future<void> _signOutAll(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      await ref.read(dioClientProvider).dio.post('/employer/settings/sign-out-all');
+
+      if (!context.mounted) return;
+      
+      Navigator.pop(context); // Pop the loading overlay
+      
+      // Local wipe only, since the remote session is already dead!
+      ref.read(authProvider.notifier).logout(localOnly: true);
+      context.go('/');
+
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.pop(context); // Pop the loading overlay
+      UJobToast.error(
+        context, 
+        'Failed to sign out all devices', 
+        sub: 'Please check your connection and try again.'
+      );
+    }
   }
 }
 
@@ -969,7 +1287,53 @@ class _SectionContainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.borderLight),
       ),
-      child: Column(children: children),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _ValueTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+  final bool showBorder;
+
+  const _ValueTile({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.showBorder = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(20.w, 16.h, 16.w, 16.h),
+        decoration: BoxDecoration(
+          border: showBorder
+              ? Border(bottom: BorderSide(color: AppColors.borderLight))
+              : null,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: AppText.bodyBold.copyWith(color: AppColors.text),
+              ),
+            ),
+            Text(
+              value,
+              style: AppText.body.copyWith(color: AppColors.muted),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
-import '../../features/shared/notifications/notifications_screen.dart';
+import '../../features/shared/notifications/notifications_provider.dart';
 
 class UJobNotificationButton extends ConsumerWidget {
   final VoidCallback onTap;
@@ -18,7 +18,7 @@ class UJobNotificationButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unreadCount = ref.watch(notifsProvider).where((n) => !n.isRead).length;
+    final unreadCount = ref.watch(unreadNotificationCountProvider).valueOrNull ?? 0;
 
     return Stack(
       clipBehavior: Clip.none,

@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/job.dart';
 import '../../../core/models/company_profile.dart';
+import '../../../core/api/dio_client.dart';
+import '../../../core/api/api_endpoints.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../jobs/employer_job_provider.dart';
 
 final companyProfileProvider = StateProvider<CompanyProfile>((ref) {
@@ -29,31 +32,7 @@ final companyProfileProvider = StateProvider<CompanyProfile>((ref) {
 
 final companyProfileCompletenessProvider = Provider<double>((ref) {
   final profile = ref.watch(companyProfileProvider);
-  int filled = 0;
-  int total = 16;
-
-  if (profile.name.isNotEmpty) filled++;
-  if (profile.logo != null && profile.logo!.isNotEmpty) filled++;
-  if (profile.industry != null && profile.industry!.isNotEmpty) filled++;
-  if (profile.description != null && profile.description!.isNotEmpty) filled++;
-  if (profile.website != null && profile.website!.isNotEmpty) filled++;
-  if (profile.contactPersonName != null &&
-      profile.contactPersonName!.isNotEmpty)
-    filled++;
-  if (profile.contactEmail != null && profile.contactEmail!.isNotEmpty)
-    filled++;
-  if (profile.contactPhone != null && profile.contactPhone!.isNotEmpty)
-    filled++;
-  if (profile.address != null && profile.address!.isNotEmpty) filled++;
-  if (profile.city != null && profile.city!.isNotEmpty) filled++;
-  if (profile.postcode != null && profile.postcode!.isNotEmpty) filled++;
-  if (profile.country != null && profile.country!.isNotEmpty) filled++;
-  if (profile.size != null && profile.size!.isNotEmpty) filled++;
-  if (profile.workType != null && profile.workType!.isNotEmpty) filled++;
-  if (profile.linkedInUrl != null && profile.linkedInUrl!.isNotEmpty) filled++;
-  if (profile.facebookUrl != null && profile.facebookUrl!.isNotEmpty) filled++;
-
-  return filled / total.toDouble();
+  return profile.profileStatus / 100.0;
 });
 
 final isCompanyProfileCompleteProvider = Provider<bool>((ref) {
@@ -73,6 +52,9 @@ class EmployerDashboardData {
   final int totalApplicants;
   final int shortlisted;
   final List<Job> recentJobs;
+  final bool isVerified;
+  final String verificationStatus;
+  final int profileCompleted;
 
   EmployerDashboardData({
     required this.companyName,
@@ -81,20 +63,42 @@ class EmployerDashboardData {
     required this.totalApplicants,
     required this.shortlisted,
     required this.recentJobs,
+    required this.isVerified,
+    required this.verificationStatus,
+    required this.profileCompleted,
   });
 }
 
-final employerDashboardProvider = Provider.autoDispose<EmployerDashboardData>((
-  ref,
-) {
-  final jobs = ref.watch(demoEmployerJobsProvider);
-  final company = ref.watch(companyProfileProvider);
-  return EmployerDashboardData(
-    companyName: company.name,
-    totalJobs: jobs.length,
-    activeJobs: jobs.where((job) => job.status == JobStatus.active).length,
-    totalApplicants: 124,
-    shortlisted: 23,
-    recentJobs: jobs.take(3).toList(),
+final employerDashboardProvider = FutureProvider<EmployerDashboardData>((ref) async {
+  final client = ref.watch(dioClientProvider);
+  
+  // Fetch sequentially to avoid Future.wait generic inference issues
+  final profileRes = await client.dio.get(Ep.employerMe);
+  final dashRes = await client.dio.get(Ep.empDashboard);
+  
+  final profileData = profileRes.data['data'] ?? {};
+  final companiesList = profileData['companies'] as List? ?? [];
+  final companyData = companiesList.isNotEmpty ? (companiesList.first as Map<String, dynamic>) : {};
+  
+  final dashData = dashRes.data['data'] ?? {};
+  final recentJobsList = (dashData['recent_jobs'] as List?) ?? [];
+  
+  final dash = EmployerDashboardData(
+    companyName: companyData['name'] ?? 'Your Company',
+    totalJobs: dashData['total_jobs'] ?? 0,
+    activeJobs: dashData['active_jobs'] ?? 0,
+    totalApplicants: dashData['total_applicants'] ?? 0,
+    shortlisted: dashData['shortlisted_count'] ?? 0,
+    recentJobs: recentJobsList.map((j) => Job.fromJson(j)).toList(),
+    isVerified: companyData['verification_status'] == 'verified' || profileData['verification_status'] == 'verified',
+    verificationStatus: companyData['verification_status']?.toString() ?? profileData['verification_status']?.toString() ?? 'unverified',
+    profileCompleted: [
+      int.tryParse(profileData['profile_completed']?.toString() ?? ''),
+      int.tryParse(companyData['profile_completed']?.toString() ?? ''),
+      int.tryParse(dashData['profile_completed']?.toString() ?? ''),
+    ].where((e) => e != null).fold(0, (max, e) => e! > max ? e : max),
   );
+  
+  print('--- DASHBOARD PROVIDER PARSED PROFILE COMPLETED: ${dash.profileCompleted} ---');
+  return dash;
 });

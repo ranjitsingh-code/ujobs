@@ -15,6 +15,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_button.dart';
+import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
 import '../../../core/widgets/ujob_job_card.dart';
 import '../jobs/seeker_job_provider.dart';
@@ -740,7 +741,7 @@ class _SeekerCompanyProfileScreenState
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => UJobLoading(count: 1),
       error: (e, s) => Center(child: Text(context.l10n.errorLoadingJobs)),
     );
   }

@@ -166,9 +166,18 @@ class _UJobTextFieldState extends State<UJobTextField> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                widget.label,
-                style: AppText.label.copyWith(color: AppColors.muted),
+                            RichText(
+                text: TextSpan(
+                  text: widget.label,
+                  style: AppText.label.copyWith(color: AppColors.muted),
+                  children: [
+                    if (widget.isRequired)
+                      TextSpan(
+                        text: ' *',
+                        style: AppText.label.copyWith(color: AppColors.error),
+                      ),
+                  ],
+                ),
               ),
               if (widget.labelTrailing != null) widget.labelTrailing!,
             ],

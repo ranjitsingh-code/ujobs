@@ -2,6 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/job.dart';
 import '../../../core/models/company.dart';
+import '../../../core/api/dio_client.dart';
+import '../../../core/providers/auth_provider.dart';
+import 'employer_job_service.dart';
+
+final employerJobServiceProvider = Provider((ref) {
+  return EmployerJobService(ref.watch(dioClientProvider));
+});
 
 final demoEmployerJobsProvider =
     StateNotifierProvider<DemoEmployerJobsNotifier, List<Job>>((ref) {
@@ -299,15 +306,18 @@ final employerJobsProvider = FutureProvider.family<List<Job>, String?>((
   ref,
   status,
 ) async {
-  final jobs = ref.watch(demoEmployerJobsProvider);
-  if (status == null) return jobs;
-  return jobs.where((job) => job.status.name == status).toList();
+  try {
+    return await ref.read(employerJobServiceProvider).getMyJobs(status: status);
+  } catch (e, stackTrace) {
+    print('Error loading jobs: $e');
+    print(stackTrace);
+    rethrow;
+  }
 });
 
 final employerJobDetailProvider = FutureProvider.family<Job, int>((
   ref,
   id,
 ) async {
-  final jobs = ref.watch(demoEmployerJobsProvider);
-  return jobs.firstWhere((job) => job.id == id);
+  return ref.read(employerJobServiceProvider).getJobDetails(id);
 });

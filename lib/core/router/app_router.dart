@@ -10,9 +10,11 @@ import '../../features/auth/splash_screen.dart';
 import '../../features/auth/role_picker_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/account_suspended_screen.dart';
+import '../../features/auth/account_locked_screen.dart';
 import '../../features/auth/register_employer_screen.dart';
 import '../../features/auth/register_seeker_screen.dart';
 import '../../features/auth/otp_screen.dart';
+import '../../features/shared/settings/change_email_otp_verify_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/onboarding_screen.dart';
 import '../../features/employer/employer_shell.dart';
@@ -21,6 +23,7 @@ import '../../features/employer/jobs/my_jobs_screen.dart';
 import '../../features/employer/jobs/post_job_screen.dart';
 import '../../features/employer/jobs/employer_job_detail_screen.dart';
 import '../../features/employer/applicants/applicants_screen.dart';
+import '../../features/employer/applicants/applicant_detail_screen.dart';
 import '../../features/employer/applicants/job_applicants_screen.dart';
 import '../../features/employer/company/company_profile_screen.dart';
 import '../../features/employer/messages/employer_messages_screen.dart';
@@ -35,11 +38,13 @@ import '../../features/seeker/applications/my_applications_screen.dart';
 import '../../features/seeker/messages/seeker_messages_screen.dart';
 import '../../features/seeker/profile/seeker_profile_screen.dart';
 import '../../features/shared/settings/settings_screen.dart';
+import '../../features/shared/settings/audit_log_screen.dart';
 import '../../features/shared/webview/webview_screen.dart';
 import '../../features/seeker/apply/apply_screen.dart';
 import '../../features/shared/chat/chat_screen.dart';
 import '../../features/shared/legal/legal_page_screen.dart';
 import '../../features/shared/legal/cms_page_screen.dart';
+import '../../features/employer/wallet/wallet_screen.dart';
 
 final _routerNotifier = _AppRouterNotifier();
 
@@ -53,7 +58,7 @@ final splashMinDurationProvider = FutureProvider<bool>((ref) async {
   return true;
 });
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   ref.listen<AsyncValue<dynamic>>(
@@ -71,7 +76,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: _routerNotifier,
     redirect: (context, state) {
@@ -98,6 +103,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc == '/forgot-password' ||
           loc == '/terms-and-conditions' ||
           loc == '/privacy-policy' ||
+          loc == '/locked' ||
+          loc == '/suspended' ||
           loc.startsWith('/register');
 
       if (!isLoggedIn && !isPublicRoute) {
@@ -149,6 +156,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (_, _) => _fadeTransition(const AccountSuspendedScreen()),
       ),
       GoRoute(
+        path: '/locked',
+        pageBuilder: (_, state) => _fadeTransition(AccountLockedScreen(message: state.extra as String?)),
+      ),
+      GoRoute(
         path: '/register/employer',
         builder: (_, _) => const RegisterEmployerScreen(),
       ),
@@ -167,6 +178,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             );
           }
           return OtpScreen(userId: extra as String?);
+        },
+      ),
+      GoRoute(
+        path: '/change-email-otp',
+        builder: (_, state) {
+          final extra = state.extra;
+          if (extra is Map<String, dynamic>) {
+            return ChangeEmailOtpVerifyScreen(email: extra['email'] as String?);
+          }
+          return const ChangeEmailOtpVerifyScreen();
         },
       ),
       GoRoute(
@@ -230,6 +251,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/employer/jobs/:id',
             builder: (_, state) => EmployerJobDetailScreen(
               jobId: int.parse(state.pathParameters['id']!),
+              jobData: state.extra as Job?,
             ),
           ),
           GoRoute(
@@ -254,6 +276,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
+            path: '/employer/applicants/:app_id',
+            builder: (_, state) => ApplicantDetailScreen(
+              applicantId: state.pathParameters['app_id'],
+            ),
+          ),
+          GoRoute(
             path: '/employer/messages',
             pageBuilder: (_, _) =>
                 const NoTransitionPage(child: EmployerMessagesScreen()),
@@ -270,6 +298,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/employer/settings',
             builder: (_, _) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/employer/wallet',
+            builder: (_, _) => const WalletScreen(),
+          ),
+          GoRoute(
+            path: '/employer/settings/audit-log',
+            builder: (_, _) => const AuditLogScreen(),
+          ),
+          GoRoute(
+            path: '/employer/settings/change-email/verify-otp',
+            builder: (_, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return ChangeEmailOtpVerifyScreen(email: extra?['email'] as String?);
+            },
           ),
         ],
       ),
@@ -340,12 +383,23 @@ final routerProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: SeekerProfileScreen()),
           ),
           GoRoute(
-            path: '/seeker/notifications',
-            builder: (_, _) => const NotificationsScreen(),
-          ),
-          GoRoute(
             path: '/seeker/settings',
             builder: (_, _) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/seeker/settings/audit-log',
+            builder: (_, _) => const AuditLogScreen(),
+          ),
+          GoRoute(
+            path: '/seeker/settings/change-email/verify-otp',
+            builder: (_, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return ChangeEmailOtpVerifyScreen(email: extra?['email'] as String?);
+            },
+          ),
+          GoRoute(
+            path: '/seeker/notifications',
+            builder: (_, _) => const NotificationsScreen(),
           ),
         ],
       ),

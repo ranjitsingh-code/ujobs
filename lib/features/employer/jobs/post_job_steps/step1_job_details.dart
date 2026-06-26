@@ -6,9 +6,12 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/ujob_text_field.dart';
-import '../../../../core/widgets/ujob_dropdown_field.dart';
+import '../../../../core/widgets/ujob_loading.dart';
 import '../../../../core/widgets/ujob_chip_group.dart';
+import '../../../../core/widgets/ujob_dropdown_field.dart';
 import '../../../../core/widgets/ujob_rich_text_editor.dart';
+import '../../../../core/providers/job_form_options_provider.dart';
+import '../../../../core/providers/categories_provider.dart';
 import '../post_job_wizard_provider.dart';
 
 class Step1JobDetails extends ConsumerWidget {
@@ -18,6 +21,17 @@ class Step1JobDetails extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(postJobWizardProvider);
     final notifier = ref.read(postJobWizardProvider.notifier);
+    
+    final optionsAsync = ref.watch(jobFormOptionsProvider);
+    final categoriesAsync = ref.watch(categoriesProvider);
+    
+    final options = optionsAsync.valueOrNull;
+    final categories = categoriesAsync.valueOrNull;
+    
+    if (options == null || categories == null) {
+      return UJobLoading(count: 3);
+    }
+
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
@@ -36,74 +50,11 @@ class Step1JobDetails extends ConsumerWidget {
 
           UJobDropdownField<String>.simple(
             label: context.l10n.jobCategory,
-            value: state.category.isEmpty ? 'Technology' : state.category,
-            options: const [
-              ('Accounting & Auditing', 'Accounting & Auditing'),
-              ('Agriculture', 'Agriculture'),
-              ('Animation & Multimedia', 'Animation & Multimedia'),
-              ('Architecture', 'Architecture'),
-              (
-                'Artificial Intelligence & Machine Learning',
-                'Artificial Intelligence & Machine Learning',
-              ),
-              ('Automotive', 'Automotive'),
-              ('Banking', 'Banking'),
-              ('Biotechnology', 'Biotechnology'),
-              ('Blockchain & Cryptocurrency', 'Blockchain & Cryptocurrency'),
-              ('Call Centers', 'Call Centers'),
-              ('Construction', 'Construction'),
-              ('Consulting', 'Consulting'),
-              ('Customer Service & BPO', 'Customer Service & BPO'),
-              ('Cybersecurity', 'Cybersecurity'),
-              ('Dairy Industry', 'Dairy Industry'),
-              ('Data Analytics', 'Data Analytics'),
-              ('Design', 'Design'),
-              ('Education', 'Education'),
-              ('Electronics', 'Electronics'),
-              ('Energy', 'Energy'),
-              ('Environmental Services', 'Environmental Services'),
-              ('Event Management', 'Event Management'),
-              ('Fashion & Apparel', 'Fashion & Apparel'),
-              ('Finance', 'Finance'),
-              ('Financial Services', 'Financial Services'),
-              ('FinTech', 'FinTech'),
-              ('Food & Beverage', 'Food & Beverage'),
-              ('Freelancing & Gig Economy', 'Freelancing & Gig Economy'),
-              ('Gaming', 'Gaming'),
-              ('Government', 'Government'),
-              ('Healthcare', 'Healthcare'),
-              ('Hospitality', 'Hospitality'),
-              ('Hospitals & Clinics', 'Hospitals & Clinics'),
-              ('Human Resources', 'Human Resources'),
-              ('Import & Export', 'Import & Export'),
-              ('Insurance', 'Insurance'),
-              ('Internet & E-commerce', 'Internet & E-commerce'),
-              ('Investment Management', 'Investment Management'),
-              ('Legal Services', 'Legal Services'),
-              ('Logistics & Supply Chain', 'Logistics & Supply Chain'),
-              ('Manufacturing', 'Manufacturing'),
-              ('Marketing', 'Marketing'),
-              ('Media & Entertainment', 'Media & Entertainment'),
-              ('Oil & Gas', 'Oil & Gas'),
-              ('Operations', 'Operations'),
-              ('Pharmaceuticals', 'Pharmaceuticals'),
-              ('Poultry Industry', 'Poultry Industry'),
-              ('Real Estate', 'Real Estate'),
-              ('Recruitment & Staffing', 'Recruitment & Staffing'),
-              ('Renewable Energy', 'Renewable Energy'),
-              ('Research & Development', 'Research & Development'),
-              ('Retail', 'Retail'),
-              ('Sales', 'Sales'),
-              ('Security Services', 'Security Services'),
-              ('Software Development', 'Software Development'),
-              ('Sports & Fitness', 'Sports & Fitness'),
-              ('Technology', 'Technology'),
-              ('Telecommunications', 'Telecommunications'),
-              ('Textile Industry', 'Textile Industry'),
-              ('Training & Development', 'Training & Development'),
-              ('Transportation', 'Transportation'),
-              ('Travel & Tourism', 'Travel & Tourism'),
-              ('Wholesale', 'Wholesale'),
+            value: state.category.isEmpty 
+                ? (categories.isNotEmpty ? categories.first.id : '') 
+                : state.category,
+            options: [
+              ...categories.map((c) => (c.name, c.id)),
               ('Other', 'Other'),
             ],
             onChanged: (val) {
@@ -147,18 +98,11 @@ class Step1JobDetails extends ConsumerWidget {
           ),
           SizedBox(height: 8.h),
           UJobChipGroup<String>(
-            options: const [
-              'Full-Time',
-              'Part-Time',
-              'Contract',
-              'Internship',
-              'Temporary',
-              'Freelance',
-            ],
-            selectedValue: state.employmentType.isEmpty
-                ? 'Full-Time'
+            options: options.employmentTypes.map((e) => e.value).toList(),
+            selectedValue: state.employmentType.isEmpty && options.employmentTypes.isNotEmpty
+                ? options.employmentTypes.first.value
                 : state.employmentType,
-            labelBuilder: (val) => val,
+            labelBuilder: (val) => options.employmentTypes.firstWhere((e) => e.value == val, orElse: () => options.employmentTypes.first).label,
             onChanged: (val) =>
                 notifier.updateField(state.copyWith(employmentType: val)),
           ),
@@ -170,11 +114,11 @@ class Step1JobDetails extends ConsumerWidget {
           ),
           SizedBox(height: 8.h),
           UJobChipGroup<String>(
-            options: const ['On-site', 'Remote', 'Hybrid'],
-            selectedValue: state.workplaceType.isEmpty
-                ? 'On-site'
+            options: options.workplaceTypes.map((e) => e.value).toList(),
+            selectedValue: state.workplaceType.isEmpty && options.workplaceTypes.isNotEmpty
+                ? options.workplaceTypes.first.value
                 : state.workplaceType,
-            labelBuilder: (val) => val,
+            labelBuilder: (val) => options.workplaceTypes.firstWhere((e) => e.value == val, orElse: () => options.workplaceTypes.first).label,
             onChanged: (val) =>
                 notifier.updateField(state.copyWith(workplaceType: val)),
           ),
@@ -217,14 +161,8 @@ class Step1JobDetails extends ConsumerWidget {
                     Expanded(
                       child: UJobDropdownField<String>.simple(
                         label: context.l10n.currency,
-                        value: state.currency.isEmpty ? 'USD' : state.currency,
-                        options: const [
-                          ('USD', 'USD'),
-                          ('EUR', 'EUR'),
-                          ('GBP', 'GBP'),
-                          ('AED', 'AED'),
-                          ('SAR', 'SAR'),
-                        ],
+                        value: state.currency.isEmpty && options.currencies.isNotEmpty ? options.currencies.first.value : state.currency,
+                        options: options.currencies.map((c) => (c.label, c.value)).toList(),
                         onChanged: (val) {
                           if (val != null)
                             notifier.updateField(state.copyWith(currency: val));
@@ -235,14 +173,10 @@ class Step1JobDetails extends ConsumerWidget {
                     Expanded(
                       child: UJobDropdownField<String>.simple(
                         label: context.l10n.period,
-                        value: state.salaryPeriod.isEmpty
-                            ? 'Yearly'
+                        value: state.salaryPeriod.isEmpty && options.salaryPeriods.isNotEmpty
+                            ? options.salaryPeriods.first.value
                             : state.salaryPeriod,
-                        options: const [
-                          ('Hourly', 'Hourly'),
-                          ('Monthly', 'Monthly'),
-                          ('Yearly', 'Yearly'),
-                        ],
+                        options: options.salaryPeriods.map((p) => (p.label, p.value)).toList(),
                         onChanged: (val) {
                           if (val != null)
                             notifier.updateField(

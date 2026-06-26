@@ -1079,7 +1079,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetPasswordSub.
   ///
   /// In en, this message translates to:
-  /// **'Enter your email and we\'ll send you a reset link'**
+  /// **'Enter your email and we\'ll send you an OTP'**
   String get resetPasswordSub;
 
   /// No description provided for @sendResetLink.
@@ -1087,6 +1087,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send reset link'**
   String get sendResetLink;
+
+  /// No description provided for @sendOtpBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Send OTP'**
+  String get sendOtpBtn;
 
   /// No description provided for @errorEnterEmail.
   ///
@@ -2048,6 +2054,78 @@ abstract class AppLocalizations {
   /// **'Invalid code entered.'**
   String get otpErrorInvalid;
 
+  /// No description provided for @auditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit Log'**
+  String get auditLog;
+
+  /// No description provided for @auditLogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review your account security and login events'**
+  String get auditLogSubtitle;
+
+  /// No description provided for @ipAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'IP Address'**
+  String get ipAddress;
+
+  /// No description provided for @deviceBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Device / Browser'**
+  String get deviceBrowser;
+
+  /// No description provided for @noAuditLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'No audit logs found.'**
+  String get noAuditLogs;
+
+  /// No description provided for @walletAndBilling.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet & Billing'**
+  String get walletAndBilling;
+
+  /// No description provided for @walletBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet Balance'**
+  String get walletBalance;
+
+  /// No description provided for @transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get transactions;
+
+  /// No description provided for @paymentHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment History'**
+  String get paymentHistory;
+
+  /// No description provided for @invoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice'**
+  String get invoice;
+
+  /// No description provided for @noTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions found.'**
+  String get noTransactions;
+
+  /// No description provided for @noPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'No payment history found.'**
+  String get noPayments;
+
   /// No description provided for @changePassword.
   ///
   /// In en, this message translates to:
@@ -2237,7 +2315,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountSection.
   ///
   /// In en, this message translates to:
-  /// **'ACCOUNT'**
+  /// **'Account'**
   String get accountSection;
 
   /// No description provided for @deleteAccount.

@@ -1,0 +1,3783 @@
+{
+  "info": {
+    "name": "Job Portal Mobile API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticate user with email and password. Returns a non-expiring accessToken in the JSON body — store it permanently and send as \"Authorization: Bearer <token>\" on every subsequent request. No cookies are ever set. No refreshToken is returned (mobile tokens never expire). If OTP/2FA is required the accessToken is NOT returned — the response contains requires_otp:true and user_id. The app must then call POST /mobile/auth/verify-otp with that user_id and the emailed code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"job_seeker\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Job Seeker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/auth/register/seeker",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "auth",
+                "register",
+                "seeker"
+              ]
+            },
+            "description": "Create a new job seeker account. Returns a non-expiring accessToken — no cookies are set. If admin has email verification enabled, requires_otp:true is returned and no token is issued — call POST /mobile/auth/verify-otp next.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"phone\": \"7911 123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Employer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/auth/register/employer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "auth",
+                "register",
+                "employer"
+              ]
+            },
+            "description": "Create a new employer account with company details. Returns a non-expiring accessToken — no cookies are set. If admin has email verification enabled, requires_otp:true is returned. When ch_company_number is provided (and is_non_limited is false), the server verifies the company against the live Companies House API: blocks if the company is not active, blocks if another employer already registered the same company number, and uses the authoritative CH data to populate the company record. If CH integration is disabled or the API is unreachable the check is skipped and registration proceeds. The company_website field accepts URLs with or without https:// — the protocol is added automatically.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"company_name\": \"example_company_name\",\n  \"phone\": \"7911 123456\",\n  \"company_about\": \"example_company_about\",\n  \"company_city\": \"example_company_city\",\n  \"company_country\": \"example_company_country\",\n  \"company_website\": \"example_company_website\",\n  \"ch_company_number\": \"example_ch_company_number\",\n  \"ch_company_status\": \"example_ch_company_status\",\n  \"ch_company_type\": \"example_ch_company_type\",\n  \"is_non_limited\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/auth/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "Verify the 6-digit OTP sent to the user's email after registration or login (when 2FA is enabled). The user_id comes from the login or register response when requires_otp:true. On success a non-expiring accessToken is returned — store it permanently and use as Authorization: Bearer <token>.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"example_user_id\",\n  \"code\": \"example_code\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/auth/resend-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "auth",
+                "resend-otp"
+              ]
+            },
+            "description": "Resend the signup/verification OTP to the user's email. Use when the user didn't receive the code after registration. Requires the user_id from the register response.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"example_user_id\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Get the authenticated user info from the Bearer token. Use on app launch to validate the stored token and restore the session."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Log out the current session. The server records an audit event. No cookies are cleared (mobile has none) — the app must discard the stored accessToken immediately after calling this endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password — Request OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/auth/forgot-password/request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "auth",
+                "forgot-password",
+                "request"
+              ]
+            },
+            "description": "Send a password reset code to the given email address. Always returns 200 to prevent email enumeration.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password — Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/auth/forgot-password/reset",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "auth",
+                "forgot-password",
+                "reset"
+              ]
+            },
+            "description": "Reset the account password using the code received by email. All body fields are snake_case.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"code\": \"example_code\",\n  \"new_password\": \"example_new_password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "List Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/jobs?search=react developer london&category=3&type=full_time&workplace=hybrid&city=London&company=Acme&date_posted=7&experience=3-5&salary_min=40000&salary_max=80000&featured=1&sort=newest&page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "react developer london",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "3",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "full_time",
+                  "disabled": true
+                },
+                {
+                  "key": "workplace",
+                  "value": "hybrid",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "London",
+                  "disabled": true
+                },
+                {
+                  "key": "company",
+                  "value": "Acme",
+                  "disabled": true
+                },
+                {
+                  "key": "date_posted",
+                  "value": "7",
+                  "disabled": true
+                },
+                {
+                  "key": "experience",
+                  "value": "3-5",
+                  "disabled": true
+                },
+                {
+                  "key": "salary_min",
+                  "value": "40000",
+                  "disabled": true
+                },
+                {
+                  "key": "salary_max",
+                  "value": "80000",
+                  "disabled": true
+                },
+                {
+                  "key": "featured",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "newest",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated public job listings with full search and filter support. All params are optional and combinable."
+          },
+          "response": []
+        },
+        {
+          "name": "Job Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/jobs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "jobs",
+                "1"
+              ]
+            },
+            "description": "Get full details for a single job posting including company info, skills, and salary."
+          },
+          "response": []
+        },
+        {
+          "name": "Job Screening Questions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/jobs/1/screening-questions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "jobs",
+                "1",
+                "screening-questions"
+              ]
+            },
+            "description": "Get the screening questions for a job. Used in the apply flow before submission."
+          },
+          "response": []
+        },
+        {
+          "name": "List Categories / Industries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "categories"
+              ]
+            },
+            "description": "Get all active categories managed by admin. Serves two purposes: (1) job category filter on the job search screen, (2) industry selector on the employer company profile (industry_category_id field). Call once on app launch and cache."
+          },
+          "response": []
+        },
+        {
+          "name": "Platform Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "stats"
+              ]
+            },
+            "description": "Get platform-wide statistics. Displayed on homepage hero section."
+          },
+          "response": []
+        },
+        {
+          "name": "Subscription Plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/plans",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "plans"
+              ]
+            },
+            "description": "Get all active subscription plans for employer upgrade/billing screens."
+          },
+          "response": []
+        },
+        {
+          "name": "List Companies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/companies?search=react developer london&page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "companies"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "react developer london",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated public company directory. Suspended employer companies are excluded."
+          },
+          "response": []
+        },
+        {
+          "name": "Company Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/companies/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "companies",
+                "1"
+              ]
+            },
+            "description": "Get company profile and its active job listings. Returns 404 if profile is set to private. Contact info (contact_person, contact_email) is only included when the employer has enabled show_contact_info AND the request is authenticated."
+          },
+          "response": []
+        },
+        {
+          "name": "List Countries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/countries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "countries"
+              ]
+            },
+            "description": "Get all countries that the admin has set to active. Used for: (1) dial code picker on phone number inputs (phone_code field), (2) country selector on seeker profile location, (3) country selector on job search filter, (4) company location on employer profile. Only countries enabled by admin are returned."
+          },
+          "response": []
+        },
+        {
+          "name": "List Skills",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/skills",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "skills"
+              ]
+            },
+            "description": "Get the full list of skills managed by admin. Used for: (1) skill tag picker on seeker profile (send selected skill IDs in the skills array when updating profile), (2) preferred_skills autocomplete on job post form. Call once on app launch and cache."
+          },
+          "response": []
+        },
+        {
+          "name": "Site Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "settings"
+              ]
+            },
+            "description": "Get public-safe site settings: site name, logo, colors, feature flags. SMTP/private credentials are excluded. Call on app launch."
+          },
+          "response": []
+        },
+        {
+          "name": "Homepage CMS Content",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/homepage",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "homepage"
+              ]
+            },
+            "description": "Get all homepage CMS content: hero text, how-it-works steps, AI features, testimonials header, CTA section."
+          },
+          "response": []
+        },
+        {
+          "name": "Testimonials",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/testimonials",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "testimonials"
+              ]
+            },
+            "description": "Get active testimonials for display on homepage. Returns empty array if testimonials are disabled in admin settings."
+          },
+          "response": []
+        },
+        {
+          "name": "CMS Pages List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/pages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "pages"
+              ]
+            },
+            "description": "Get all published CMS pages (About, Privacy Policy, Terms, etc.)."
+          },
+          "response": []
+        },
+        {
+          "name": "CMS Page Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/pages/privacy-policy",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "pages",
+                "privacy-policy"
+              ]
+            },
+            "description": "Get a single CMS page by its slug. Used for About, Privacy, Terms screens in mobile."
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Contact Form",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/contact",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "contact"
+              ]
+            },
+            "description": "Submit a contact/support message. Rate limited to 5 requests per 15 minutes per IP.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Technologies Ltd\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"7911 123456\",\n  \"subject\": \"General Enquiry\",\n  \"message\": \"Hello, I have a question about using the platform.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Companies House Search",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/companies-house/search?q=react developer london",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "companies-house",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "react developer london",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Search Companies House for registered UK companies by name. Used during employer registration to pre-fill company details. Rate limited to 30 requests per minute. Returns empty array if query is under 2 characters. If the CH API is unavailable or the integration is disabled, returns { success: true, data: [], error: \"...\" } (always HTTP 200) — the app should allow the user to proceed with manual entry in that case."
+          },
+          "response": []
+        },
+        {
+          "name": "Companies House Company Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/public/companies-house/company/:number",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "public",
+                "companies-house",
+                "company",
+                ":number"
+              ]
+            },
+            "description": "Get full details for a specific UK registered company from Companies House by company number. Used during employer registration to auto-fill all company fields."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Seeker",
+      "item": [
+        {
+          "name": "Seeker Feature Flags",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/features",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "features"
+              ]
+            },
+            "description": "Get all admin-controlled feature flags relevant to the job seeker app. No user authentication required — call this at app launch to conditionally show/hide features. All values are booleans."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Seeker Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "me"
+              ]
+            },
+            "description": "Get the authenticated seeker full profile: personal info, skills, experience, resume list, preferences."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Seeker Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "me"
+              ]
+            },
+            "description": "Update any part of the seeker profile in one call. All fields are optional — only send what changed. Covers personal info, location, relocation, professional info, skills, work experience, education, and online presence.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"phone\": \"7911 123456\",\n  \"phone_code\": \"+44\",\n  \"show_phone\": true,\n  \"country\": \"GB\",\n  \"city\": \"London\",\n  \"address\": \"123 Oxford Street\",\n  \"zip_code\": \"W1D 1BS\",\n  \"open_to_relocation\": true,\n  \"relocation_type\": \"specific\",\n  \"relocation_cities\": \"Manchester, Birmingham\",\n  \"headline\": \"Senior React Developer · 5+ yrs experience\",\n  \"summary\": \"<p>Passionate software engineer specialising in modern front-end development with React and TypeScript.</p>\",\n  \"experience_years\": 5.5,\n  \"expected_salary\": 65000,\n  \"salary_currency\": \"GBP\",\n  \"availability\": \"immediately\",\n  \"profile_visibility\": \"public\",\n  \"skills\": [\n    1,\n    3,\n    7\n  ],\n  \"seeker_experiences\": [\n    {\n      \"job_title\": \"Frontend Developer\",\n      \"company_name\": \"Tech Corp\",\n      \"location\": \"London\",\n      \"start_date\": \"2022-01-15\",\n      \"end_date\": \"\",\n      \"is_current\": true,\n      \"description\": \"Built React applications serving 500k users.\"\n    }\n  ],\n  \"seeker_educations\": [\n    {\n      \"institution\": \"University of London\",\n      \"degree\": \"BSc Computer Science\",\n      \"field_of_study\": \"Computer Science\",\n      \"start_date\": \"2017-09-01\",\n      \"end_date\": \"2021-06-30\",\n      \"grade\": \"First Class\"\n    }\n  ],\n  \"linkedin_url\": \"https://linkedin.com/in/johndoe\",\n  \"github_url\": \"https://github.com/johndoe\",\n  \"portfolio_url\": \"https://johndoe.dev\",\n  \"twitter_url\": \"https://x.com/johndoe\",\n  \"website_url\": \"https://johndoe.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AI Matched Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/matching-jobs?page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "matching-jobs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get jobs matched to the seeker profile based on skills, location, and preferences."
+          },
+          "response": []
+        },
+        {
+          "name": "Apply for Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/jobs/1/apply",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "jobs",
+                "1",
+                "apply"
+              ]
+            },
+            "description": "Submit a job application with optional cover letter, resume, and screening question answers.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resume_id\": \"example_resume_id\",\n  \"cover_letter\": \"example_cover_letter\",\n  \"answers\": [\n    {\n      \"questionId\": 1,\n      \"answer\": \"Yes, I have 5 years of React experience\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Application Status for Job",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/jobs/1/application-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "jobs",
+                "1",
+                "application-status"
+              ]
+            },
+            "description": "Check if the seeker has already applied to a specific job. Use to toggle Apply/Applied button state."
+          },
+          "response": []
+        },
+        {
+          "name": "My Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/applications?page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "applications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated list of the seeker applications with job, company, and current stage info."
+          },
+          "response": []
+        },
+        {
+          "name": "Saved Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/saved-jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "saved-jobs"
+              ]
+            },
+            "description": "Get all jobs bookmarked/saved by the seeker."
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Save Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/jobs/1/save",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "jobs",
+                "1",
+                "save"
+              ]
+            },
+            "description": "Toggle the save state for a job. If not saved, saves it. If already saved, removes it. Both POST and DELETE call the same toggle logic."
+          },
+          "response": []
+        },
+        {
+          "name": "Unsave Job (Toggle)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/jobs/1/save",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "jobs",
+                "1",
+                "save"
+              ]
+            },
+            "description": "Toggle the save state for a job — same toggle logic as POST. Conventionally used to unsave."
+          },
+          "response": []
+        },
+        {
+          "name": "List Resumes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/resumes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "resumes"
+              ]
+            },
+            "description": "Get all uploaded resumes for the seeker. The primary resume is flagged with isPrimary: true."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Resume",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/resumes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "resumes"
+              ]
+            },
+            "description": "Upload a resume as multipart/form-data. The form field name must be \"resume\". Accepted formats: PDF, DOC, DOCX. Maximum file size 3 MB.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resume\": \"(binary)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Resume",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/resumes/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "resumes",
+                "1"
+              ]
+            },
+            "description": "Permanently delete an uploaded resume."
+          },
+          "response": []
+        },
+        {
+          "name": "Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/notifications?page=1&limit=20&search=react developer london&type=full_time",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "react developer london",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "full_time",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated notifications for the seeker (application updates, job matches, system messages)."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/notifications/1/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "notifications",
+                "1",
+                "read"
+              ]
+            },
+            "description": "Mark a single notification as read."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/notifications/read-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "notifications",
+                "read-all"
+              ]
+            },
+            "description": "Mark all unread notifications as read in one call."
+          },
+          "response": []
+        },
+        {
+          "name": "Unread Notification Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/notifications/unread-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "Get the count of unread notifications. Poll every 30s to update the bell badge."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Account Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "settings"
+              ]
+            },
+            "description": "Get seeker account settings. Response has two keys: user (account info) and prefs (notification/privacy preferences)."
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/settings/password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "settings",
+                "password"
+              ]
+            },
+            "description": "Change the seeker account password.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"OldPassword789!\",\n  \"new_password\": \"example_new_password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Email (direct)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/settings/email",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "settings",
+                "email"
+              ]
+            },
+            "description": "Change the seeker email address directly without OTP. For OTP-verified email change (recommended), use POST /mobile/seeker/settings/email/request-otp followed by POST /mobile/seeker/settings/email/verify-otp.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_email\": \"example_new_email\",\n  \"current_password\": \"OldPassword789!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Request Email Change OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/settings/email/request-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "settings",
+                "email",
+                "request-otp"
+              ]
+            },
+            "description": "Step 1 of OTP-verified email change. Validates password, checks new email availability, and sends a 6-digit OTP to the current email address. Then call POST /mobile/seeker/settings/email/verify-otp to complete the change.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_email\": \"example_new_email\",\n  \"current_password\": \"OldPassword789!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email Change OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/settings/email/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "settings",
+                "email",
+                "verify-otp"
+              ]
+            },
+            "description": "Step 2 of OTP-verified email change. Submit the 6-digit code received at the current email address. On success, the email is permanently updated.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"example_code\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle 2FA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/settings/2fa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "settings",
+                "2fa"
+              ]
+            },
+            "description": "Enable or disable two-factor authentication for the seeker account. Current password is always required.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enable\": true,\n  \"current_password\": \"OldPassword789!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Account Audit Log",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/settings/audit-log?page=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "settings",
+                "audit-log"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated audit log showing all login and security events for this account."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/settings/account",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "settings",
+                "account"
+              ]
+            },
+            "description": "Permanently soft-delete the seeker account. No cookies are cleared — the app must discard the stored accessToken immediately after a successful response."
+          },
+          "response": []
+        },
+        {
+          "name": "Sign Out All Devices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/seeker/settings/sign-out-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "seeker",
+                "settings",
+                "sign-out-all"
+              ]
+            },
+            "description": "Revoke all active sessions for this seeker account across all devices. No cookies are cleared (mobile has none) — the app must discard the stored accessToken immediately."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Employer",
+      "item": [
+        {
+          "name": "Employer Feature Flags",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/features",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "features"
+              ]
+            },
+            "description": "Get all admin-controlled feature flags relevant to the employer app. No user authentication required — call this at app launch to conditionally show/hide features. All values are booleans.\n\n• otp_login — OTP is required when employer logs in\n• otp_signup — OTP verification is required after employer registers\n• companies_house — CH company search is available on the registration form\n• job_approval_required — new job posts go to pending and need admin approval before going live\n• plans_wallet — subscription plans and wallet credit system are active\n• stripe — Stripe payment is available for purchasing plans\n• extra_apply_methods — employer can set job apply method to external URL or email (in addition to internal)\n• chat — messaging with candidates is available"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Employer Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "me"
+              ]
+            },
+            "description": "Get the authenticated employer profile with full company details. User fields use snake_case (first_name, last_name). Company is returned as companies[0]. Use profile_completed (0–100) to show a profile completion bar."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Company Logo / Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/employer/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "employer",
+                "upload"
+              ]
+            },
+            "description": "Upload an image file (company logo, banner, etc.) as multipart/form-data. The form field name must be \"file\". Returns a hosted URL to save in logo_url on the profile update call. Accepted formats: JPEG, PNG, SVG, GIF, WEBP, ICO. Max 3 MB. Note: this endpoint is on the shared /api/v1/ prefix (not /mobile/) as it uses the same upload infrastructure.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"file\": \"(binary file — use multipart/form-data)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Employer Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "me"
+              ]
+            },
+            "description": "Update the company profile. All fields are optional — only send what changed. Blocked if account is suspended. Upload logo first via POST /api/v1/employer/upload, then pass the returned URL as logo_url.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Technologies Ltd\",\n  \"logo_url\": \"https://res.cloudinary.com/demo/image/upload/acme-logo.png\",\n  \"website\": \"https://acme.com\",\n  \"about\": \"<p>We are a leading technology company building the future of work.</p>\",\n  \"industry_category_id\": 2,\n  \"contact_person\": \"Jane Smith\",\n  \"contact_email\": \"hr@acme.com\",\n  \"contact_phone\": \"+44 7700 900123\",\n  \"show_contact_info\": true,\n  \"address\": \"123 Oxford Street\",\n  \"city\": \"London\",\n  \"country\": \"GB\",\n  \"zip_code\": \"W1D 1BS\",\n  \"company_size\": \"size_51_200\",\n  \"work_type\": \"hybrid\",\n  \"linkedin_url\": \"https://linkedin.com/in/johndoe\",\n  \"facebook_url\": \"https://facebook.com/acmeTech\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "My Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/jobs?status=draft&page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "jobs"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "draft",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated list of jobs posted by this employer with applicant counts per job."
+          },
+          "response": []
+        },
+        {
+          "name": "Post a Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/jobs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "jobs"
+              ]
+            },
+            "description": "Create a new job posting. Triggers restricted word check — flagged jobs go to pending review. Blocked if account is suspended or a pending job already exists.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Senior Frontend Developer\",\n  \"description\": \"<p>We are looking for an experienced frontend developer to join our growing team.</p>\",\n  \"employment_type\": \"full_time\",\n  \"workplace_type\": \"hybrid\",\n  \"category_id\": \"3\",\n  \"city\": \"London\",\n  \"country\": \"GB\",\n  \"vacancies\": 2,\n  \"application_deadline\": \"2026-12-31\",\n  \"salary_min\": 40000,\n  \"salary_max\": 80000,\n  \"salary_currency\": \"GBP\",\n  \"salary_period\": \"yearly\",\n  \"responsibilities\": \"<p>Lead front-end architecture decisions and mentor junior developers.</p>\",\n  \"requirements\": \"<p>5+ years of React experience. Strong TypeScript skills required.</p>\",\n  \"experience_min_years\": 3,\n  \"min_education\": \"bachelors\",\n  \"preferred_skills\": \"React, TypeScript, Node.js\",\n  \"languages_required\": \"English\",\n  \"certifications_required\": \"AWS Certified (preferred)\",\n  \"age_min\": 21,\n  \"age_max\": 55,\n  \"benefits\": \"[\\\"Health Insurance\\\",\\\"Work From Home\\\",\\\"Annual Bonus\\\",\\\"Flexible Schedule\\\"]\",\n  \"application_method\": \"internal\",\n  \"application_email\": \"careers@acme.com\",\n  \"application_url\": \"https://acme.com/careers/apply\",\n  \"resume_required\": \"required\",\n  \"cover_letter_policy\": \"optional\",\n  \"auto_reject_after_deadline\": false,\n  \"screening_questions\": [\n    {\n      \"question_text\": \"Do you have 3+ years of React experience?\",\n      \"is_required\": true,\n      \"order_index\": 0\n    },\n    {\n      \"question_text\": \"Are you eligible to work in the UK?\",\n      \"is_required\": true,\n      \"order_index\": 1\n    }\n  ],\n  \"status\": \"draft\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Job",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/jobs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "jobs",
+                "1"
+              ]
+            },
+            "description": "Edit an existing job posting. Accepts the same fields as Post a Job — only send what changed. Ownership is verified."
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Job Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/jobs/1/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "jobs",
+                "1",
+                "status"
+              ]
+            },
+            "description": "Pause, resume, or close a job posting. Cannot change a rejected job. Cannot set status to active when admin job approval is required.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"draft\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Job",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/jobs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "jobs",
+                "1"
+              ]
+            },
+            "description": "Soft-delete a job (sets deleted_at + status = closed). Data is preserved. Hidden from all public listings immediately."
+          },
+          "response": []
+        },
+        {
+          "name": "Job Screening Questions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/jobs/1/screening-questions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "jobs",
+                "1",
+                "screening-questions"
+              ]
+            },
+            "description": "Get screening questions for a specific job posted by this employer."
+          },
+          "response": []
+        },
+        {
+          "name": "Job Applicants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/jobs/1/applicants?stage=shortlisted&page=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "jobs",
+                "1",
+                "applicants"
+              ],
+              "query": [
+                {
+                  "key": "stage",
+                  "value": "shortlisted",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated applicants for a job with seeker profile info and current stage."
+          },
+          "response": []
+        },
+        {
+          "name": "Move Applicant Stage",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/applications/23/stage",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "applications",
+                "23",
+                "stage"
+              ]
+            },
+            "description": "Move an applicant to a different hiring pipeline stage. Triggers notification to the seeker.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stage\": \"shortlisted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Saved Candidates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/saved-candidates",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "saved-candidates"
+              ]
+            },
+            "description": "Get all candidates saved/shortlisted by this employer."
+          },
+          "response": []
+        },
+        {
+          "name": "Save / Unsave Candidate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/candidates/42/save",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "candidates",
+                "42",
+                "save"
+              ]
+            },
+            "description": "Toggle save state for a candidate profile. If already saved, unsaves. If not saved, saves."
+          },
+          "response": []
+        },
+        {
+          "name": "Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/notifications?page=1&limit=20&search=react developer london&type=full_time",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "react developer london",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "full_time",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated employer notifications (new applicants, job approvals, suspension alerts)."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/notifications/1/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "notifications",
+                "1",
+                "read"
+              ]
+            },
+            "description": "Mark a single employer notification as read."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/notifications/read-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "notifications",
+                "read-all"
+              ]
+            },
+            "description": "Mark all unread employer notifications as read."
+          },
+          "response": []
+        },
+        {
+          "name": "Unread Notification Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/notifications/unread-count",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "Get unread notification count for bell badge. Poll every 30s."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Account Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings"
+              ]
+            },
+            "description": "Get employer account settings. Response has two keys: user (account info) and prefs (all notification, privacy, and preference settings)."
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "password"
+              ]
+            },
+            "description": "Change the employer account password.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"OldPassword789!\",\n  \"new_password\": \"example_new_password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Email (direct)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/email",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "email"
+              ]
+            },
+            "description": "Change the employer email address directly without OTP. For OTP-verified change (recommended), use POST /mobile/employer/settings/email/request-otp followed by POST /mobile/employer/settings/email/verify-otp.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_email\": \"example_new_email\",\n  \"current_password\": \"OldPassword789!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Request Email Change OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/email/request-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "email",
+                "request-otp"
+              ]
+            },
+            "description": "Step 1 of OTP-verified email change. Validates password, checks new email availability, and sends a 6-digit OTP to the current email address. Then call POST /mobile/employer/settings/email/verify-otp to complete the change.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_email\": \"example_new_email\",\n  \"current_password\": \"OldPassword789!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email Change OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/email/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "email",
+                "verify-otp"
+              ]
+            },
+            "description": "Step 2 of OTP-verified email change. Submit the 6-digit code received at the current email address. On success, the email is permanently updated.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"example_code\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Phone",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/phone",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "phone"
+              ]
+            },
+            "description": "Update the employer phone number.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"7911 123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/preferences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "preferences"
+              ]
+            },
+            "description": "Update employer notification, privacy, and app preferences. All fields are snake_case. Send only the fields you want to change.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notif_new_application\": true,\n  \"notif_messages\": true,\n  \"notif_interview\": true,\n  \"notif_security\": true,\n  \"notif_marketing\": false,\n  \"notif_browser\": false,\n  \"company_profile_public\": true,\n  \"show_email_to_candidates\": false,\n  \"show_phone_to_candidates\": false,\n  \"language\": \"en\",\n  \"timezone\": \"Europe/London\",\n  \"date_format\": \"DD/MM/YYYY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle 2FA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/2fa",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "2fa"
+              ]
+            },
+            "description": "Enable or disable two-factor authentication for the employer account. Current password is always required.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enable\": true,\n  \"current_password\": \"OldPassword789!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/account",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "account"
+              ]
+            },
+            "description": "Permanently soft-delete the employer account. All jobs are closed. No cookies are cleared — the app must discard the stored accessToken immediately after a successful response."
+          },
+          "response": []
+        },
+        {
+          "name": "Sign Out All Devices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/sign-out-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "sign-out-all"
+              ]
+            },
+            "description": "Revoke all active sessions for this employer account across all devices. No cookies are cleared (mobile has none) — the app must discard the stored accessToken immediately."
+          },
+          "response": []
+        },
+        {
+          "name": "Account Audit Log",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/employer/settings/audit-log?page=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "employer",
+                "settings",
+                "audit-log"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated audit log showing all login and security events for this employer account."
+          },
+          "response": []
+        },
+        {
+          "name": "Wallet Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/employer/wallet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "employer",
+                "wallet"
+              ]
+            },
+            "description": "Get current wallet credit balance and the 10 most recent transactions (only relevant when plans/wallet system is enabled). Note: this endpoint is on the shared /api/v1/ prefix."
+          },
+          "response": []
+        },
+        {
+          "name": "Wallet Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/employer/wallet/transactions?page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "employer",
+                "wallet",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated wallet transaction history. Note: this endpoint is on the shared /api/v1/ prefix."
+          },
+          "response": []
+        },
+        {
+          "name": "Payment History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/employer/payments?page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "employer",
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated payment / billing history for the employer. Note: this endpoint is on the shared /api/v1/ prefix."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Stripe Config",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/stripe/config",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "stripe",
+                "config"
+              ]
+            },
+            "description": "Check whether Stripe payments are enabled and get the publishable key. Call before showing any upgrade/payment UI. Note: this endpoint is on the shared /api/v1/ prefix."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Checkout Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/employer/stripe/checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "employer",
+                "stripe",
+                "checkout"
+              ]
+            },
+            "description": "Create a Stripe Embedded Checkout session for a plan purchase. Returns a client_secret used to mount the Stripe UI. Note: this endpoint is on the shared /api/v1/ prefix.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"embedded\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Checkout Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/employer/stripe/verify-session",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "employer",
+                "stripe",
+                "verify-session"
+              ]
+            },
+            "description": "Verify a completed Stripe checkout session and credit the employer wallet. Note: this endpoint is on the shared /api/v1/ prefix.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": \"cs_live_51NxAbcXyz123456789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Shared",
+      "item": [
+        {
+          "name": "Application Stage History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/applications/1/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "applications",
+                "1",
+                "history"
+              ]
+            },
+            "description": "Get the full stage change history for an application. Used in application detail timeline. Accessible by both the seeker (their own application) and the employer (their job)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "List Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/conversations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "conversations"
+              ]
+            },
+            "description": "Get all conversations for the authenticated user (works for both seeker and employer roles)."
+          },
+          "response": []
+        },
+        {
+          "name": "Open Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/conversations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "conversations"
+              ]
+            },
+            "description": "Employer-only: Start or retrieve an existing conversation with a seeker for a specific job. Returns existing conversation if one already exists.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seeker_user_id\": 42,\n  \"job_id\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/conversations/8/messages?page=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "conversations",
+                "8",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get paginated messages for a conversation. Returns oldest first within each page."
+          },
+          "response": []
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/conversations/8/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "conversations",
+                "8",
+                "messages"
+              ]
+            },
+            "description": "Send a text message in a conversation. Rate limited to 60 messages per 15 minutes per user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Hi! Your profile caught our eye. Would you be interested in a chat about an opening?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enable / Disable Chat",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "session={{session_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/mobile/conversations/1/chat-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "mobile",
+                "conversations",
+                "1",
+                "chat-status"
+              ]
+            },
+            "description": "Employer-only: Enable or disable a specific conversation. When disabled, the seeker cannot send further messages.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.yourapp.com",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "your_api_key_here",
+      "type": "string"
+    },
+    {
+      "key": "session_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

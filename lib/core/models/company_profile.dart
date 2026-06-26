@@ -17,6 +17,10 @@ class CompanyProfile {
   final String? country;
   final String? linkedInUrl;
   final String? facebookUrl;
+  final String? industryCategoryId;
+  final int profileStatus;
+
+  final bool? verified;
 
   final int activeJobs;
   final int applicants;
@@ -40,9 +44,42 @@ class CompanyProfile {
     this.country,
     this.linkedInUrl,
     this.facebookUrl,
+    this.industryCategoryId,
+    this.profileStatus = 0,
+    this.verified,
     this.activeJobs = 0,
     this.applicants = 0,
   });
+
+  factory CompanyProfile.fromJson(Map<String, dynamic> json) {
+    return CompanyProfile(
+      id: json['id']?.toString() ?? '',
+      verified: json['verified'] as bool? ?? (json['verification_status'] == 'verified'),
+      profileStatus: json['profile_completed'] is int
+          ? json['profile_completed']
+          : int.tryParse(json['profile_completed']?.toString() ?? '0') ?? 0,
+      name: json['name'] as String? ?? '',
+      logo: json['logo_url'] as String?,
+      industry: json['categories']?['name'] as String?,
+      size: json['company_size'] as String?,
+      workType: json['work_type'] as String?,
+      website: json['website'] as String?,
+      description: json['about'] as String?,
+      contactPersonName: json['contact_person'] as String?,
+      contactEmail: json['contact_email'] as String?,
+      contactPhone: json['contact_phone'] as String?,
+      showContactInfo: json['show_contact_info'] as bool? ?? false,
+      address: json['address'] as String?,
+      city: json['city'] as String?,
+      postcode: json['zip_code'] as String?,
+      country: json['country'] as String?,
+      linkedInUrl: json['linkedin_url'] as String?,
+      facebookUrl: json['facebook_url'] as String?,
+      industryCategoryId: json['industry_category_id']?.toString(),
+      activeJobs: json['active_jobs_count'] as int? ?? 0,
+      applicants: json['applicants_count'] as int? ?? 0,
+    );
+  }
 
   CompanyProfile copyWith({
     String? name,
@@ -62,6 +99,9 @@ class CompanyProfile {
     String? country,
     String? linkedInUrl,
     String? facebookUrl,
+    String? industryCategoryId,
+    int? profileStatus,
+    bool? verified,
   }) {
     return CompanyProfile(
       id: id,
@@ -82,6 +122,9 @@ class CompanyProfile {
       country: country ?? this.country,
       linkedInUrl: linkedInUrl ?? this.linkedInUrl,
       facebookUrl: facebookUrl ?? this.facebookUrl,
+      industryCategoryId: industryCategoryId ?? this.industryCategoryId,
+      profileStatus: profileStatus ?? this.profileStatus,
+      verified: verified ?? this.verified,
       activeJobs: activeJobs,
       applicants: applicants,
     );

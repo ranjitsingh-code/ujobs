@@ -1,3 +1,4 @@
+import "../../../core/widgets/ujob_toast.dart";
 import 'package:flutter/material.dart';
 import '../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,12 +7,15 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../../core/models/job.dart';
+import '../../../core/widgets/ujob_verification_banners.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_avatar.dart';
+import '../../../core/widgets/ujob_notification_button.dart';
 import '../../shared/chat/conversation_provider.dart';
 import 'employer_dashboard_provider.dart';
+import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
 import '../../../core/widgets/ujob_employer_job_card.dart';
 import '../../../core/widgets/ujob_employer_job_actions_sheet.dart';
@@ -23,31 +27,52 @@ class EmployerDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isProfileComplete = ref.watch(isCompanyProfileCompleteProvider);
+        final auth = ref.watch(authProvider);
+    final dashboardAsync = ref.watch(employerDashboardProvider);
+    
+    return dashboardAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.bg,
+        body: UJobSpinner(),
+      ),
+      error: (e, s) => Scaffold(
+        backgroundColor: AppColors.bg,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Failed to load dashboard', style: AppText.bodyMedium.copyWith(color: AppColors.error)),
+              SizedBox(height: 16.h),
+              ElevatedButton(
+                onPressed: () => ref.refresh(employerDashboardProvider),
+                child: const Text('Retry'),
+              )
+            ],
+          ),
+        ),
+      ),
+      data: (dashboard) {
+        final conversations = ref.watch(conversationsProvider).valueOrNull ?? demoConversations;
+        final messagesToReply = dashboard.totalJobs == 0
+            ? const <Conversation>[]
+            : conversations.where((conversation) => conversation.requiresEmployerReply).toList();
+            
+        final user = auth.valueOrNull;
+        final firstName = user?.firstName.trim();
+        final name = firstName?.isNotEmpty == true ? firstName! : 'there';
+        final hour = DateTime.now().hour;
+        final greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
-    final auth = ref.watch(authProvider);
-    final dashboard = ref.watch(employerDashboardProvider);
-    final conversations =
-        ref.watch(conversationsProvider).valueOrNull ?? demoConversations;
-    final messagesToReply = dashboard.totalJobs == 0
-        ? const <Conversation>[]
-        : conversations
-              .where((conversation) => conversation.requiresEmployerReply)
-              .toList();
-    final user = auth.valueOrNull;
-    final firstName = user?.firstName.trim();
-    final name = firstName?.isNotEmpty == true ? firstName! : 'there';
-    final hour = DateTime.now().hour;
-    final greeting = hour < 12
-        ? 'Good morning'
-        : hour < 18
-        ? 'Good afternoon'
-        : 'Good evening';
-
-    return Scaffold(
+        return Scaffold(
       backgroundColor: AppColors.bg,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(employerDashboardProvider);
+          await ref.read(employerDashboardProvider.future);
+        },
+        color: AppColors.primary,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(
             child: _DashboardHeader(
@@ -55,8 +80,10 @@ class EmployerDashboardScreen extends ConsumerWidget {
               name: name,
               dashboard: dashboard,
               onNotificationsTap: () => context.push('/employer/notifications'),
-              onJobsTap: () => context.go('/employer/jobs'),
-              onApplicantsTap: () => context.push('/employer/applicants'),
+              onTotalJobsTap: () => context.go('/employer/jobs', extra: 0),
+              onActiveJobsTap: () => context.go('/employer/jobs', extra: 1),
+              onTotalApplicantsTap: () => context.push('/employer/applicants', extra: 0),
+              onShortlistedTap: () => context.push('/employer/applicants', extra: 2),
             ),
           ),
           SliverPadding(
@@ -64,27 +91,24 @@ class EmployerDashboardScreen extends ConsumerWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _QuickActions(
-                  isProfileComplete: isProfileComplete,
+                  isVerified: dashboard.isVerified,
                   onPostJob: () {
-                    if (!isProfileComplete) {
+                    if (!dashboard.isVerified) {
                       showDialog(
                         context: context,
                         builder: (ctx) => UJobAlertDialog(
                           icon: HugeIcon(
                             icon: HugeIcons.strokeRoundedAlert02,
-                            color: AppColors.warning,
+                            color: AppColors.error,
                             size: 32.r,
                           ),
-                          iconBgColor: AppColors.warning,
-                          title: 'Action Required',
-                          description:
-                              'You must complete your company profile before you can post a new job.',
-                          confirmText: 'Setup Profile',
+                          iconBgColor: AppColors.error,
+                          title: 'Verification Required',
+                          description: 'Your company profile must be 100% complete and verified by an admin before you can post jobs. If you have already completed your profile, please wait for admin approval.',
+                          confirmText: 'Okay',
                           confirmColor: AppColors.primary,
-                          cancelText: 'Cancel',
                           onConfirm: () {
                             Navigator.pop(ctx);
-                            context.push('/employer/profile');
                           },
                         ),
                       );
@@ -93,21 +117,25 @@ class EmployerDashboardScreen extends ConsumerWidget {
                     context.push('/employer/post-job');
                   },
                 ),
-                if (!isProfileComplete) ...[
+                if (dashboard.verificationStatus == 'unverified') ...[
                   SizedBox(height: 24.h),
-                  _CompanyProfileSetup(
+                  const UJobVerificationPendingBanner(),
+                ],
+                if (dashboard.profileCompleted < 100) ...[
+                  SizedBox(height: 24.h),
+                  UJobCompanyProfileSetup(
                     onSetup: () {
                       context.push('/employer/profile');
                     },
                   ),
                 ],
-                if (messagesToReply.isNotEmpty) ...[
-                  SizedBox(height: 24.h),
-                  _MessagesToReply(
-                    conversations: messagesToReply,
-                    onViewAll: () => context.go('/employer/messages'),
-                  ),
-                ],
+                // if (messagesToReply.isNotEmpty) ...[
+                //   SizedBox(height: 24.h),
+                //   _MessagesToReply(
+                //     conversations: messagesToReply,
+                //     onViewAll: () => context.go('/employer/messages'),
+                //   ),
+                // ],
                 SizedBox(height: 24.h),
                 _SectionHeader(
                   title: 'My Job Listings',
@@ -119,27 +147,24 @@ class EmployerDashboardScreen extends ConsumerWidget {
                 SizedBox(height: 14.h),
                 if (dashboard.recentJobs.isEmpty)
                   _EmptyJobs(
-                    isProfileComplete: isProfileComplete,
+                    isVerified: dashboard.isVerified,
                     onPostJob: () {
-                      if (!isProfileComplete) {
+                      if (!dashboard.isVerified) {
                         showDialog(
                           context: context,
                           builder: (ctx) => UJobAlertDialog(
                             icon: HugeIcon(
                               icon: HugeIcons.strokeRoundedAlert02,
-                              color: AppColors.warning,
+                              color: AppColors.error,
                               size: 32.r,
                             ),
-                            iconBgColor: AppColors.warning,
-                            title: 'Action Required',
-                            description:
-                                'You must complete your company profile before you can post a new job.',
-                            confirmText: 'Setup Profile',
+                            iconBgColor: AppColors.error,
+                            title: 'Verification Required',
+                            description: 'Your company profile must be 100% complete and verified by an admin before you can post jobs. If you have already completed your profile, please wait for admin approval.',
+                            confirmText: 'Okay',
                             confirmColor: AppColors.primary,
-                            cancelText: 'Cancel',
                             onConfirm: () {
                               Navigator.pop(ctx);
-                              context.push('/employer/profile');
                             },
                           ),
                         );
@@ -155,7 +180,7 @@ class EmployerDashboardScreen extends ConsumerWidget {
                       child: UJobEmployerJobCard(
                         job: job,
                         isManaging: false,
-                        onTap: () => context.push('/employer/jobs/${job.id}'),
+                        onTap: () => context.push('/employer/jobs/${job.id}', extra: job),
                         onApplicantsTap: () => context.push(
                           '/employer/jobs/${job.id}/applicants',
                           extra: job,
@@ -176,66 +201,128 @@ class EmployerDashboardScreen extends ConsumerWidget {
                           ),
                           onPause: () => JobActionHelpers.confirmPause(
                             context,
-                            () => ref
-                                .read(demoEmployerJobsProvider.notifier)
-                                .updateStatus(job.id, JobStatus.paused),
+                            () async {
+                              try {
+                                await ref.read(employerJobServiceProvider).updateJobStatus(job.id, JobStatus.paused.name);
+                                ref.invalidate(employerDashboardProvider);
+                                ref.invalidate(employerJobsProvider);
+                                if (context.mounted) {
+                                  UJobToast.success(context, 'Success', sub: 'Job paused');
+                                }
+                              } catch (e) {
+                                if (context.mounted) UJobToast.error(context, 'Error', sub: 'Failed to pause job');
+                              }
+                            },
                           ),
                           onResume: () => JobActionHelpers.confirmResume(
                             context,
-                            () => ref
-                                .read(demoEmployerJobsProvider.notifier)
-                                .updateStatus(job.id, JobStatus.active),
+                            () async {
+                              try {
+                                await ref.read(employerJobServiceProvider).updateJobStatus(job.id, JobStatus.active.name);
+                                ref.invalidate(employerDashboardProvider);
+                                ref.invalidate(employerJobsProvider);
+                                if (context.mounted) {
+                                  UJobToast.success(context, 'Success', sub: 'Job republished');
+                                }
+                              } catch (e) {
+                                if (context.mounted) UJobToast.error(context, 'Error', sub: 'Failed to republish job');
+                              }
+                            },
                           ),
                           onPublish: () => JobActionHelpers.confirmPublish(
                             context,
-                            () => ref
-                                .read(demoEmployerJobsProvider.notifier)
-                                .updateStatus(job.id, JobStatus.active),
+                            () async {
+                              try {
+                                await ref.read(employerJobServiceProvider).updateJobStatus(job.id, JobStatus.active.name);
+                                ref.invalidate(employerDashboardProvider);
+                                ref.invalidate(employerJobsProvider);
+                                if (context.mounted) {
+                                  UJobToast.success(context, 'Success', sub: 'Job published');
+                                }
+                              } catch (e) {
+                                if (context.mounted) UJobToast.error(context, 'Error', sub: 'Failed to publish job');
+                              }
+                            },
                           ),
                           onReopen: () => JobActionHelpers.confirmReopen(
                             context,
-                            () => ref
-                                .read(demoEmployerJobsProvider.notifier)
-                                .updateStatus(job.id, JobStatus.active),
+                            () async {
+                              try {
+                                await ref.read(employerJobServiceProvider).updateJobStatus(job.id, JobStatus.active.name);
+                                ref.invalidate(employerDashboardProvider);
+                                ref.invalidate(employerJobsProvider);
+                                if (context.mounted) {
+                                  UJobToast.success(context, 'Success', sub: 'Job reopened');
+                                }
+                              } catch (e) {
+                                if (context.mounted) UJobToast.error(context, 'Error', sub: 'Failed to reopen job');
+                              }
+                            },
                           ),
+                          onClose: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => UJobAlertDialog(
+                                icon: HugeIcon(
+                                  icon: HugeIcons.strokeRoundedAlert02,
+                                  color: AppColors.text,
+                                  size: 32.r,
+                                ),
+                                iconBgColor: AppColors.text,
+                                title: 'Close Job',
+                                description: 'Are you sure you want to close this job? You will no longer receive new applications.',
+                                cancelText: 'Cancel',
+                                confirmText: 'Close Job',
+                                onConfirm: () async {
+                                  try {
+                                    await ref.read(employerJobServiceProvider).updateJobStatus(job.id, JobStatus.closed.name);
+                                    ref.invalidate(employerDashboardProvider);
+                                    ref.invalidate(employerJobsProvider);
+                                    if (context.mounted) {
+                                      UJobToast.success(context, 'Success', sub: 'Job closed');
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      UJobToast.error(context, 'Error', sub: 'Failed to close job');
+                                    }
+                                  }
+                                  if (context.mounted) {
+                                    Navigator.pop(ctx);
+                                  }
+                                },
+                              ),
+                            );
+                          },
                           onDelete: () {
                             showDialog(
                               context: context,
                               builder: (ctx) => UJobAlertDialog(
                                 icon: HugeIcon(
-                                  icon:
-                                      job.status == JobStatus.closed ||
-                                          job.status == JobStatus.rejected
-                                      ? HugeIcons.strokeRoundedDelete01
-                                      : HugeIcons.strokeRoundedAlert02,
+                                  icon: HugeIcons.strokeRoundedDelete01,
                                   color: AppColors.error,
                                   size: 32.r,
                                 ),
                                 iconBgColor: AppColors.error,
-                                title:
-                                    job.status == JobStatus.closed ||
-                                        job.status == JobStatus.rejected
-                                    ? 'Delete Job'
-                                    : 'Close Job',
-                                description:
-                                    job.status == JobStatus.closed ||
-                                        job.status == JobStatus.rejected
-                                    ? 'Are you sure you want to permanently delete this job?'
-                                    : 'Are you sure you want to close this job? You will no longer receive new applications.',
+                                title: 'Delete Job',
+                                description: 'Are you sure you want to permanently delete this job?',
                                 cancelText: 'Cancel',
-                                confirmText:
-                                    job.status == JobStatus.closed ||
-                                        job.status == JobStatus.rejected
-                                    ? 'Delete'
-                                    : 'Close Job',
-                                onConfirm: () {
-                                  if (!(job.status == JobStatus.closed ||
-                                      job.status == JobStatus.rejected)) {
-                                    ref
-                                        .read(demoEmployerJobsProvider.notifier)
-                                        .updateStatus(job.id, JobStatus.closed);
+                                confirmText: 'Delete',
+                                onConfirm: () async {
+                                  try {
+                                    await ref.read(employerJobServiceProvider).deleteJob(job.id);
+                                    ref.invalidate(employerDashboardProvider);
+                                    ref.invalidate(employerJobsProvider);
+                                    if (context.mounted) {
+                                      UJobToast.success(context, 'Success', sub: 'Job deleted');
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      UJobToast.error(context, 'Error', sub: 'Failed to delete job');
+                                    }
                                   }
-                                  Navigator.pop(ctx);
+                                  if (context.mounted) {
+                                    Navigator.pop(ctx);
+                                  }
                                 },
                               ),
                             );
@@ -249,6 +336,9 @@ class EmployerDashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
+      ),
+    );
+      },
     );
   }
 }
@@ -258,16 +348,20 @@ class _DashboardHeader extends StatelessWidget {
   final String name;
   final EmployerDashboardData dashboard;
   final VoidCallback onNotificationsTap;
-  final VoidCallback onJobsTap;
-  final VoidCallback onApplicantsTap;
+  final VoidCallback onTotalJobsTap;
+  final VoidCallback onActiveJobsTap;
+  final VoidCallback onTotalApplicantsTap;
+  final VoidCallback onShortlistedTap;
 
   const _DashboardHeader({
     required this.greeting,
     required this.name,
     required this.dashboard,
     required this.onNotificationsTap,
-    required this.onJobsTap,
-    required this.onApplicantsTap,
+    required this.onTotalJobsTap,
+    required this.onActiveJobsTap,
+    required this.onTotalApplicantsTap,
+    required this.onShortlistedTap,
   });
 
   @override
@@ -306,7 +400,7 @@ class _DashboardHeader extends StatelessWidget {
                       ],
                     ),
                   ),
-                  _NotificationButton(onTap: onNotificationsTap),
+                  UJobNotificationButton(onTap: onNotificationsTap, borderColor: AppColors.primary),
                 ],
               ),
               SizedBox(height: 24.h),
@@ -317,7 +411,7 @@ class _DashboardHeader extends StatelessWidget {
                       value: '${dashboard.totalJobs}',
                       label: context.l10n.totalJobs,
                       icon: Icons.work_outline_rounded,
-                      onTap: onJobsTap,
+                      onTap: onTotalJobsTap,
                     ),
                   ),
                   SizedBox(width: 10.w),
@@ -326,7 +420,7 @@ class _DashboardHeader extends StatelessWidget {
                       value: '${dashboard.activeJobs}',
                       label: context.l10n.activeJobs,
                       icon: Icons.work_history_outlined,
-                      onTap: onJobsTap,
+                      onTap: onActiveJobsTap,
                     ),
                   ),
                 ],
@@ -339,7 +433,7 @@ class _DashboardHeader extends StatelessWidget {
                       value: '${dashboard.totalApplicants}',
                       label: context.l10n.totalApplicants,
                       icon: Icons.groups_outlined,
-                      onTap: onApplicantsTap,
+                      onTap: onTotalApplicantsTap,
                     ),
                   ),
                   SizedBox(width: 10.w),
@@ -348,7 +442,7 @@ class _DashboardHeader extends StatelessWidget {
                       value: '${dashboard.shortlisted}',
                       label: context.l10n.statusShortlisted,
                       icon: Icons.bookmark_added_outlined,
-                      onTap: onApplicantsTap,
+                      onTap: onShortlistedTap,
                     ),
                   ),
                 ],
@@ -361,55 +455,6 @@ class _DashboardHeader extends StatelessWidget {
   }
 }
 
-class _NotificationButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _NotificationButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        IconButton(
-          onPressed: onTap,
-          tooltip: 'Notifications',
-          style: IconButton.styleFrom(
-            backgroundColor: AppColors.surface.withValues(alpha: 0.12),
-            fixedSize: Size(44.r, 44.r),
-          ),
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedNotification01,
-            color: AppColors.surface,
-            size: 23,
-          ),
-        ),
-        Positioned(
-          right: -1.w,
-          top: -3.h,
-          child: Container(
-            width: 20.r,
-            height: 20.r,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.error,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 2),
-            ),
-            child: Text(
-              '2',
-              style: AppText.caption.copyWith(
-                color: AppColors.surface,
-                fontSize: 9.sp,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class _StatTile extends StatelessWidget {
   final String value;
@@ -489,18 +534,18 @@ class _StatTile extends StatelessWidget {
 }
 
 class _QuickActions extends StatelessWidget {
-  final bool isProfileComplete;
+  final bool isVerified;
   final VoidCallback onPostJob;
 
   const _QuickActions({
-    required this.isProfileComplete,
+    required this.isVerified,
     required this.onPostJob,
   });
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
-      opacity: isProfileComplete ? 1.0 : 0.5,
+      opacity: 1.0,
       child: Container(
         height: 58.h,
         decoration: BoxDecoration(
@@ -755,10 +800,10 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _EmptyJobs extends StatelessWidget {
-  final bool isProfileComplete;
+  final bool isVerified;
   final VoidCallback onPostJob;
 
-  const _EmptyJobs({required this.isProfileComplete, required this.onPostJob});
+  const _EmptyJobs({required this.isVerified, required this.onPostJob});
 
   @override
   Widget build(BuildContext context) {
@@ -791,7 +836,7 @@ class _EmptyJobs extends StatelessWidget {
           ),
           SizedBox(height: 18.h),
           Opacity(
-            opacity: isProfileComplete ? 1.0 : 0.5,
+            opacity: 1.0,
             child: FilledButton.icon(
               onPressed: onPostJob,
               style: FilledButton.styleFrom(
@@ -880,6 +925,63 @@ class _CompanyProfileSetup extends ConsumerWidget {
                     'Setup Now',
                     style: AppText.button.copyWith(color: Colors.white),
                   ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerificationPendingBanner extends StatelessWidget {
+  const _VerificationPendingBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(20.r),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.xl,
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.error.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(12.r),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedAlert02,
+              color: AppColors.error,
+              size: 28.r,
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Profile verification pending',
+                  style: AppText.titleSm.copyWith(color: AppColors.text),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  'Your profile is not verified yet. You have to wait for the verification from the admin.',
+                  style: AppText.small.copyWith(color: AppColors.muted),
                 ),
               ],
             ),

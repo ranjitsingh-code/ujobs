@@ -1,3 +1,7 @@
+import 'package:go_router/go_router.dart';
+
+import '../../../core/widgets/ujob_loading.dart';
+
 import 'package:flutter/material.dart';
 import '../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,19 +69,22 @@ class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final allApplicants = ref.watch(employerApplicantsProvider);
-
-    // Extract unique job titles from applicants for the filter
-    final availableJobs = allApplicants
-        .where((a) => a.targetJobTitle != null && a.targetJobTitle!.isNotEmpty)
-        .map((a) => a.targetJobTitle!)
-        .toSet()
-        .toList();
-
+    final asyncApplicants = ref.watch(employerApplicantsProvider);
+    
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: const UJobAppBar(title: 'Applicants', showBack: false),
-      body: NestedScrollView(
+      body: SafeArea(
+        child: asyncApplicants.when(
+        loading: () => UJobLoading(count: 4),
+        error: (err, stack) => Center(child: Text('Failed to load applicants', style: AppText.bodyMedium.copyWith(color: AppColors.error))),
+        data: (allApplicants) {
+          final availableJobs = allApplicants
+              .where((a) => a.targetJobTitle != null && a.targetJobTitle!.isNotEmpty)
+              .map((a) => a.targetJobTitle!)
+              .toSet()
+              .toList();
+
+          return NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverToBoxAdapter(
@@ -208,19 +215,16 @@ class _ApplicantsScreenState extends ConsumerState<ApplicantsScreen>
                 return UJobApplicantCard(
                   applicant: applicant,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ApplicantDetailScreen(applicantId: applicant.id),
-                      ),
-                    );
+                    context.push('/employer/applicants/${applicant.id}');
                   },
                 );
               },
             );
           }).toList(),
         ),
+      );
+        }
+      ),
       ),
     );
   }

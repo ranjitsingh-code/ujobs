@@ -89,12 +89,46 @@ class UJobApplicantCard extends ConsumerWidget {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          applicant.targetJobTitle != null
-                              ? 'Applied for: ${applicant.targetJobTitle} · ${applicant.appliedAgo}'
-                              : '${applicant.role} · Applied ${applicant.appliedAgo}',
-                          style: AppText.small.copyWith(color: AppColors.muted),
+                          applicant.role,
+                          style: AppText.small.copyWith(color: AppColors.text),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                        if (applicant.location.isNotEmpty == true) ...[
+                          SizedBox(height: 4.h),
+                          Row(
+                            children: [
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedLocation01,
+                                color: AppColors.muted,
+                                size: 14.r,
+                              ),
+                              SizedBox(width: 4.w),
+                              Expanded(
+                                child: Text(
+                                  applicant.location,
+                                  style: AppText.small.copyWith(color: AppColors.muted),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        SizedBox(height: 4.h),
+                        Row(
+                          children: [
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedClock01,
+                              color: AppColors.muted,
+                              size: 14.r,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Applied ${applicant.appliedAgo}',
+                              style: AppText.small.copyWith(color: AppColors.muted),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -115,14 +149,14 @@ class UJobApplicantCard extends ConsumerWidget {
                             vertical: 4.h,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.bg,
-                            borderRadius: AppRadius.sm,
-                            border: Border.all(color: AppColors.borderLight),
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20.r),
                           ),
                           child: Text(
                             s,
                             style: AppText.small.copyWith(
-                              color: AppColors.text,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),

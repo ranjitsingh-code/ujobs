@@ -7,7 +7,6 @@ Because the mobile UI designs and models are strictly locked in, we need the API
 Could you please review and update the following?
 
 ### 🔴 1. Critical Server Bugs (500 Errors & Formatting)
-* **OTP Verification Crash:** `POST /api/v1/auth/verify-otp` returns a `500 Internal Server Error` when the mobile app sends the verification payload.
 * **Saved Candidates Crash:** `GET /api/v1/employer/saved-candidates` instantly returns a `500 Internal Server Error`.
 * **Resumes Format Issue:** `GET /api/v1/seeker/resumes` is returning `multipart/form-data`. The mobile app needs this to return a standard **JSON array** of the seeker's uploaded resumes.
 
