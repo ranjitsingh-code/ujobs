@@ -102,7 +102,7 @@ class UJobCompanyProfileSetup extends StatelessWidget {
                   children: [
                     Text(
                       'Complete Profile',
-                      style: AppText.bodyLarge.copyWith(
+                      style: AppText.titleSm.copyWith(
                         color: AppColors.white,
                         fontWeight: FontWeight.bold,
                       ),

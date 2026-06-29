@@ -135,11 +135,11 @@ class UJobEmployerJobCard extends ConsumerWidget {
                     color: statusColor,
                   ),
                   _InfoChip(
-                    label: _employmentLabel(context, job.employmentType),
+                    label: _employmentLabel(context, job.employmentType).replaceAll('-', ' ').replaceAll('_', ' ').toUpperCase(),
                     color: AppColors.muted,
                   ),
                   _InfoChip(
-                    label: _workplaceLabel(context, job.workplaceType),
+                    label: _workplaceLabel(context, job.workplaceType).replaceAll('-', ' ').replaceAll('_', ' ').toUpperCase(),
                     color: AppColors.info,
                   ),
                 ],

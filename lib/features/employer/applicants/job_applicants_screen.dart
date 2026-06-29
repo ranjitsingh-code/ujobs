@@ -53,6 +53,11 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen>
         });
       }
     });
+
+    // Silently refresh data in the background
+    Future.microtask(() {
+      ref.invalidate(jobApplicantsProvider(widget.job.id));
+    });
   }
 
   @override
@@ -73,7 +78,15 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen>
         error: (error, _) => Center(child: Text('Error loading applicants')),
         data: (fetchedApplicants) {
           final allApplicants = fetchedApplicants.map((a) => a.copyWith(targetJobTitle: widget.job.title)).toList();
-          return NestedScrollView(
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async {
+              ref.invalidate(jobApplicantsProvider(widget.job.id));
+              try {
+                await ref.read(jobApplicantsProvider(widget.job.id).future);
+              } catch (_) {}
+            },
+            child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverToBoxAdapter(
@@ -221,6 +234,7 @@ class _JobApplicantsScreenState extends ConsumerState<JobApplicantsScreen>
             );
           }).toList(),
         ),
+      ),
       );
       },
       ),

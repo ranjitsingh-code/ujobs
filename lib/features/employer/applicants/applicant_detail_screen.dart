@@ -21,6 +21,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'employer_applicant_provider.dart';
 import '../../../core/providers/feature_flags_provider.dart';
+import '../../../core/widgets/ujob_toast.dart';
 
 class ApplicantDetailScreen extends ConsumerStatefulWidget {
   final Applicant? applicant;
@@ -42,6 +43,14 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Silently refresh data in the background if we have an applicant to refresh
+    if (widget.applicant != null || widget.applicantId != null) {
+      Future.microtask(() {
+        final applicantToFetch = widget.applicant ?? Applicant.empty(id: widget.applicantId!);
+        ref.invalidate(singleApplicantProvider(applicantToFetch));
+      });
+    }
   }
 
   @override
@@ -192,85 +201,85 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                                       );
                                     },
                                   ),
-                                  if (isChatEnabled) ...[
-                                    SizedBox(height: 12.h),
-                                    InkWell(
-                                      borderRadius: BorderRadius.circular(20.r),
-                                      onTap: () {
-                                        void handleMessage() {
-                                          if (!applicant.hasMessaged) {
-                                            ref
-                                                .read(
-                                                  employerApplicantsProvider
-                                                      .notifier,
-                                                )
-                                                .markAsMessaged(applicant.id);
-                                          }
-                                          context.push(
-                                            '/conversations/conv-${applicant.id}',
-                                            extra: {
-                                              'name': applicant.name,
-                                              'initials': applicant.initials,
-                                              'avatar': null,
-                                            },
-                                          );
-                                        }
+                                  // if (isChatEnabled) ...[
+                                  //   SizedBox(height: 12.h),
+                                  //   InkWell(
+                                  //     borderRadius: BorderRadius.circular(20.r),
+                                  //     onTap: () {
+                                  //       void handleMessage() {
+                                  //         if (!applicant.hasMessaged) {
+                                  //           ref
+                                  //               .read(
+                                  //                 employerApplicantsProvider
+                                  //                     .notifier,
+                                  //               )
+                                  //               .markAsMessaged(applicant.id);
+                                  //         }
+                                  //         context.push(
+                                  //           '/conversations/conv-${applicant.id}',
+                                  //           extra: {
+                                  //             'name': applicant.name,
+                                  //             'initials': applicant.initials,
+                                  //             'avatar': null,
+                                  //           },
+                                  //         );
+                                  //       }
 
-                                        if (applicant.hasMessaged) {
-                                          handleMessage();
-                                        } else {
-                                          _showConfirmationDialog(
-                                            context: context,
-                                            title: 'Message Applicant',
-                                            description:
-                                                'Do you want to send a message to ${applicant.name}?',
-                                            confirmText: 'Message',
-                                            color: AppColors.primary,
-                                            icon: HugeIcon(
-                                              icon: HugeIcons
-                                                  .strokeRoundedMessage01,
-                                              color: AppColors.primary,
-                                              size: 28.r,
-                                            ),
-                                            onConfirm: handleMessage,
-                                          );
-                                        }
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 12.w,
-                                          vertical: 6.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            20.r,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            HugeIcon(
-                                              icon: HugeIcons
-                                                  .strokeRoundedMessage01,
-                                              color: AppColors.primary,
-                                              size: 16.r,
-                                            ),
-                                            SizedBox(width: 6.w),
-                                            Text(
-                                              'Message',
-                                              style: AppText.small.copyWith(
-                                                color: AppColors.primary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  //       if (applicant.hasMessaged) {
+                                  //         handleMessage();
+                                  //       } else {
+                                  //         _showConfirmationDialog(
+                                  //           context: context,
+                                  //           title: 'Message Applicant',
+                                  //           description:
+                                  //               'Do you want to send a message to ${applicant.name}?',
+                                  //           confirmText: 'Message',
+                                  //           color: AppColors.primary,
+                                  //           icon: HugeIcon(
+                                  //             icon: HugeIcons
+                                  //                 .strokeRoundedMessage01,
+                                  //             color: AppColors.primary,
+                                  //             size: 28.r,
+                                  //           ),
+                                  //           onConfirm: handleMessage,
+                                  //         );
+                                  //       }
+                                  //     },
+                                  //     child: Container(
+                                  //       padding: EdgeInsets.symmetric(
+                                  //         horizontal: 12.w,
+                                  //         vertical: 6.h,
+                                  //       ),
+                                  //       decoration: BoxDecoration(
+                                  //         color: AppColors.primary.withValues(
+                                  //           alpha: 0.1,
+                                  //         ),
+                                  //         borderRadius: BorderRadius.circular(
+                                  //           20.r,
+                                  //         ),
+                                  //       ),
+                                  //       child: Row(
+                                  //         mainAxisSize: MainAxisSize.min,
+                                  //         children: [
+                                  //           HugeIcon(
+                                  //             icon: HugeIcons
+                                  //                 .strokeRoundedMessage01,
+                                  //             color: AppColors.primary,
+                                  //             size: 16.r,
+                                  //           ),
+                                  //           SizedBox(width: 6.w),
+                                  //           Text(
+                                  //             'Message',
+                                  //             style: AppText.small.copyWith(
+                                  //               color: AppColors.primary,
+                                  //               fontWeight: FontWeight.bold,
+                                  //             ),
+                                  //           ),
+                                  //         ],
+                                  //       ),
+                                  //     ),
+                                  //   ),
+                                  // ],
                                 ],
                               ),
                             ],
@@ -285,6 +294,42 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                             padding: EdgeInsets.symmetric(horizontal: 20.w),
                             child: UJobStageStepper(
                               currentStage: applicant.status,
+                              onStageSelected: (stage) {
+                                if (stage.toLowerCase() == applicant.status.toLowerCase()) return;
+                                
+                                _showConfirmationDialog(
+                                  context: context,
+                                  title: 'Update Stage',
+                                  description: 'Are you sure you want to advance this application to the $stage stage?',
+                                  confirmText: 'Confirm',
+                                  color: AppColors.primary,
+                                  icon: HugeIcon(
+                                    icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                                    color: AppColors.primary,
+                                    size: 28.r,
+                                  ),
+                                  onConfirm: () async {
+                                    try {
+                                      await ref.read(employerApplicantsProvider.notifier).updateStatus(applicant.id, stage, jobId: applicant.jobId);
+                                      if (context.mounted) {
+                                        UJobToast.success(
+                                          context,
+                                          'Stage Updated',
+                                          sub: 'Applicant moved to $stage.',
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        UJobToast.error(
+                                          context,
+                                          'Update Failed',
+                                          sub: 'Failed to update stage.',
+                                        );
+                                      }
+                                    }
+                                  },
+                                );
+                              },
                             ),
                           ),
                       ],
@@ -400,9 +445,11 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                   ),
                   onPressed: () async {
                     final url = Uri.parse(applicant.resumeUrl!);
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    } else {
+                    try {
+                      final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+                      if (!launched) throw Exception('Could not launch');
+                    } catch (e) {
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
@@ -842,16 +889,20 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                       try {
                         await ref
                             .read(employerApplicantsProvider.notifier)
-                            .updateStatus(applicant.id, 'Rejected');
+                            .updateStatus(applicant.id, 'Rejected', jobId: applicant.jobId);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Applicant rejected.')),
+                          UJobToast.success(
+                            context,
+                            'Applicant Rejected',
+                            sub: 'The applicant has been rejected.',
                           );
                         }
                       } catch (e) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Failed to update stage.')),
+                          UJobToast.error(
+                            context,
+                            'Update Failed',
+                            sub: 'Failed to reject applicant.',
                           );
                         }
                       }
@@ -885,16 +936,20 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                       try {
                         await ref
                             .read(employerApplicantsProvider.notifier)
-                            .updateStatus(applicant.id, nextStageValue!);
+                            .updateStatus(applicant.id, nextStageValue!, jobId: applicant.jobId);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Applicant moved to $nextStageValue!')),
+                          UJobToast.success(
+                            context,
+                            'Stage Updated',
+                            sub: 'Applicant moved to $nextStageValue.',
                           );
                         }
                       } catch (e) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Failed to update stage.')),
+                          UJobToast.error(
+                            context,
+                            'Update Failed',
+                            sub: 'Failed to update stage.',
                           );
                         }
                       }

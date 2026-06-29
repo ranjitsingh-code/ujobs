@@ -222,6 +222,9 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
 
       // 4. Reload data explicitly
       await _onRefresh();
+      
+      // Invalidate dashboard provider so it re-fetches the new completion %
+      ref.invalidate(employerDashboardProvider);
 
       if (mounted) {
         UJobToast.success(context, 'Success', sub: 'Profile updated successfully!');

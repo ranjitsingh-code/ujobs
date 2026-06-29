@@ -22,6 +22,7 @@ class UJobTextField extends StatefulWidget {
   final Widget? labelTrailing;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
+  final ValueChanged<String>? onSubmitted;
   final List<TextInputFormatter>? inputFormatters;
 
   // Auto-validation parameters
@@ -51,6 +52,7 @@ class UJobTextField extends StatefulWidget {
     this.labelTrailing,
     this.onChanged,
     this.onTap,
+    this.onSubmitted,
     this.inputFormatters,
     this.isRequired = false,
     this.isEmail = false,
@@ -196,6 +198,7 @@ class _UJobTextFieldState extends State<UJobTextField> {
             _validate(v);
             widget.onChanged?.call(v);
           },
+          onSubmitted: widget.onSubmitted,
           onTap: widget.onTap,
           inputFormatters: widget.inputFormatters,
           style: AppText.body.copyWith(

@@ -108,8 +108,8 @@ class EmployerJobDetailScreen extends ConsumerWidget {
                     _buildSummaryRow('Job Category', job.category!),
                   if (job.location != null)
                     _buildSummaryRow('Location', job.location!),
-                  _buildSummaryRow('Employment Type', job.employmentType),
-                  _buildSummaryRow('Workplace', job.workplaceType),
+                  _buildSummaryRow('Employment', job.employmentType.replaceAll('_', ' ').toUpperCase()),
+                  _buildSummaryRow('Workplace', job.workplaceType.replaceAll('_', ' ').toUpperCase()),
                   if (job.openings != null)
                     _buildSummaryRow('Vacancies', job.openings!),
                   if (job.salaryMin != null)

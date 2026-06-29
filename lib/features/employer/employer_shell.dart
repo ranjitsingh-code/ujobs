@@ -22,8 +22,8 @@ class EmployerShell extends ConsumerWidget {
       ('/employer', HugeIcons.strokeRoundedHome01, context.l10n.dashboard),
       ('/employer/jobs', HugeIcons.strokeRoundedBriefcase01, context.l10n.jobsTab),
       ('/employer/applicants', HugeIcons.strokeRoundedUserGroup, context.l10n.applicants),
-      if (featureFlags.chat)
-        ('/employer/messages', HugeIcons.strokeRoundedBubbleChat, context.l10n.messages),
+      // if (featureFlags.chat)
+      //   ('/employer/messages', HugeIcons.strokeRoundedBubbleChat, context.l10n.messages),
       ('/employer/profile', HugeIcons.strokeRoundedUser, context.l10n.accountSection),
     ];
 

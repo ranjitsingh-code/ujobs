@@ -8,27 +8,39 @@ class SeekerJobService {
 
   Future<List<Job>> getJobs({
     String? search,
-    String? category,
+    int? categoryId,
     String? employmentType,
     String? workplaceType,
     String? experienceLevel,
-    int? salaryMin,
+    String? salaryRange,
+    String? datePosted,
+    String? sort,
+    String? location,
+    int? companyId,
     int limit = 20,
     int page = 1,
   }) async {
     final queryParams = {
-      'search': ?search,
-      'category': ?category,
-      'employment_type': ?employmentType,
-      'workplace_type': ?workplaceType,
-      'experience_level': ?experienceLevel,
-      'salary_min': ?salaryMin,
+      if (search != null && search.isNotEmpty) 'search': search,
+      if (categoryId != null) 'category_id': categoryId,
+      if (employmentType != null && employmentType.isNotEmpty) 'employment_type': employmentType,
+      if (workplaceType != null && workplaceType.isNotEmpty) 'workplace_type': workplaceType,
+      if (experienceLevel != null && experienceLevel.isNotEmpty) 'experience_level': experienceLevel,
+      if (salaryRange != null && salaryRange.isNotEmpty) 'salary_range': salaryRange,
+      if (datePosted != null && datePosted.isNotEmpty) 'date_posted': datePosted,
+      if (sort != null && sort.isNotEmpty) 'sort': sort,
+      if (location != null && location.isNotEmpty) 'location': location,
+      if (companyId != null) 'company_id': companyId,
       'limit': limit,
       'page': page,
     };
 
+    print('--- SEEKER ALL JOBS API QUERY PARAMS ---');
+    print(queryParams);
+    print('----------------------------------------');
+
     final res = await _client.dio.get(
-      Ep.publicJobs,
+      '/seeker/all-jobs',
       queryParameters: queryParams,
     );
     final data = res.data['data'] as List;
@@ -36,8 +48,25 @@ class SeekerJobService {
   }
 
   Future<Job> getJobDetails(int id) async {
-    final res = await _client.dio.get('${Ep.publicJobs}/$id');
+    final res = await _client.dio.get('${Ep.seekerJobs}/$id');
     return Job.fromJson(res.data['data']);
+  }
+
+  Future<void> applyJob(
+    int jobId, {
+    String? resumeId,
+    String? coverLetter,
+    List<Map<String, dynamic>>? answers,
+  }) async {
+    final payload = <String, dynamic>{};
+    if (resumeId != null) payload['resume_id'] = resumeId;
+    if (coverLetter != null && coverLetter.isNotEmpty) payload['cover_letter'] = coverLetter;
+    if (answers != null && answers.isNotEmpty) payload['answers'] = answers;
+
+    await _client.dio.post(
+      '${Ep.seekerJobs}/$jobId/apply',
+      data: payload,
+    );
   }
 
   Future<void> saveJob(int id) async {

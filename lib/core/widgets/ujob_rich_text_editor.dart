@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_delta_from_html/flutter_quill_delta_from_html.dart';
+import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -10,11 +11,13 @@ class UJobRichTextEditor extends StatefulWidget {
   final String title;
   final String initialValue;
   final ValueChanged<String> onSave;
+  final bool returnHtml;
 
   const UJobRichTextEditor({
     required this.title,
     required this.initialValue,
     required this.onSave,
+    this.returnHtml = false,
     super.key,
   });
 
@@ -58,8 +61,16 @@ class _UJobRichTextEditorState extends State<UJobRichTextEditor> {
   }
 
   void _handleSave() {
-    final jsonStr = jsonEncode(_controller.document.toDelta().toJson());
-    widget.onSave(jsonStr);
+    if (widget.returnHtml) {
+      final deltaJson = _controller.document.toDelta().toJson();
+      final html = QuillDeltaToHtmlConverter(
+        List.castFrom(deltaJson),
+      ).convert();
+      widget.onSave(html);
+    } else {
+      final jsonStr = jsonEncode(_controller.document.toDelta().toJson());
+      widget.onSave(jsonStr);
+    }
     Navigator.pop(context);
   }
 
@@ -173,6 +184,7 @@ void showUJobRichTextEditor({
   required String title,
   required String initialValue,
   required ValueChanged<String> onSave,
+  bool returnHtml = false,
 }) {
   Navigator.of(context).push(
     MaterialPageRoute(
@@ -180,6 +192,7 @@ void showUJobRichTextEditor({
         title: title,
         initialValue: initialValue,
         onSave: onSave,
+        returnHtml: returnHtml,
       ),
       fullscreenDialog: true,
     ),

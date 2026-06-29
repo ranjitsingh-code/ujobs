@@ -8,6 +8,7 @@ class User {
   final String? status;
   final bool twoFactorEnabled;
   final bool? verified;
+  final int? profileCompleted;
 
   const User({
     required this.id,
@@ -19,6 +20,7 @@ class User {
     this.status,
     this.twoFactorEnabled = false,
     this.verified,
+    this.profileCompleted,
   });
 
   String get fullName => '$firstName $lastName'.trim();
@@ -39,9 +41,10 @@ class User {
     status: json['status'] as String?,
     twoFactorEnabled: (json['two_factor_enabled'] ?? json['two_factor_authentication']) as bool? ?? false,
     verified: json['verified'] as bool?,
+    profileCompleted: json['profile_completed'] as int?,
   );
 
-  User copyWith({String? role, String? status, bool? verified}) => User(
+  User copyWith({String? role, String? status, bool? verified, int? profileCompleted}) => User(
     id: id,
     email: email,
     firstName: firstName,
@@ -51,5 +54,6 @@ class User {
     status: status ?? this.status,
     twoFactorEnabled: twoFactorEnabled,
     verified: verified ?? this.verified,
+    profileCompleted: profileCompleted ?? this.profileCompleted,
   );
 }

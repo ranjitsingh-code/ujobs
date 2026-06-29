@@ -48,8 +48,8 @@ class AppColors {
   static const surface = Color(0xFFFFFFFF);
   static const borderLight = Color(0xFFF1F5F9);
   static const border = Color(0xFFE2E8F0);
-  static const muted2 = Color(0xFF94A3B8);
-  static const muted = Color(0xFF64748B);
+  static const muted2 = Color(0xFF64748B); // Slate 500 (was 400)
+  static const muted = Color(0xFF475569); // Slate 600 (was 500)
   static const text2 = Color(0xFF334155);
   static const text = Color(0xFF0F172A);
 

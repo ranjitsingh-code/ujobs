@@ -101,8 +101,14 @@ abstract class AppLocalizations {
   /// Application name
   ///
   /// In en, this message translates to:
-  /// **'UJob'**
+  /// **'Ujobs'**
   String get appName;
+
+  /// No description provided for @checkSpamHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive the email? Please make sure to check your Spam or Junk folder.'**
+  String get checkSpamHint;
 
   /// No description provided for @loading.
   ///

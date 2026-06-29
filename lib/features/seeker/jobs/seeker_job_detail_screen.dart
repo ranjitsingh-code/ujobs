@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/l10n_extensions.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -14,11 +15,13 @@ import '../../../core/widgets/ujob_toast.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
+import '../../../core/widgets/ujob_image.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/widgets/ujob_rich_text_display.dart';
 import 'seeker_job_provider.dart';
 import '../applications/seeker_application_provider.dart';
 import '../../../core/models/application.dart';
+import '../profile/seeker_profile_provider.dart';
 
 class SeekerJobDetailScreen extends ConsumerStatefulWidget {
   final int jobId;
@@ -71,10 +74,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
     final jobAsync = ref.watch(seekerJobDetailProvider(widget.jobId));
     final l10n = context.l10n;
 
-    final apps = ref.watch(seekerApplicationsProvider(null)).value ?? [];
-    final isSaved = apps.any(
-      (a) => a.job.id == widget.jobId && a.status == ApplicationStatus.saved,
-    );
+    final isSaved = jobAsync.valueOrNull?.isSaved ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -86,9 +86,16 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
               ref
                   .read(seekerApplicationsProvider(null).notifier)
                   .toggleSave(jobAsync.value!);
+              // Give backend a moment to process the save/unsave before refetching
+              Future.delayed(const Duration(milliseconds: 300), () {
+                if (mounted) {
+                  ref.invalidate(seekerJobDetailProvider(widget.jobId));
+                }
+              });
               UJobToast.success(
                 context,
-                isSaved ? 'unsaved' : 'This has been saved',
+                isSaved ? 'Job Unsaved' : 'Job Saved',
+                sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.',
               );
             }
           },
@@ -103,17 +110,58 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
       ),
       body: jobAsync.when(
         loading: () => const UJobLoading(count: 1),
-        error: (err, stack) => UJobError(
-          message: l10n.error,
-          onRetry: () => ref.refresh(seekerJobDetailProvider(widget.jobId)),
-        ),
+        error: (err, stack) {
+          if (err is DioException && err.response?.statusCode == 404) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedFileRemove,
+                    color: AppColors.muted,
+                    size: 64.r,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text('Job Unavailable', style: AppText.heading2),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'This job might have been removed or closed.',
+                    style: AppText.body.copyWith(color: AppColors.muted),
+                  ),
+                  SizedBox(height: 24.h),
+                  SizedBox(
+                    width: 160.w,
+                    child: UJobButton(
+                      label: 'Go Back',
+                      onTap: () => context.pop(),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return UJobError(
+            message: l10n.error,
+            onRetry: () => ref.refresh(seekerJobDetailProvider(widget.jobId)),
+          );
+        },
         data: (job) {
-          final isApplied = _hasApplied;
+          final isApplied = _hasApplied || job.isApplied;
+          String applyLabel = 'Applied';
+          if (job.applicationStatus != null && job.applicationStatus!.isNotEmpty) {
+            applyLabel = 'Status: ${job.applicationStatus![0].toUpperCase()}${job.applicationStatus!.substring(1)}';
+          }
 
           return Stack(
             children: [
-              NestedScrollView(
-                headerSliverBuilder: (context, innerBoxIsScrolled) {
+              RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(seekerJobDetailProvider(widget.jobId));
+                },
+                color: AppColors.seekPrimary,
+                child: NestedScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
                     SliverToBoxAdapter(
                       child: Padding(
@@ -125,21 +173,32 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 56.r,
-                                  height: 56.r,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.error,
+                                if (job.company?.logo != null && job.company!.logo!.isNotEmpty)
+                                  ClipRRect(
                                     borderRadius: BorderRadius.circular(12.r),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    job.company?.name[0].toUpperCase() ?? 'C',
-                                    style: AppText.heading2.copyWith(
-                                      color: AppColors.surface,
+                                    child: UJobImage(
+                                      path: job.company!.logo!,
+                                      width: 56.r,
+                                      height: 56.r,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
+                                else
+                                  Container(
+                                    width: 56.r,
+                                    height: 56.r,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.seekPrimary,
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      job.company?.name.isNotEmpty == true ? job.company!.name[0].toUpperCase() : 'C',
+                                      style: AppText.heading2.copyWith(
+                                        color: AppColors.surface,
+                                      ),
                                     ),
                                   ),
-                                ),
                                 SizedBox(width: 12.w),
                                 Expanded(
                                   child: Column(
@@ -182,6 +241,22 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                           SizedBox(width: 4.w),
                                           Text(
                                             _formatDate(job.createdAt),
+                                            style: AppText.small.copyWith(
+                                              color: AppColors.muted,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8.w),
+                                          Container(
+                                            width: 3.r,
+                                            height: 3.r,
+                                            decoration: const BoxDecoration(
+                                              color: AppColors.border,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8.w),
+                                          Text(
+                                            '${job.applicantCount} applied',
                                             style: AppText.small.copyWith(
                                               color: AppColors.muted,
                                             ),
@@ -234,6 +309,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                         ),
                                       ),
                                     ),
+                                    /*
                                     SizedBox(height: 8.h),
                                     GestureDetector(
                                       onTap: () {
@@ -279,6 +355,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                         ),
                                       ),
                                     ),
+                                    */
                                   ],
                                 ),
                               ],
@@ -303,7 +380,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                       icon: HugeIcons.strokeRoundedMoney01,
                                       label: l10n.salary,
                                       value: job.salaryMin != null
-                                          ? '\$${job.salaryMin} - \$${job.salaryMax}'
+                                          ? '${job.salaryCurrency ?? '\$'}${job.salaryMin} - ${job.salaryCurrency ?? '\$'}${job.salaryMax}${job.salaryPeriod != null ? ' / ${job.salaryPeriod}' : ''}'
                                           : l10n.notSpecified,
                                     ),
                                   ),
@@ -316,7 +393,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                     child: _QuickFactItem(
                                       icon: HugeIcons.strokeRoundedBriefcase01,
                                       label: l10n.jobType,
-                                      value: job.employmentType ?? 'Full-time',
+                                      value: (job.employmentType ?? 'full_time').replaceAll('_', ' ').toUpperCase(),
                                     ),
                                   ),
                                   Container(
@@ -328,7 +405,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                     child: _QuickFactItem(
                                       icon: HugeIcons.strokeRoundedLocation01,
                                       label: l10n.workplace,
-                                      value: job.workplaceType ?? 'Remote',
+                                      value: (job.workplaceType ?? 'remote').replaceAll('_', ' ').toUpperCase(),
                                     ),
                                   ),
                                 ],
@@ -534,8 +611,8 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _OverviewRow('Employment', job.employmentType),
-                              _OverviewRow('Workplace', job.workplaceType),
+                              _OverviewRow('Employment', job.employmentType.replaceAll('_', ' ').toUpperCase()),
+                              _OverviewRow('Workplace', job.workplaceType.replaceAll('_', ' ').toUpperCase()),
                               if (job.category != null)
                                 _OverviewRow('Job Category', job.category!),
                               if (job.location != null)
@@ -548,7 +625,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                               if (job.salaryMin != null)
                                 _OverviewRow(
                                   'Salary',
-                                  '\$${job.salaryMin} - \$${job.salaryMax}',
+                                  '${job.salaryCurrency ?? '\$'}${job.salaryMin} - ${job.salaryCurrency ?? '\$'}${job.salaryMax}${job.salaryPeriod != null ? ' / ${job.salaryPeriod}' : ''}',
                                 ),
                               if (job.closesAt != null)
                                 _OverviewRow(
@@ -737,35 +814,87 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                 style: AppText.heading3,
                               ),
                               SizedBox(height: 16.h),
-                              Text(
-                                job.company?.description ??
-                                    'No description available for this company.',
-                                style: AppText.body.copyWith(
-                                  color: AppColors.text2,
-                                  height: 1.5,
-                                ),
-                              ),
-                              SizedBox(height: 16.h),
-                              UJobButton(
-                                label: 'Visit profile',
-                                color: AppColors.seekPrimary,
-                                outlined: true,
-                                onTap: () {
-                                  if (job.company != null) {
-                                    context.push(
-                                      '/seeker/company',
-                                      extra: {'company': job.company},
-                                    );
-                                  }
-                                },
-                              ),
+                              job.company?.description != null
+                                  ? UJobRichTextDisplay(content: job.company!.description!)
+                                  : Text(
+                                      'No description available for this company.',
+                                      style: AppText.body.copyWith(
+                                        color: AppColors.text2,
+                                        height: 1.5,
+                                      ),
+                                    ),
                             ],
                           ),
+                        ),
+                        
+                        Builder(
+                          builder: (context) {
+                            String formatCompanySize(String size) {
+                              if (size.trim().isEmpty) return size;
+                              String s = size.toLowerCase();
+                              if (s.startsWith('size_')) {
+                                s = s.replaceAll('size_', '');
+                              }
+                              s = s.replaceAll('_plus', '+');
+                              s = s.replaceAll('_', '-');
+                              if (!s.contains('employee')) {
+                                s = '$s Employees';
+                              }
+                              return s.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+                            }
+
+                            String formatIndustry(String ind) {
+                              if (ind.trim().isEmpty) return ind;
+                              String s = ind.toLowerCase();
+                              if (s.startsWith('industry_')) {
+                                s = s.replaceAll('industry_', '');
+                              }
+                              s = s.replaceAll('_', ' ');
+                              return s.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+                            }
+
+                            final Map<String, String> details = {};
+                            if (job.company?.industry != null) details['Industry'] = formatIndustry(job.company!.industry!);
+                            if (job.company?.size != null) details['Company Size'] = formatCompanySize(job.company!.size!);
+                            if (job.company?.founded != null) details['Founded'] = job.company!.founded!;
+                            if (job.company?.location != null) details['Location'] = job.company!.location!;
+                            if (job.company?.website != null) details['Website'] = job.company!.website!;
+                            if (job.company?.linkedinUrl != null) details['LinkedIn'] = job.company!.linkedinUrl!;
+                            if (job.company?.facebookUrl != null) details['Facebook'] = job.company!.facebookUrl!;
+
+                            if (details.isEmpty) return const SizedBox.shrink();
+
+                            final entries = details.entries.toList();
+                            return Container(
+                              padding: EdgeInsets.all(16.r),
+                              margin: EdgeInsets.only(bottom: 24.h),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(16.r),
+                                border: Border.all(color: AppColors.borderLight),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Company Overview', style: AppText.heading3),
+                                  SizedBox(height: 16.h),
+                                  ...entries.asMap().entries.map((entry) {
+                                    return _OverviewRow(
+                                      entry.value.key,
+                                      entry.value.value,
+                                      isLast: entry.key == entries.length - 1,
+                                    );
+                                  }),
+                                ],
+                              ),
+                            );
+                          }
                         ),
                       ],
                     ),
                   ],
                 ),
+              ),
               ),
 
               // --- BOTTOM BAR ---
@@ -793,7 +922,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                       Expanded(
                         child: UJobButton(
                           label: isApplied
-                              ? 'Applied'
+                              ? applyLabel
                               : 'Apply for this Position',
                           color: isApplied
                               ? AppColors.success
@@ -813,35 +942,133 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
   }
 
   void _apply(BuildContext context, dynamic job) async {
-    final hasQuestions = job.screeningQuestions?.isNotEmpty == true;
-    final needsCoverLetter = job.coverLetterRequirement != 'Disabled';
+    // 1. Initial Confirmation
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => UJobAlertDialog(
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedBriefcase01,
+          color: AppColors.seekPrimary,
+          size: 32.r,
+        ),
+        iconBgColor: AppColors.seekPrimary,
+        title: 'Apply for this Job?',
+        description: 'Are you sure you want to submit your application for ${job.title} at ${job.company?.name ?? 'Company'}?',
+        confirmText: 'Apply',
+        confirmColor: AppColors.seekPrimary,
+        onConfirm: () => Navigator.of(context, rootNavigator: true).pop(true),
+      ),
+    );
 
-    if (!hasQuestions && !needsCoverLetter) {
-      final confirmed = await showDialog<bool>(
+    if (confirmed != true) return;
+
+    // 2. Check Resume Requirement
+    final needsResume = job.resumeRequirement != null && 
+        job.resumeRequirement!.toLowerCase() != 'optional' && 
+        job.resumeRequirement!.toLowerCase() != 'disabled' &&
+        job.resumeRequirement!.toLowerCase() != 'false' &&
+        job.resumeRequirement!.toLowerCase() != 'no';
+
+    if (needsResume) {
+      // Show non-dismissible loading dialog
+      showDialog(
         context: context,
-        builder: (context) => UJobAlertDialog(
-          icon: HugeIcon(
-            icon: HugeIcons.strokeRoundedBriefcase01,
-            color: AppColors.seekPrimary,
-            size: 32.r,
+        barrierDismissible: false,
+        builder: (context) => PopScope(
+          canPop: false,
+          child: Dialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+            child: Padding(
+              padding: EdgeInsets.all(24.r),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(color: AppColors.seekPrimary),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Verifying your documents...\nPlease wait a bit.',
+                    textAlign: TextAlign.center,
+                    style: AppText.bodyBold,
+                  ),
+                ],
+              ),
+            ),
           ),
-          iconBgColor: AppColors.seekPrimary,
-          title: 'Apply for this Job?',
-          description:
-              'Are you sure you want to submit your application for ${job.title} at ${job.company?.name ?? 'Company'}?',
-          confirmText: 'Apply',
-          confirmColor: AppColors.seekPrimary,
-          onConfirm: () => Navigator.pop(context, true),
         ),
       );
 
-      if (confirmed == true) {
-        setState(() => _hasApplied = true);
-        if (mounted) UJobToast.success(context, 'Application Submitted!');
+      try {
+        await ref.read(fetchSeekerProfileProvider.future);
+      } catch (_) {}
+      
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // Close loading dialog
+      
+      final profile = ref.read(seekerProfileProvider)?.profile;
+      final hasResume = profile?.resumes.isNotEmpty == true;
+
+      if (!hasResume) {
+        showDialog(
+          context: context,
+          builder: (context) => UJobAlertDialog(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedFile02,
+              color: AppColors.error,
+              size: 32.r,
+            ),
+            iconBgColor: AppColors.error,
+            title: 'Resume Required',
+            description: 'This position requires a resume. Please upload your CV in your profile before applying.',
+            confirmText: 'Go to Profile',
+            confirmColor: AppColors.seekPrimary,
+            onConfirm: () {
+              Navigator.of(context, rootNavigator: true).pop();
+              context.go('/seeker/profile');
+            },
+            cancelText: 'Cancel',
+          ),
+        );
+        return; // Stop applying
+      }
+    }
+
+    // 3. Check Cover Letter / Questions
+    final hasQuestions = job.screeningQuestions?.isNotEmpty == true;
+    final needsCoverLetter = job.coverLetterRequirement != null && 
+        job.coverLetterRequirement!.toLowerCase() != 'disabled' &&
+        job.coverLetterRequirement!.toLowerCase() != 'false' &&
+        job.coverLetterRequirement!.toLowerCase() != 'no';
+
+    if (!hasQuestions && !needsCoverLetter) {
+      // Instant Apply API call
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const PopScope(
+          canPop: false,
+          child: Center(child: CircularProgressIndicator(color: AppColors.seekPrimary)),
+        ),
+      );
+
+      try {
+        await ref.read(seekerJobServiceProvider).applyJob(widget.jobId);
+        ref.invalidate(seekerJobDetailProvider(widget.jobId));
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // Close loading dialog
+          setState(() => _hasApplied = true);
+          UJobToast.success(context, 'Success', sub: 'Application Submitted!');
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // Close loading dialog
+          UJobToast.error(context, 'Error', sub: 'Failed to submit application.');
+        }
       }
       return;
     }
 
+    // 4. Navigate to ApplyScreen
     final result = await context.push<bool>(
       '/seeker/jobs/${widget.jobId}/apply',
       extra: {'title': job.title, 'company': job.company?.name ?? ''},
@@ -1003,9 +1230,21 @@ class _OverviewRow extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppText.small.copyWith(color: AppColors.muted)),
-          Text(value, style: AppText.bodyBold),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Text(
+              value, 
+              style: AppText.bodyBold.copyWith(
+                color: (value.startsWith('http')) ? AppColors.seekPrimary : AppColors.text,
+              ),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
         ],
       ),
     );

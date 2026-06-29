@@ -49,8 +49,9 @@ class Ep {
   static const employerFeatureFlags = '/employer/features';
   static const publicJobFormOptions = '/public/job-form-options';
 
-  // Seeker — NOTE: /seeker/profile (404), /seeker/dashboard (404) — use /seeker/me
+  // Seeker
   static const seekerMe = '/seeker/me'; // GET + PUT
+  static const seekerDashboard = '/seeker/dashboard';
   static const seekerJobs = '/seeker/jobs';
   static const seekerResumes =
       '/seeker/resumes'; // multipart/form-data — NOT JSON
@@ -68,9 +69,14 @@ class Ep {
   static String screeningQs(String id) =>
       '/public/jobs/$id/screening-questions';
   static const seekSettings = '/seeker/settings';
+  static const seekPreferences = '/seeker/settings/preferences';
   static const seekPassword = '/seeker/settings/password';
+  static const seekEmailRequestOtp = '/seeker/settings/email/request-otp';
+  static const seekEmailVerifyOtp = '/seeker/settings/email/verify-otp';
   static const seek2FA = '/seeker/settings/2fa';
   static const seekAuditLog = '/seeker/settings/audit-log';
+  static const seekAccount = '/seeker/settings/account';
+  static const seekSignOutAll = '/seeker/settings/sign-out-all';
 
   // Public
   static const publicJobs = '/public/jobs';

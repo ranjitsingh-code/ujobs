@@ -9,7 +9,11 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get appName => 'يو جوب';
+  String get appName => 'يو جوبز';
+
+  @override
+  String get checkSpamHint =>
+      'لم تتلقَ البريد الإلكتروني؟ يرجى التأكد من التحقق من مجلد الرسائل غير المرغوب فيها (Spam).';
 
   @override
   String get loading => 'جار التحميل...';

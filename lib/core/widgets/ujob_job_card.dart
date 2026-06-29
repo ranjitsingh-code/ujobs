@@ -49,7 +49,7 @@ class UJobJobCard extends StatelessWidget {
                         path: job.company!.logo!,
                         width: 48.r,
                         height: 48.r,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                         borderRadius: AppRadius.md,
                       )
                     else if (showCompany)
@@ -141,14 +141,37 @@ class UJobJobCard extends StatelessWidget {
                   spacing: 8.w,
                   runSpacing: 8.h,
                   children: [
-                    _Badge(
-                      label: job.employmentType
-                          .replaceAll('_', ' ')
-                          .toUpperCase(),
-                    ),
-                    _Badge(label: job.workplaceType.toUpperCase()),
+                    if (job.employmentType.isNotEmpty)
+                      _Badge(
+                        label: job.employmentType
+                            .replaceAll('_', ' ')
+                            .toUpperCase(),
+                      ),
+                    if (job.workplaceType.isNotEmpty)
+                      _Badge(
+                        label: job.workplaceType
+                            .replaceAll('_', ' ')
+                            .toUpperCase(),
+                      ),
                     if (job.category != null && job.category!.isNotEmpty)
                       _Badge(label: job.category!.toUpperCase()),
+                    if (job.applicationStatus != null && job.applicationStatus!.isNotEmpty) ...[
+                      SizedBox(width: 8.w),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.1),
+                          borderRadius: AppRadius.pill,
+                        ),
+                        child: Text(
+                          job.applicationStatus!.toUpperCase(),
+                          style: AppText.bodySemiBold.copyWith(
+                            fontSize: 10.sp,
+                            color: AppColors.success,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 SizedBox(height: 16.h),
@@ -159,17 +182,18 @@ class UJobJobCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (job.createdAt != null)
+                          if (job.createdAt != null || true)
                             Wrap(
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
-                                Text(
-                                  timeago.format(job.createdAt!),
-                                  style: AppText.bodySmall.copyWith(
-                                    color: AppColors.muted,
+                                if (job.createdAt != null)
+                                  Text(
+                                    timeago.format(job.createdAt!),
+                                    style: AppText.bodySmall.copyWith(
+                                      color: AppColors.muted,
+                                    ),
                                   ),
-                                ),
-                                if (job.applicantCount > 0) ...[
+                                if (job.createdAt != null)
                                   Padding(
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 6.w,
@@ -183,13 +207,12 @@ class UJobJobCard extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  Text(
-                                    '${job.applicantCount} applied',
-                                    style: AppText.bodySmall.copyWith(
-                                      color: AppColors.muted,
-                                    ),
+                                Text(
+                                  '${job.applicantCount} applied',
+                                  style: AppText.bodySmall.copyWith(
+                                    color: AppColors.muted,
                                   ),
-                                ],
+                                ),
                               ],
                             ),
                         ],
@@ -198,8 +221,8 @@ class UJobJobCard extends StatelessWidget {
                     if (job.salaryMin != null)
                       Text(
                         job.salaryMax != null
-                            ? '${job.salaryMin} - ${job.salaryMax}'
-                            : job.salaryMin!,
+                            ? '${job.salaryCurrency ?? ''} ${job.salaryMin} - ${job.salaryMax}'.trim()
+                            : '${job.salaryCurrency ?? ''} ${job.salaryMin!}'.trim(),
                         style: AppText.heading3.copyWith(
                           color: AppColors.text,
                           fontSize: 16.sp,

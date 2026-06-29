@@ -9,6 +9,7 @@ import 'ujob_avatar.dart';
 import 'ujob_button.dart';
 import 'ujob_alert_dialog.dart';
 import 'ujob_pdf_viewer_screen.dart';
+import 'ujob_toast.dart';
 import '../../features/employer/applicants/employer_applicant_provider.dart';
 
 class UJobApplicantCard extends ConsumerWidget {
@@ -232,13 +233,23 @@ class UJobApplicantCard extends ConsumerWidget {
     WidgetRef ref,
     Applicant applicant,
   ) {
-    final List<String> availableStages = [
-      'Shortlisted',
-      'Interview',
-      'Offered',
-      'Hired',
-      'Rejected',
-    ];
+    final orderedStages = ['Applied', 'Shortlisted', 'Interview', 'Offered', 'Hired'];
+    final currentStatus = applicant.status.toLowerCase();
+    final currentIndex = orderedStages.indexWhere((s) => s.toLowerCase() == currentStatus);
+
+    final List<String> availableStages = [];
+    if (currentIndex != -1 && currentIndex < orderedStages.length - 1) {
+      availableStages.addAll(orderedStages.sublist(currentIndex + 1));
+    } else if (currentIndex == -1 && currentStatus != 'rejected') {
+      // Fallback if status is unknown, just show all forward stages
+      availableStages.addAll(['Shortlisted', 'Interview', 'Offered', 'Hired']);
+    }
+
+    if (currentStatus != 'rejected' && currentStatus != 'hired') {
+      if (!availableStages.contains('Rejected')) {
+        availableStages.add('Rejected');
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -255,6 +266,14 @@ class UJobApplicantCard extends ConsumerWidget {
             children: [
               Text('Update Application Stage', style: AppText.heading3),
               SizedBox(height: 16.h),
+              if (availableStages.isEmpty)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  child: Text(
+                    'No further stages available.',
+                    style: AppText.bodyMedium.copyWith(color: AppColors.muted),
+                  ),
+                ),
               ...availableStages.map((stage) {
                 final isCurrent =
                     applicant.status.toLowerCase() == stage.toLowerCase();
@@ -302,11 +321,28 @@ class UJobApplicantCard extends ConsumerWidget {
                             : 'Are you sure you want to advance this application to the $stage stage?',
                         cancelText: 'Cancel',
                         confirmText: 'Confirm',
-                        onConfirm: () {
-                          ref
-                              .read(employerApplicantsProvider.notifier)
-                              .updateStatus(applicant.id, stage);
+                        onConfirm: () async {
                           Navigator.pop(ctx);
+                          try {
+                            await ref
+                                .read(employerApplicantsProvider.notifier)
+                                .updateStatus(applicant.id, stage, jobId: applicant.jobId);
+                            if (context.mounted) {
+                              UJobToast.success(
+                                context,
+                                'Stage Updated',
+                                sub: 'Applicant moved to $stage.',
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              UJobToast.error(
+                                context,
+                                'Update Failed',
+                                sub: 'Failed to update applicant stage.',
+                              );
+                            }
+                          }
                         },
                       ),
                     );

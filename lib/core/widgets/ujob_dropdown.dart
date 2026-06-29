@@ -6,12 +6,14 @@ class UJobDropdown extends StatelessWidget {
   final String value;
   final List<String> items;
   final ValueChanged<String?> onChanged;
+  final String Function(String)? labelBuilder;
 
   const UJobDropdown({
     required this.label,
     required this.value,
     required this.items,
     required this.onChanged,
+    this.labelBuilder,
     super.key,
   });
 
@@ -20,7 +22,7 @@ class UJobDropdown extends StatelessWidget {
     return UJobDropdownField<String>.simple(
       label: label,
       value: items.contains(value) ? value : null,
-      options: items.map((item) => (item, item)).toList(),
+      options: items.map((item) => (labelBuilder?.call(item) ?? item, item)).toList(),
       onChanged: onChanged,
     );
   }

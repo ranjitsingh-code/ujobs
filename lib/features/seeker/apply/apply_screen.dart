@@ -46,6 +46,36 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
   bool _submitting = false;
   bool _submitted = false;
 
+  bool _canProceed(ApplyStep step, dynamic job) {
+    if (step == ApplyStep.coverLetter) {
+      final isRequired = job.coverLetterRequirement != null && 
+          job.coverLetterRequirement!.toLowerCase() != 'optional' && 
+          job.coverLetterRequirement!.toLowerCase() != 'disabled' &&
+          job.coverLetterRequirement!.toLowerCase() != 'false' &&
+          job.coverLetterRequirement!.toLowerCase() != 'no';
+      if (isRequired) {
+        final text = getPlainTextFromQuillJson(_coverCtrl.text).trim();
+        return text.isNotEmpty;
+      }
+      return true;
+    } else if (step == ApplyStep.questions) {
+      final questions = job.screeningQuestions ?? [];
+      for (int i = 0; i < questions.length; i++) {
+        if ((_questionAnswers[i] ?? '').trim().isEmpty) return false;
+      }
+      return true;
+    }
+    return true;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _coverCtrl.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
   @override
   void dispose() {
     _coverCtrl.dispose();
@@ -75,10 +105,33 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
 
     setState(() => _submitting = true);
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      final job = ref.read(seekerJobDetailProvider(widget.jobId)).valueOrNull;
+      final answers = <Map<String, dynamic>>[];
+      if (job?.screeningQuestions != null) {
+        for (var entry in _questionAnswers.entries) {
+          if (entry.value.trim().isNotEmpty) {
+            final q = job!.screeningQuestions![entry.key];
+            answers.add({
+              'questionId': q['id'],
+              'answer': entry.value.trim(),
+            });
+          }
+        }
+      }
+
+      await ref.read(seekerJobServiceProvider).applyJob(
+        widget.jobId,
+        coverLetter: _coverCtrl.text.trim(),
+        answers: answers,
+      );
+      ref.invalidate(seekerJobDetailProvider(widget.jobId));
       setState(() => _submitted = true);
-    } catch (_) {
-      setState(() => _submitted = true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to apply: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -106,7 +159,13 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
       return const Scaffold(body: UJobLoading(count: 1));
 
     final steps = <ApplyStep>[];
-    if (job.coverLetterRequirement != 'Disabled') {
+    
+    final needsCoverLetter = job.coverLetterRequirement != null && 
+        job.coverLetterRequirement!.toLowerCase() != 'disabled' &&
+        job.coverLetterRequirement!.toLowerCase() != 'false' &&
+        job.coverLetterRequirement!.toLowerCase() != 'no';
+
+    if (needsCoverLetter) {
       steps.add(ApplyStep.coverLetter);
     }
     if (job.screeningQuestions != null && job.screeningQuestions!.isNotEmpty) {
@@ -121,6 +180,7 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
 
     final currentStep = steps[_stepIndex];
     final totalSteps = steps.length;
+    final canProceed = _canProceed(currentStep, job);
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -147,7 +207,14 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
             child: SingleChildScrollView(
               padding: AppSpacing.pagePad,
               child: currentStep == ApplyStep.coverLetter
-                  ? _StepCoverLetter(controller: _coverCtrl)
+                  ? _StepCoverLetter(
+                      controller: _coverCtrl,
+                      isRequired: job.coverLetterRequirement != null && 
+                          job.coverLetterRequirement!.toLowerCase() != 'optional' && 
+                          job.coverLetterRequirement!.toLowerCase() != 'disabled' &&
+                          job.coverLetterRequirement!.toLowerCase() != 'false' &&
+                          job.coverLetterRequirement!.toLowerCase() != 'no',
+                    )
                   : _StepScreeningQuestions(
                       questions: job.screeningQuestions ?? [],
                       answers: _questionAnswers,
@@ -163,6 +230,7 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
             step: _stepIndex,
             totalSteps: totalSteps,
             submitting: _submitting,
+            canProceed: canProceed,
             onBack: _stepIndex > 0 ? () => setState(() => _stepIndex--) : null,
             onNext: _stepIndex < totalSteps - 1
                 ? () => setState(() => _stepIndex++)
@@ -176,14 +244,23 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
 
 class _StepCoverLetter extends StatelessWidget {
   final TextEditingController controller;
-  const _StepCoverLetter({required this.controller});
+  final bool isRequired;
+  const _StepCoverLetter({required this.controller, this.isRequired = false});
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       SizedBox(height: 8.h),
-      Text('Cover Letter', style: AppText.heading2),
+      Row(
+        children: [
+          Text('Cover Letter', style: AppText.heading2),
+          if (!isRequired) ...[
+            SizedBox(width: 8.w),
+            Text('(Optional)', style: AppText.body.copyWith(color: AppColors.muted)),
+          ],
+        ],
+      ),
       SizedBox(height: 8.h),
       Text(
         'Introduce yourself and explain why you\'re a great fit.',
@@ -201,6 +278,7 @@ class _StepCoverLetter extends StatelessWidget {
               context: context,
               title: 'Cover Letter',
               initialValue: controller.text,
+              returnHtml: true,
               onSave: (val) {
                 controller.text = val;
               },
@@ -221,6 +299,7 @@ class _StepCoverLetter extends StatelessWidget {
                 context: context,
                 title: 'Cover Letter',
                 initialValue: controller.text,
+                returnHtml: true,
                 onSave: (val) {
                   controller.text = val;
                 },
@@ -309,6 +388,7 @@ class _BottomBar extends StatelessWidget {
   final int step;
   final int totalSteps;
   final bool submitting;
+  final bool canProceed;
   final VoidCallback? onBack;
   final VoidCallback onNext;
 
@@ -316,6 +396,7 @@ class _BottomBar extends StatelessWidget {
     required this.step,
     required this.totalSteps,
     required this.submitting,
+    this.canProceed = true,
     this.onBack,
     required this.onNext,
   });
@@ -359,7 +440,7 @@ class _BottomBar extends StatelessWidget {
                         color: AppColors.surface,
                         size: 20.r,
                       ),
-                      onTap: submitting ? null : onNext,
+                      onTap: (!canProceed || submitting) ? null : onNext,
                       isLoading: submitting,
                     ),
                   ),
@@ -393,7 +474,7 @@ class _BottomBar extends StatelessWidget {
                         color: AppColors.surface,
                         size: 20.r,
                       ),
-                      onTap: submitting ? null : onNext,
+                      onTap: (!canProceed || submitting) ? null : onNext,
                       isLoading: submitting,
                     ),
                   ),

@@ -9,7 +9,11 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'UJob';
+  String get appName => 'Ujobs';
+
+  @override
+  String get checkSpamHint =>
+      'Didn\'t receive the email? Please make sure to check your Spam or Junk folder.';
 
   @override
   String get loading => 'Loading...';

@@ -40,6 +40,11 @@ class Job {
   final String? ageMax;
   final List<Map<String, dynamic>>? screeningQuestions;
 
+  // Seeker-specific fields
+  final bool isApplied;
+  final String? applicationId;
+  final String? applicationStatus;
+
   Job({
     required this.id,
     required this.title,
@@ -75,6 +80,9 @@ class Job {
     this.ageMin,
     this.ageMax,
     this.screeningQuestions,
+    this.isApplied = false,
+    this.applicationId,
+    this.applicationStatus,
   });
 
   factory Job.fromJson(Map<String, dynamic> json) {
@@ -98,9 +106,11 @@ class Job {
               ? ((json['companies'] ?? json['company']) as List).first
               : (json['companies'] ?? json['company']))
           : null,
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'])
-          : null,
+      createdAt: _parseDate(json, const [
+        'posted_at',
+        'published_at',
+        'created_at',
+      ]),
       isSaved: json['is_saved'] ?? false,
       applicantCount: _parseApplicantCount(json),
       viewCount: _parseCount(json, const [
@@ -135,6 +145,9 @@ class Job {
       screeningQuestions: ((json['screening_questions'] ?? json['job_screening_questions']) as List<dynamic>?)
           ?.map((e) => Map<String, dynamic>.from(e as Map))
           .toList(),
+      isApplied: json['is_applied'] ?? false,
+      applicationId: json['application_id']?.toString(),
+      applicationStatus: json['application_status']?.toString(),
     );
   }
 
@@ -208,6 +221,9 @@ class Job {
     String? ageMin,
     String? ageMax,
     List<Map<String, dynamic>>? screeningQuestions,
+    bool? isApplied,
+    String? applicationId,
+    String? applicationStatus,
   }) {
     return Job(
       id: id,
@@ -245,6 +261,9 @@ class Job {
       ageMin: ageMin ?? this.ageMin,
       ageMax: ageMax ?? this.ageMax,
       screeningQuestions: screeningQuestions ?? this.screeningQuestions,
+      isApplied: isApplied ?? this.isApplied,
+      applicationId: applicationId ?? this.applicationId,
+      applicationStatus: applicationStatus ?? this.applicationStatus,
     );
   }
 

@@ -257,7 +257,21 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: UJobAppBar(title: _isEditing ? l10n.editJob : l10n.postJob),
+      appBar: UJobAppBar(
+        title: _isEditing ? l10n.editJob : l10n.postJob,
+        rightWidget: GestureDetector(
+          onTap: () => context.pop(),
+          child: Container(
+            padding: EdgeInsets.all(8.r),
+            color: Colors.transparent,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedCancel01,
+              size: 24.r,
+              color: AppColors.text,
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [

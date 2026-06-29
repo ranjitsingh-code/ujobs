@@ -29,8 +29,8 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
 
   static const _filters = [
     'All',
-    'Saved',
     'Applied',
+    'Saved',
     'Shortlisted',
     'Interview',
     'Offer',
@@ -84,21 +84,33 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
           ),
           data: (applications) {
             if (applications.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              return RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(seekerApplicationsProvider(null));
+                },
+                color: AppColors.seekPrimary,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedBriefcase01,
-                      color: AppColors.muted,
-                      size: 64.r,
-                    ),
-                    SizedBox(height: 16.h),
-                    Text('No Applications Yet', style: AppText.heading2),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'Start applying to jobs to see them here.',
-                      style: AppText.body.copyWith(color: AppColors.muted),
+                    SizedBox(height: 200.h),
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedBriefcase01,
+                            color: AppColors.muted,
+                            size: 64.r,
+                          ),
+                          SizedBox(height: 16.h),
+                          Text('No Applications Yet', style: AppText.heading2),
+                          SizedBox(height: 8.h),
+                          Text(
+                            'Start applying to jobs to see them here.',
+                            style: AppText.body.copyWith(color: AppColors.muted),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -106,13 +118,14 @@ class _MyApplicationsScreenState extends ConsumerState<MyApplicationsScreen> {
             }
 
             final labels = _filters.map((f) {
-              final count = applications.where((a) {
-                if (f == 'All') return true;
-                return a.status.name.toLowerCase() == f.toLowerCase() ||
-                    (f == 'Interview' && a.status.name == 'interviewing') ||
-                    (f == 'Offer' && a.status.name == 'offered');
-              }).length;
-              return '$f ($count)';
+              final count = f == 'All'
+                  ? applications.map((a) => a.job.id).toSet().length
+                  : applications.where((a) {
+                      return a.status.name.toLowerCase() == f.toLowerCase() ||
+                          (f == 'Interview' && a.status.name == 'interviewing') ||
+                          (f == 'Offer' && a.status.name == 'offered');
+                    }).length;
+              return count > 0 ? '$f ($count)' : f;
             }).toList();
 
             return Column(
@@ -159,26 +172,55 @@ class _ApplicationList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final filtered = applications.where((a) {
+    var filtered = applications.where((a) {
       if (filter == 'All') return true;
       return a.status.name.toLowerCase() == filter.toLowerCase() ||
           (filter == 'Interview' && a.status.name == 'interviewing') ||
           (filter == 'Offer' && a.status.name == 'offered');
     }).toList();
 
+    if (filter == 'All') {
+      final uniqueMap = <int, Application>{};
+      for (final app in filtered) {
+        // Prioritize actual applications over 'saved' status
+        if (app.status != ApplicationStatus.saved || !uniqueMap.containsKey(app.job.id)) {
+          uniqueMap[app.job.id] = app;
+        }
+      }
+      filtered = uniqueMap.values.toList();
+    }
+
     if (filtered.isEmpty) {
-      return Center(
-        child: Text(
-          'No applications in this category.',
-          style: AppText.body.copyWith(color: AppColors.muted),
+      return RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(seekerApplicationsProvider(null));
+        },
+        color: AppColors.seekPrimary,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(height: 150.h),
+            Center(
+              child: Text(
+                'No applications in this category.',
+                style: AppText.body.copyWith(color: AppColors.muted),
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    return ListView.separated(
-      padding: AppSpacing.pagePad,
-      itemCount: filtered.length,
-      separatorBuilder: (_, __) => SizedBox(height: 12.h),
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(seekerApplicationsProvider(null));
+      },
+      color: AppColors.seekPrimary,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: AppSpacing.pagePad,
+        itemCount: filtered.length,
+        separatorBuilder: (_, __) => SizedBox(height: 12.h),
       itemBuilder: (context, index) {
         final app = filtered[index];
         final apps = ref.watch(seekerApplicationsProvider(null)).value ?? [];
@@ -186,7 +228,10 @@ class _ApplicationList extends ConsumerWidget {
           (a) => a.job.id == app.job.id && a.status == ApplicationStatus.saved,
         );
         return UJobJobCard(
-          job: app.job.copyWith(isSaved: isSaved),
+          job: app.job.copyWith(
+            isSaved: isSaved,
+            applicationStatus: app.status != ApplicationStatus.saved ? app.status.name : '',
+          ),
           onTap: () => context.push('/seeker/jobs/${app.job.id}'),
           onSaveTap: () {
             ref
@@ -194,11 +239,13 @@ class _ApplicationList extends ConsumerWidget {
                 .toggleSave(app.job);
             UJobToast.success(
               context,
-              isSaved ? 'unsaved' : 'This has been saved',
+              isSaved ? 'Job Unsaved' : 'Job Saved',
+              sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.',
             );
           },
         );
       },
+    ),
     );
   }
 }

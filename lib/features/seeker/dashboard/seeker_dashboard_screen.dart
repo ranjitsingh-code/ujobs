@@ -18,7 +18,6 @@ import '../applications/seeker_application_provider.dart';
 import '../../../core/models/application.dart';
 import '../../../core/widgets/ujob_toast.dart';
 import '../../../core/widgets/ujob_notification_button.dart';
-import '../../../core/widgets/ujob_messages_to_reply.dart';
 import '../../../core/widgets/ujob_dashboard_section_header.dart';
 import '../../../core/widgets/ujob_boxed_empty_state.dart';
 import '../../../core/widgets/ujob_profile_setup_prompt.dart';
@@ -31,12 +30,18 @@ class SeekerDashboardScreen extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     final dashboardAsync = ref.watch(seekerDashboardProvider);
     final convAsync = ref.watch(seekerConversationsProvider);
-    final needsReply =
-        convAsync.valueOrNull?.where((c) => c.unreadCount > 0).toList() ?? [];
     final l10n = context.l10n;
 
-    final String greeting =
-        'Good morning'; // Static for now, can be dynamic based on time
+    final int hour = DateTime.now().hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = 'Good morning';
+    } else if (hour < 17) {
+      greeting = 'Good afternoon';
+    } else {
+      greeting = 'Good evening';
+    }
+
     final String name = auth.when(
       data: (u) => u != null ? u.firstName : 'Seeker',
       loading: () => '...',
@@ -44,8 +49,9 @@ class SeekerDashboardScreen extends ConsumerWidget {
     );
 
     final String initials = auth.when(
-      data: (u) =>
-          u != null ? '${u.firstName[0]}${u.lastName[0]}'.toUpperCase() : 'AJ',
+      data: (u) => u != null && u.firstName.isNotEmpty && u.lastName.isNotEmpty
+          ? '${u.firstName[0]}${u.lastName[0]}'.toUpperCase()
+          : 'AJ',
       loading: () => '..',
       error: (_, _) => 'AJ',
     );
@@ -58,8 +64,14 @@ class SeekerDashboardScreen extends ConsumerWidget {
           message: l10n.error,
           onRetry: () => ref.refresh(seekerDashboardProvider),
         ),
-        data: (data) => CustomScrollView(
-          slivers: [
+        data: (data) => RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(seekerDashboardProvider);
+          },
+          color: AppColors.seekPrimary,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
             SliverToBoxAdapter(
               child: _DashboardHeader(
                 greeting: greeting,
@@ -79,11 +91,13 @@ class SeekerDashboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Banner
-                    UJobProfileSetupPrompt(
-                      onSetup: () => context.go('/seeker/profile'),
-                    ),
+                    if (data.profileCompletion < 100)
+                      UJobProfileSetupPrompt(
+                        onSetup: () => context.go('/seeker/profile'),
+                      ),
 
-                    // Messages
+                    // Messages (Commented out as per user request)
+                    /*
                     if (needsReply.isNotEmpty) ...[
                       UJobMessagesToReply(
                         conversations: needsReply,
@@ -91,6 +105,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                       ),
                       SizedBox(height: 32.h),
                     ],
+                    */
 
                     UJobDashboardSectionHeader(
                       title: 'Latest Jobs',
@@ -135,7 +150,8 @@ class SeekerDashboardScreen extends ConsumerWidget {
                                   .toggleSave(job);
                               UJobToast.success(
                                 context,
-                                isSaved ? 'unsaved' : 'This has been saved',
+                                isSaved ? 'Job Unsaved' : 'Job Saved',
+                                sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.',
                               );
                             },
                           );
@@ -147,6 +163,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -239,14 +256,14 @@ class _DashboardHeader extends StatelessWidget {
                       ),
                       SizedBox(width: 12.w),
                       _StatCard(
-                        title: '47',
+                        title: '${dashboard.matchesCount}',
                         subtitle: 'Matches',
                         isSelected: false,
                         onTap: onMatchesTap,
                       ),
                       SizedBox(width: 12.w),
                       _StatCard(
-                        title: '12',
+                        title: '${dashboard.savedCount}',
                         subtitle: 'Saved',
                         isSelected: false,
                         onTap: onSavedTap,

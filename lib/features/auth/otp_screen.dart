@@ -354,6 +354,35 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                       ),
               ),
               SizedBox(height: 24.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.08),
+                  borderRadius: AppRadius.md,
+                  border: Border.all(color: AppColors.info.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedInformationCircle, 
+                      color: AppColors.info, 
+                      size: 20.r,
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Text(
+                        l10n.checkSpamHint,
+                        style: AppText.small.copyWith(
+                          color: AppColors.text2,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 24.h),
 
               UJobButton(
                 label: l10n.verifyEmail,

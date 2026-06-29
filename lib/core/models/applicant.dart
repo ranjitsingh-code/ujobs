@@ -81,6 +81,46 @@ class Applicant {
     this.relocationType,
   });
 
+  Applicant.empty({
+    required this.id,
+    this.jobId = '',
+    this.name = '',
+    this.initials = '',
+    this.role = '',
+    this.targetJobTitle,
+    this.status = 'Applied',
+    DateTime? appliedAt,
+    this.email = '',
+    this.phone = '',
+    this.location = '',
+    this.coverLetter,
+    this.screeningAnswers,
+    this.about,
+    this.experienceYears = '',
+    this.expectedSalary = '',
+    this.availability = '',
+    this.workExperience = const [],
+    this.education = const [],
+    this.skills = const [],
+    this.hasMessaged = false,
+    this.avatarUrl,
+    this.resumeUrl,
+    this.seekerProfileId,
+    this.resumeId,
+    this.updatedAt,
+    this.employerRating,
+    this.notes,
+    this.conversation,
+    this.showPhone = true,
+    this.linkedinUrl,
+    this.githubUrl,
+    this.portfolioUrl,
+    this.twitterUrl,
+    this.websiteUrl,
+    this.openToRelocation = false,
+    this.relocationType,
+  }) : appliedAt = appliedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+
 
   factory Applicant.fromJson(Map<String, dynamic> json) {
     String getInitials(String name) {

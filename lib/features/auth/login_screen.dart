@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -88,13 +89,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         });
       }
     } else {
-      if (mounted) {
-        setState(() {
-          _emailCtrl.text = _role == 'employer'
-              ? 'nexoviasolutions@gmail.com'
-              : 'mdazadhossain95@gmail.com';
-          _passwordCtrl.text = 'Azad613051@';
-        });
+      if (kDebugMode) {
+        if (mounted) {
+          setState(() {
+            _emailCtrl.text = _role == 'employer'
+                ? 'azadhossainsocialmedia@gmail.com'
+                : 'mdazadhossain95@gmail.com';
+            _passwordCtrl.text = _role == 'employer' ? '233O5h]>' : 'Azad613051@';
+          });
+        }
       }
     }
   }
@@ -288,12 +291,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 final currentEmail = _emailCtrl.text.trim();
                                 if (currentEmail.isEmpty ||
                                     currentEmail == 'mdazadhossain95@gmail.com' ||
-                                    currentEmail == 'nexoviasolutions@gmail.com' ||
+                                    currentEmail == 'azadhossainsocialmedia@gmail.com' ||
+                                    currentEmail == 'testccount222@gmail.com' ||
                                     currentEmail == 'john.doe@example.com') {
                                   _emailCtrl.text = r == 'employer'
-                                      ? 'nexoviasolutions@gmail.com'
+                                      ? 'azadhossainsocialmedia@gmail.com'
                                       : 'mdazadhossain95@gmail.com';
-                                  _passwordCtrl.text = 'Azad613051@';
+                                  _passwordCtrl.text = r == 'employer' ? '233O5h]>' : 'Azad613051@';
                                 }
                               });
                             },

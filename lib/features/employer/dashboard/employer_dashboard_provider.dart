@@ -8,8 +8,8 @@ import '../jobs/employer_job_provider.dart';
 
 final companyProfileProvider = StateProvider<CompanyProfile>((ref) {
   return const CompanyProfile(
-    id: 'demo-company',
-    name: 'Acme Ltd',
+    id: '',
+    name: '',
     industry: '',
     size: '',
     workType: '',
@@ -25,8 +25,8 @@ final companyProfileProvider = StateProvider<CompanyProfile>((ref) {
     country: '',
     linkedInUrl: '',
     facebookUrl: '',
-    activeJobs: 2,
-    applicants: 124,
+    activeJobs: 0,
+    applicants: 0,
   );
 });
 
@@ -78,7 +78,13 @@ final employerDashboardProvider = FutureProvider<EmployerDashboardData>((ref) as
   
   final profileData = profileRes.data['data'] ?? {};
   final companiesList = profileData['companies'] as List? ?? [];
-  final companyData = companiesList.isNotEmpty ? (companiesList.first as Map<String, dynamic>) : {};
+  final companyData = companiesList.isNotEmpty ? (companiesList.first as Map<String, dynamic>) : <String, dynamic>{};
+  
+  if (companyData.isNotEmpty) {
+    Future.microtask(() {
+      ref.read(companyProfileProvider.notifier).state = CompanyProfile.fromJson(companyData);
+    });
+  }
   
   final dashData = dashRes.data['data'] ?? {};
   final recentJobsList = (dashData['recent_jobs'] as List?) ?? [];

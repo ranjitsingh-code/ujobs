@@ -6,8 +6,13 @@ import '../theme/app_text_styles.dart';
 
 class UJobStageStepper extends StatelessWidget {
   final String currentStage;
+  final void Function(String)? onStageSelected;
 
-  const UJobStageStepper({super.key, required this.currentStage});
+  const UJobStageStepper({
+    super.key, 
+    required this.currentStage,
+    this.onStageSelected,
+  });
 
   final List<String> _stages = const [
     'Applied',
@@ -68,9 +73,11 @@ class UJobStageStepper extends StatelessWidget {
                 }
 
                 return SizedBox(
-                  width: 76
-                      .w, // Fixed width to keep alignment symmetrical and allow text wrapping
-                  child: Column(
+                  width: 76.w, // Fixed width to keep alignment symmetrical and allow text wrapping
+                  child: GestureDetector(
+                    onTap: onStageSelected != null ? () => onStageSelected!(_stages[index]) : null,
+                    behavior: HitTestBehavior.opaque,
+                    child: Column(
                     children: [
                       Container(
                         width: 32.r,
@@ -123,6 +130,7 @@ class UJobStageStepper extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
                   ),
                 );
               } else {

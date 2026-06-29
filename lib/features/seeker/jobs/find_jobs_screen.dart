@@ -16,6 +16,10 @@ import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_pill_tab_bar.dart';
 import '../../../core/widgets/ujob_dropdown.dart';
+import '../../../core/providers/categories_provider.dart';
+import '../../../core/widgets/ujob_toast.dart';
+import '../applications/seeker_application_provider.dart';
+import '../../../core/models/application.dart';
 import 'seeker_job_provider.dart';
 
 class FindJobsScreen extends ConsumerStatefulWidget {
@@ -53,6 +57,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
   @override
   Widget build(BuildContext context) {
     final jobsAsync = ref.watch(seekerJobsProvider);
+    final matchingJobsAsync = ref.watch(seekerMatchingJobsProvider);
     final l10n = context.l10n;
 
     return Scaffold(
@@ -60,8 +65,14 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
       body: DefaultTabController(
         length: 2,
         initialIndex: _tabIndex,
-        child: NestedScrollView(
-          physics: const BouncingScrollPhysics(),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(seekerMatchingJobsProvider);
+            ref.invalidate(seekerJobsProvider);
+          },
+          color: AppColors.seekPrimary,
+          child: NestedScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverAppBar(
@@ -88,57 +99,67 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                 titleSpacing: 0,
                 title: Padding(
                   padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: UJobTextField(
-                          label: '',
-                          hint: 'Search jobs, skills...',
-                          controller: _searchController,
-                          prefix: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            child: HugeIcon(
-                              icon: HugeIcons.strokeRoundedSearch01,
-                              color: AppColors.muted,
-                              size: 20.r,
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: UJobTextField(
+                            label: '',
+                            hint: 'Search jobs, skills...',
+                            controller: _searchController,
+                            prefix: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16.w),
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedSearch01,
+                                color: AppColors.muted,
+                                size: 20.r,
+                              ),
                             ),
-                          ),
-                          onChanged: (v) =>
-                              ref
-                                  .read(activeJobFilterProvider.notifier)
-                                  .state = ref
-                                  .read(activeJobFilterProvider)
-                                  .copyWith(search: v),
-                        ),
-                      ),
-                      if (_tabIndex == 1) ...[
-                        SizedBox(width: 12.w),
-                        Container(
-                          height: 56.h,
-                          width: 56.w,
-                          decoration: BoxDecoration(
-                            color: AppColors.seekPrimary,
-                            borderRadius: BorderRadius.circular(16.r),
-                          ),
-                          child: IconButton(
-                            icon: HugeIcon(
-                              icon: HugeIcons.strokeRoundedFilterHorizontal,
-                              color: AppColors.surface,
-                              size: 24.r,
-                            ),
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                backgroundColor: Colors.transparent,
-                                isScrollControlled: true,
-                                useSafeArea: true,
-                                builder: (context) => const _FilterSheet(),
-                              );
+                            onChanged: (v) {
+                              if (_tabIndex == 1) {
+                                ref
+                                    .read(activeJobFilterProvider.notifier)
+                                    .state = ref
+                                    .read(activeJobFilterProvider)
+                                    .copyWith(search: v);
+                              } else {
+                                setState(() {}); // trigger local filter
+                              }
                             },
                           ),
                         ),
+                        if (_tabIndex == 1) ...[
+                          SizedBox(width: 12.w),
+                          Container(
+                            width: 56.w,
+                            decoration: BoxDecoration(
+                              color: AppColors.seekPrimary,
+                              borderRadius: AppRadius.md,
+                            ),
+                            child: InkWell(
+                              borderRadius: AppRadius.md,
+                              onTap: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  backgroundColor: Colors.transparent,
+                                  isScrollControlled: true,
+                                  useSafeArea: true,
+                                  builder: (context) => const _FilterSheet(),
+                                );
+                              },
+                              child: Center(
+                                child: HugeIcon(
+                                  icon: HugeIcons.strokeRoundedFilterHorizontal,
+                                  color: AppColors.surface,
+                                  size: 24.r,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -177,12 +198,23 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
           },
           body: PageView(
             controller: _pageCtrl,
-            onPageChanged: (v) => setState(() => _tabIndex = v),
+            onPageChanged: (v) {
+              setState(() => _tabIndex = v);
+              if (v == 1) {
+                // Apply the search text to the active filter provider when switching to All Jobs
+                ref
+                    .read(activeJobFilterProvider.notifier)
+                    .state = ref
+                    .read(activeJobFilterProvider)
+                    .copyWith(search: _searchController.text);
+              }
+            },
             children: [
-              _buildForYouTab(jobsAsync, l10n),
+              _buildForYouTab(matchingJobsAsync, l10n),
               _buildAllJobsTab(jobsAsync, l10n),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -193,10 +225,17 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
       loading: () => const UJobLoading(count: 3),
       error: (err, stack) => UJobError(
         message: l10n.error,
-        onRetry: () => ref.refresh(seekerJobsProvider),
+        onRetry: () => ref.refresh(seekerMatchingJobsProvider),
       ),
       data: (jobs) {
-        if (jobs.isEmpty) {
+        final query = _searchController.text.toLowerCase();
+        final filteredJobs = jobs.where((job) {
+          if (query.isEmpty) return true;
+          return job.title.toLowerCase().contains(query) ||
+                 (job.company?.name.toLowerCase().contains(query) ?? false);
+        }).toList();
+
+        if (filteredJobs.isEmpty) {
           return Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -218,7 +257,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                   Text('Recommended', style: AppText.heading3),
                   const Spacer(),
                   Text(
-                    '${jobs.length} matches',
+                    '${filteredJobs.length} matches',
                     style: AppText.bodyMedium.copyWith(
                       color: AppColors.seekPrimary,
                     ),
@@ -229,13 +268,23 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
             Expanded(
               child: ListView.separated(
                 padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
-                itemCount: jobs.length,
+                itemCount: filteredJobs.length,
                 separatorBuilder: (_, __) => SizedBox(height: 12.h),
                 itemBuilder: (context, index) {
-                  final job = jobs[index];
+                  final job = filteredJobs[index];
+                  final apps = ref.watch(seekerApplicationsProvider(null)).value ?? [];
+                  final isSaved = apps.any((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
                   return UJobJobCard(
-                    job: job,
+                    job: job.copyWith(isSaved: isSaved),
                     onTap: () => context.push('/seeker/jobs/${job.id}'),
+                    onSaveTap: () {
+                      ref.read(seekerApplicationsProvider(null).notifier).toggleSave(job);
+                      UJobToast.success(
+                        context, 
+                        isSaved ? 'Job Unsaved' : 'Job Saved', 
+                        sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.'
+                      );
+                    },
                   );
                 },
               ),
@@ -294,7 +343,8 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                               ),
                               builder: (ctx) => _SortSheet(
                                 currentValue: _sortBy,
-                                options: _sortOptions,
+                                options: ref.read(jobFilterOptionsProvider).valueOrNull?.sortOptions.map((e) => e.value).toList() ?? _sortOptions,
+                                optionLabels: ref.read(jobFilterOptionsProvider).valueOrNull?.sortOptions,
                               ),
                             );
                             if (val != null && mounted) {
@@ -309,7 +359,15 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                           child: Row(
                             children: [
                               Text(
-                                _sortBy,
+                                () {
+                                  final sortOpts = ref.read(jobFilterOptionsProvider).valueOrNull?.sortOptions;
+                                  if (sortOpts != null) {
+                                    for (final opt in sortOpts) {
+                                      if (opt.value == _sortBy) return opt.label;
+                                    }
+                                  }
+                                  return _sortBy;
+                                }(),
                                 style: AppText.bodyMedium.copyWith(
                                   color: AppColors.seekPrimaryDark,
                                 ),
@@ -333,9 +391,19 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                       separatorBuilder: (_, __) => SizedBox(height: 12.h),
                       itemBuilder: (context, index) {
                         final job = jobs[index];
+                        final apps = ref.watch(seekerApplicationsProvider(null)).value ?? [];
+                        final isSaved = apps.any((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
                         return UJobJobCard(
-                          job: job,
+                          job: job.copyWith(isSaved: isSaved),
                           onTap: () => context.push('/seeker/jobs/${job.id}'),
+                          onSaveTap: () {
+                            ref.read(seekerApplicationsProvider(null).notifier).toggleSave(job);
+                            UJobToast.success(
+                              context, 
+                              isSaved ? 'Job Unsaved' : 'Job Saved', 
+                              sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.'
+                            );
+                          },
                         );
                       },
                     ),
@@ -361,12 +429,38 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
   final _keywordsCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
   final _companyCtrl = TextEditingController();
-  String _datePosted = 'Any time';
+  String _datePosted = 'any_time';
   List<String> _employmentTypes = [];
   List<String> _workplaces = [];
-  String _experienceLevel = 'Any level';
-  String _minSalary = 'Any salary';
-  String _category = 'All Categories';
+  String _experienceLevel = 'any_level';
+  String _minSalary = 'any_salary';
+  String _category = 'all_categories';
+
+  String _formatLabel(String value, {List<dynamic>? apiOptions}) {
+    // If the API provided a label for this value, use it!
+    if (apiOptions != null) {
+      for (final opt in apiOptions) {
+        if (opt.value == value) return opt.label;
+      }
+    }
+
+    if (value.endsWith('_plus')) {
+      final numStr = value.replaceAll('_plus', '');
+      final amount = int.tryParse(numStr);
+      if (amount != null) {
+        if (amount >= 1000) return '\$${(amount / 1000).toStringAsFixed(0)}k+';
+        return '\$$amount+';
+      }
+    }
+    if (value == 'any_time') return 'Any time';
+    if (value == 'any_level') return 'Any level';
+    if (value == 'any_salary') return 'Any salary';
+    if (value == 'all_categories') return 'All Categories';
+    
+    final str = value.replaceAll('_', ' ').replaceAll('-', ' ');
+    if (str.isEmpty) return '';
+    return str[0].toUpperCase() + str.substring(1).toLowerCase();
+  }
 
   @override
   void initState() {
@@ -375,10 +469,10 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
     _keywordsCtrl.text = filter.search ?? '';
     _locationCtrl.text = filter.location ?? '';
     _companyCtrl.text = filter.company ?? '';
-    _category = filter.category ?? 'All Categories';
-    _datePosted = filter.datePosted ?? 'Any time';
-    _experienceLevel = filter.experienceLevel ?? 'Any level';
-    _minSalary = filter.minSalary ?? 'Any salary';
+    _category = filter.category ?? 'all_categories';
+    _datePosted = filter.datePosted ?? 'any_time';
+    _experienceLevel = filter.experienceLevel ?? 'any_level';
+    _minSalary = filter.minSalary ?? 'any_salary';
     _employmentTypes = List.from(filter.employmentTypes);
     _workplaces = List.from(filter.workplaces);
   }
@@ -413,18 +507,22 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                 const Spacer(),
                 TextButton(
                   onPressed: () {
-                    // Reset
+                    // Reset local state
                     setState(() {
                       _keywordsCtrl.clear();
                       _locationCtrl.clear();
                       _companyCtrl.clear();
-                      _datePosted = 'Any time';
+                      _datePosted = 'any_time';
                       _employmentTypes = [];
                       _workplaces = [];
-                      _experienceLevel = 'Any level';
-                      _minSalary = 'Any salary';
-                      _category = 'All Categories';
+                      _experienceLevel = 'any_level';
+                      _minSalary = 'any_salary';
+                      _category = 'all_categories';
                     });
+                    
+                    // Trigger the API reset
+                    Navigator.pop(context);
+                    ref.read(activeJobFilterProvider.notifier).state = JobFilter();
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: AppColors.borderLight.withValues(
@@ -461,116 +559,114 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
           ),
           // Scrollable Body
           Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(20.r),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  UJobTextField(
-                    label: 'Keywords',
-                    hint: 'Job title, skills, company...',
-                    controller: _keywordsCtrl,
-                  ),
-                  SizedBox(height: 16.h),
-                  UJobTextField(
-                    label: 'Location',
-                    hint: 'City or region...',
-                    controller: _locationCtrl,
-                  ),
-                  SizedBox(height: 24.h),
+            child: ref.watch(jobFilterOptionsProvider).when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Center(child: Text('Failed to load filters: $e')),
+              data: (options) {
+                // Determine dropdown items, ensuring selected values remain valid
+                final datePostedItems = options.datePosted.isNotEmpty ? ['any_time', ...options.datePosted.map((e) => e.value)] : ['any_time', 'last_24_hours', 'past_week', 'past_month'];
+                if (!datePostedItems.contains(_datePosted)) _datePosted = 'any_time';
+                
+                final employmentTypeItems = options.employmentTypes.isNotEmpty ? options.employmentTypes.map((e) => e.value).toList() : ['full_time', 'part_time', 'contract', 'freelance', 'internship', 'temporary'];
+                
+                final workplaceItems = options.workplaceTypes.isNotEmpty ? options.workplaceTypes.map((e) => e.value).toList() : ['on_site', 'remote', 'hybrid'];
+                
+                final experienceLevelItems = options.experienceLevels.isNotEmpty ? ['any_level', ...options.experienceLevels.map((e) => e.value)] : ['any_level', 'entry_level', 'mid_level', 'senior', 'executive'];
+                if (!experienceLevelItems.contains(_experienceLevel)) _experienceLevel = 'any_level';
+                
+                final minSalaryItems = options.salaryRanges.isNotEmpty ? ['any_salary', ...options.salaryRanges.map((e) => e.value)] : ['any_salary', '20000_plus', '30000_plus', '40000_plus', '50000_plus', '70000_plus', '100000_plus'];
+                if (!minSalaryItems.contains(_minSalary)) _minSalary = 'any_salary';
+                
+                final loadedCategories = ref.watch(categoriesProvider).valueOrNull;
+                final categoryItems = loadedCategories != null && loadedCategories.isNotEmpty 
+                    ? ['all_categories', ...loadedCategories.map((c) => c.name)]
+                    : (options.categories.isNotEmpty ? ['all_categories', ...options.categories.map((e) => e.value)] : ['all_categories', 'Technology', 'Software Development', 'Accounting & Auditing', 'Healthcare', 'Logistics & Supply Chain']);
+                if (!categoryItems.contains(_category)) _category = 'all_categories';
 
-                  UJobDropdown(
-                    label: 'Date Posted',
-                    value: _datePosted,
-                    items: const [
-                      'Any time',
-                      'Last 24 hours',
-                      'Last 3 days',
-                      'Last 7 days',
-                      'Last 14 days',
-                      'Last 30 days',
+                return SingleChildScrollView(
+                  padding: EdgeInsets.all(20.r),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      UJobTextField(
+                        label: 'Keywords',
+                        hint: 'Job title, skills, company...',
+                        controller: _keywordsCtrl,
+                      ),
+                      SizedBox(height: 16.h),
+                      UJobTextField(
+                        label: 'Location',
+                        hint: 'City or region...',
+                        controller: _locationCtrl,
+                      ),
+                      SizedBox(height: 24.h),
+
+                      UJobDropdown(
+                        label: 'Date Posted',
+                        value: _datePosted,
+                        items: datePostedItems,
+                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.datePosted),
+                        onChanged: (v) => setState(() => _datePosted = v!),
+                      ),
+                      SizedBox(height: 24.h),
+
+                      Text('Employment Type', style: AppText.bodyBold),
+                      SizedBox(height: 12.h),
+                      UJobMultiChipGroup<String>(
+                        options: employmentTypeItems,
+                        selectedValues: _employmentTypes,
+                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.employmentTypes),
+                        onChanged: (v) => setState(() => _employmentTypes = v),
+                      ),
+                      SizedBox(height: 24.h),
+
+                      Text('Workplace', style: AppText.bodyBold),
+                      SizedBox(height: 12.h),
+                      UJobMultiChipGroup<String>(
+                        options: workplaceItems,
+                        selectedValues: _workplaces,
+                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.workplaceTypes),
+                        onChanged: (v) => setState(() => _workplaces = v),
+                      ),
+                      SizedBox(height: 24.h),
+
+                      UJobDropdown(
+                        label: 'Experience Level',
+                        value: _experienceLevel,
+                        items: experienceLevelItems,
+                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.experienceLevels),
+                        onChanged: (v) => setState(() => _experienceLevel = v!),
+                      ),
+                      SizedBox(height: 24.h),
+
+                      UJobDropdown(
+                        label: 'Minimum Salary',
+                        value: _minSalary,
+                        items: minSalaryItems,
+                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.salaryRanges),
+                        onChanged: (v) => setState(() => _minSalary = v!),
+                      ),
+                      SizedBox(height: 24.h),
+
+                      UJobTextField(
+                        label: 'Company',
+                        hint: 'Company name...',
+                        controller: _companyCtrl,
+                      ),
+                      SizedBox(height: 16.h),
+
+                      UJobDropdown(
+                        label: 'Category',
+                        value: _category,
+                        items: categoryItems,
+                        labelBuilder: _formatLabel,
+                        onChanged: (v) => setState(() => _category = v!),
+                      ),
+                      SizedBox(height: 40.h),
                     ],
-                    onChanged: (v) => setState(() => _datePosted = v!),
                   ),
-                  SizedBox(height: 24.h),
-
-                  Text('Employment Type', style: AppText.bodyBold),
-                  SizedBox(height: 12.h),
-                  UJobMultiChipGroup<String>(
-                    options: const [
-                      'Full-time',
-                      'Part-time',
-                      'Contract',
-                      'Internship',
-                      'Temporary',
-                    ],
-                    selectedValues: _employmentTypes,
-                    labelBuilder: (v) => v,
-                    onChanged: (v) => setState(() => _employmentTypes = v),
-                  ),
-                  SizedBox(height: 24.h),
-
-                  Text('Workplace', style: AppText.bodyBold),
-                  SizedBox(height: 12.h),
-                  UJobMultiChipGroup<String>(
-                    options: const ['On-site', 'Remote', 'Hybrid'],
-                    selectedValues: _workplaces,
-                    labelBuilder: (v) => v,
-                    onChanged: (v) => setState(() => _workplaces = v),
-                  ),
-                  SizedBox(height: 24.h),
-
-                  UJobDropdown(
-                    label: 'Experience Level',
-                    value: _experienceLevel,
-                    items: const [
-                      'Any level',
-                      'Entry Level',
-                      'Mid-Level',
-                      'Senior',
-                    ],
-                    onChanged: (v) => setState(() => _experienceLevel = v!),
-                  ),
-                  SizedBox(height: 24.h),
-
-                  UJobDropdown(
-                    label: 'Minimum Salary',
-                    value: _minSalary,
-                    items: const [
-                      'Any salary',
-                      '\$30,000+',
-                      '\$50,000+',
-                      '\$70,000+',
-                      '\$90,000+',
-                      '\$110,000+',
-                    ],
-                    onChanged: (v) => setState(() => _minSalary = v!),
-                  ),
-                  SizedBox(height: 24.h),
-
-                  UJobTextField(
-                    label: 'Company',
-                    hint: 'Company name...',
-                    controller: _companyCtrl,
-                  ),
-                  SizedBox(height: 16.h),
-
-                  UJobDropdown(
-                    label: 'Category',
-                    value: _category,
-                    items: const [
-                      'All Categories',
-                      'Technology',
-                      'Software Development',
-                      'Accounting & Auditing',
-                      'Healthcare',
-                      'Logistics & Supply Chain',
-                    ],
-                    onChanged: (v) => setState(() => _category = v!),
-                  ),
-                  SizedBox(height: 40.h),
-                ],
-              ),
+                );
+              }
             ),
           ),
           // Apply Button
@@ -605,14 +701,14 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                       ? null
                       : _locationCtrl.text,
                   company: _companyCtrl.text.isEmpty ? null : _companyCtrl.text,
-                  category: _category == 'All Categories' ? null : _category,
-                  datePosted: _datePosted == 'Any time' ? null : _datePosted,
+                  category: _category == 'all_categories' ? null : _category,
+                  datePosted: _datePosted == 'any_time' ? null : _datePosted,
                   employmentTypes: _employmentTypes,
                   workplaces: _workplaces,
-                  experienceLevel: _experienceLevel == 'Any level'
+                  experienceLevel: _experienceLevel == 'any_level'
                       ? null
                       : _experienceLevel,
-                  minSalary: _minSalary == 'Any salary' ? null : _minSalary,
+                  minSalary: _minSalary == 'any_salary' ? null : _minSalary,
                 );
               },
             ),
@@ -626,8 +722,9 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
 class _SortSheet extends ConsumerWidget {
   final String currentValue;
   final List<String> options;
+  final List<dynamic>? optionLabels;
 
-  const _SortSheet({required this.currentValue, required this.options});
+  const _SortSheet({required this.currentValue, required this.options, this.optionLabels});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -659,10 +756,16 @@ class _SortSheet extends ConsumerWidget {
           SizedBox(height: 16.h),
           ...options.map((option) {
             final isSelected = option == currentValue;
+            String displayLabel = option;
+            if (optionLabels != null) {
+              for (final opt in optionLabels!) {
+                if (opt.value == option) displayLabel = opt.label;
+              }
+            }
             return ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(
-                option,
+                displayLabel,
                 style: AppText.body.copyWith(
                   color: isSelected ? AppColors.seekPrimary : AppColors.text,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,

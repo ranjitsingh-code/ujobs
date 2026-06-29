@@ -467,6 +467,7 @@ class _EmpStep2 extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           UJobCountryDropdown(value: country, onChanged: onCountryChanged),
+          SizedBox(height: 16.h),
           UJobTextField(
             label: l10n.websiteLabel,
             hint: l10n.websiteHint,

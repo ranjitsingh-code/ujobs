@@ -282,7 +282,7 @@ class UJobCountryDropdown extends ConsumerWidget {
           errorText: errorText,
           onChanged: onChanged,
           options: countries
-              .map((c) => ('${c.flag} ${c.name}', c.name))
+              .map((c) => ('${c.flag} ${c.name}', c.iso2))
               .toList(),
         );
       },

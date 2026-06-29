@@ -22,12 +22,25 @@ import '../../../core/widgets/ujob_employer_job_actions_sheet.dart';
 import '../../../core/utils/job_action_helpers.dart';
 import '../jobs/employer_job_provider.dart';
 
-class EmployerDashboardScreen extends ConsumerWidget {
+class EmployerDashboardScreen extends ConsumerStatefulWidget {
   const EmployerDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-        final auth = ref.watch(authProvider);
+  ConsumerState<EmployerDashboardScreen> createState() => _EmployerDashboardScreenState();
+}
+
+class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.invalidate(employerDashboardProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = ref.watch(authProvider);
     final dashboardAsync = ref.watch(employerDashboardProvider);
     
     return dashboardAsync.when(

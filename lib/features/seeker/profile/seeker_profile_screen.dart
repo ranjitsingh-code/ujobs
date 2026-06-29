@@ -1,18 +1,32 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'dart:io';
+import 'package:ujobs_app/core/widgets/ujob_toast.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_button.dart';
+import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_text_field.dart';
-import '../../../core/widgets/ujob_dropdown.dart';
-import '../../../core/widgets/ujob_rich_text_field.dart';
+import '../../../core/widgets/ujob_dropdown_field.dart';
+import '../../../core/widgets/ujob_skill_autocomplete.dart';
+import '../../../core/models/skill.dart';
 import '../../../core/widgets/ujob_rich_text_editor.dart';
+import '../../../core/widgets/ujob_pdf_viewer_screen.dart';
+import '../../../core/models/seeker_profile.dart';
+import 'seeker_profile_provider.dart';
 import '../dashboard/seeker_dashboard_provider.dart';
+import 'widgets/add_experience_sheet.dart';
+import 'widgets/add_education_sheet.dart';
+import '../../../core/providers/countries_provider.dart';
+import '../../../core/providers/job_form_options_provider.dart';
+import '../../../core/widgets/ujob_phone_number_field.dart';
 
 class SeekerProfileScreen extends ConsumerStatefulWidget {
   const SeekerProfileScreen({super.key});
@@ -25,35 +39,148 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   // Personal Information
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
+  String _phoneCode = '+44';
   final _phoneCtrl = TextEditingController();
+  bool _showPhone = true;
 
   // Location
-  final _countryCtrl = TextEditingController();
+  String? _country;
   final _cityCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _zipCtrl = TextEditingController();
+
+  // Relocation
   bool _willingToRelocate = false;
+  String? _relocationType;
+  final _relocationCitiesCtrl = TextEditingController();
+  List<String> _relocationCities = [];
+
+  // Resume
+  SeekerResume? _primaryResume;
 
   // Professional Info
   final _headlineCtrl = TextEditingController();
-  final _skillsCtrl = TextEditingController();
   String? _expYears;
   String? _expMonths;
+  final _expectedSalaryCtrl = TextEditingController();
+  String? _currency;
   String? _availability;
-
-  // Rich Text
+  String? _profileVisibility;
   String _about = '';
+
+  // Skills
+  final _skillSearchCtrl = TextEditingController();
+  List<Skill> _selectedSkills = [];
+
+  // Experience & Education
+  List<SeekerExperience> _experiences = [];
+  List<SeekerEducation> _educations = [];
+
+  // Social URLs
+  final _linkedinCtrl = TextEditingController();
+  final _githubCtrl = TextEditingController();
+  final _portfolioCtrl = TextEditingController();
+  final _twitterCtrl = TextEditingController();
+  final _websiteCtrl = TextEditingController();
+
+  bool _isLoading = false;
+  int _refreshKey = 0;
 
   @override
   void initState() {
     super.initState();
-    // Pre-fill mock data
-    _firstNameCtrl.text = 'Azad';
-    _lastNameCtrl.text = 'Hossain';
-    _phoneCtrl.text = '+1 234 567 890';
-    _headlineCtrl.text = 'Senior Flutter Developer';
-    _countryCtrl.text = 'United States';
-    _cityCtrl.text = 'San Francisco';
+    
+    // Show loading indicator only on the very first load
+    final existingData = ref.read(seekerProfileProvider);
+    if (existingData == null) {
+      _isLoading = true;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProfile();
+    });
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      ref.invalidate(seekerDashboardProvider);
+      await ref.refresh(fetchSeekerProfileProvider.future);
+      final freshData = ref.read(seekerProfileProvider);
+      if (freshData != null) {
+        _populateFields(freshData);
+      }
+    } catch (e) {
+      // Fallback to whatever is currently in state if fetch fails
+      final profileData = ref.read(seekerProfileProvider);
+      if (profileData != null) {
+        _populateFields(profileData);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _refreshKey++;
+        });
+      }
+    }
+  }
+
+  void _populateFields(SeekerProfileData data) {
+    final user = data.user;
+    final profile = data.profile;
+
+    _firstNameCtrl.text = user.firstName;
+    _lastNameCtrl.text = user.lastName;
+    _phoneCtrl.text = user.phone ?? '';
+
+    if (profile != null) {
+      _phoneCode = "+44";
+      _showPhone = profile.showPhone;
+
+      _country = profile.country;
+      _cityCtrl.text = profile.city ?? '';
+      _addressCtrl.text = profile.address ?? '';
+      _zipCtrl.text = profile.zipCode ?? '';
+
+      _willingToRelocate = profile.openToRelocation;
+      _relocationType = profile.relocationType;
+      // In the absence of a dedicated cities field, we could parse it from relocationType if needed.
+      // But we will just initialize empty for now.
+
+      if (profile.resumes.isNotEmpty) {
+        _primaryResume = profile.resumes.firstWhere(
+          (r) => r.isPrimary,
+          orElse: () => profile.resumes.first,
+        );
+      }
+
+      _headlineCtrl.text = profile.headline ?? '';
+      if (profile.experienceYearsInt != null) {
+        _expYears = profile.experienceYearsInt.toString();
+      }
+      if (profile.experienceMonths != null) {
+        _expMonths = profile.experienceMonths.toString();
+      }
+      if (profile.expectedSalary != null) {
+        _expectedSalaryCtrl.text = profile.expectedSalary!.toInt().toString();
+      }
+      _currency = profile.salaryCurrency;
+      _availability = profile.availability;
+      _profileVisibility = profile.profileVisibility;
+      _about = profile.about ?? '';
+
+      _selectedSkills = profile.skills.map((s) => Skill(id: int.tryParse(s.id) ?? 0, name: s.name)).toList();
+      _experiences = List.from(profile.experiences);
+      _educations = List.from(profile.educations);
+
+      _linkedinCtrl.text = profile.linkedinUrl ?? '';
+      _githubCtrl.text = profile.githubUrl ?? '';
+      _portfolioCtrl.text = profile.portfolioUrl ?? '';
+      _twitterCtrl.text = profile.twitterUrl ?? '';
+      _websiteCtrl.text = profile.websiteUrl ?? '';
+
+      setState(() {});
+    }
   }
 
   @override
@@ -61,347 +188,116 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     _phoneCtrl.dispose();
-    _countryCtrl.dispose();
     _cityCtrl.dispose();
     _addressCtrl.dispose();
     _zipCtrl.dispose();
+    _relocationCitiesCtrl.dispose();
     _headlineCtrl.dispose();
-    _skillsCtrl.dispose();
+    _expectedSalaryCtrl.dispose();
+    _skillSearchCtrl.dispose();
+    _linkedinCtrl.dispose();
+    _githubCtrl.dispose();
+    _portfolioCtrl.dispose();
+    _twitterCtrl.dispose();
+    _websiteCtrl.dispose();
     super.dispose();
   }
 
-  void _showBottomSheet(BuildContext context, String title, Widget child) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: EdgeInsets.fromLTRB(24.w, 20.h, 16.w, 16.h),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: AppColors.borderLight),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(title, style: AppText.heading2),
-                    IconButton(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedCancel01,
-                        color: AppColors.muted,
-                        size: 24.r,
-                      ),
-                      onPressed: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-              ),
-              child,
-            ],
-          ),
-        ),
-      ),
-    );
+  Future<void> _deleteResume(String id) async {
+    try {
+      final service = ref.read(seekerProfileServiceProvider);
+      await service.deleteResume(id);
+      setState(() {
+        _primaryResume = null;
+      });
+      ref.invalidate(seekerDashboardProvider);
+      if (!mounted) return;
+      UJobToast.success(context, 'Success', sub: 'Resume deleted successfully!');
+    } catch (e) {
+      if (!mounted) return;
+      UJobToast.error(context, 'Error', sub: 'Error deleting resume: $e');
+    }
   }
 
-  void _showEditPersonalInfo() {
-    _showBottomSheet(
-      context,
-      'Personal Information',
-      Padding(
-        padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 32.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: UJobTextField(
-                    label: 'First Name',
-                    hint: 'John',
-                    controller: _firstNameCtrl,
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: UJobTextField(
-                    label: 'Last Name',
-                    hint: 'Doe',
-                    controller: _lastNameCtrl,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            UJobTextField(
-              label: 'Phone Number',
-              hint: '+1 234 567 890',
-              controller: _phoneCtrl,
-              keyboardType: TextInputType.phone,
-            ),
+  Future<void> _pickAndUploadResume() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx'],
+      );
 
-            SizedBox(height: 32.h),
-            UJobButton(
-              label: 'Save Changes',
-              color: AppColors.seekPrimary,
-              onTap: () {
-                setState(() {});
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+      if (result != null && result.files.single.path != null) {
+        final path = result.files.single.path!;
+        final file = File(path);
+        
+        // 3MB limit
+        if (file.lengthSync() > 3 * 1024 * 1024) {
+          if (!mounted) return;
+          UJobToast.error(context, 'Error', sub: 'File must be smaller than 3MB');
+          return;
+        }
 
-  void _showEditLocation() {
-    _showBottomSheet(
-      context,
-      'Location & Relocation',
-      Padding(
-        padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 32.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: UJobTextField(
-                    label: 'Country',
-                    hint: 'United States',
-                    controller: _countryCtrl,
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: UJobTextField(
-                    label: 'City',
-                    hint: 'San Francisco',
-                    controller: _cityCtrl,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: UJobTextField(
-                    label: 'Address',
-                    hint: '123 Tech Lane',
-                    controller: _addressCtrl,
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: UJobTextField(
-                    label: 'Zip/Post Code',
-                    hint: '94105',
-                    controller: _zipCtrl,
-                  ),
-                ),
-              ],
-            ),
-            _CheckboxTile(
-              label: "Yes, I'm willing to relocate",
-              value: _willingToRelocate,
-              onChanged: (v) {
-                if (v != null) setState(() => _willingToRelocate = v);
-              },
-            ),
-            SizedBox(height: 32.h),
-            UJobButton(
-              label: 'Save Changes',
-              color: AppColors.seekPrimary,
-              onTap: () {
-                setState(() {});
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => const UJobSpinner(color: AppColors.seekPrimary),
+        );
 
-  void _showEditProfessionalInfo() {
-    _showBottomSheet(
-      context,
-      'Professional Info',
-      Padding(
-        padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 32.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            UJobTextField(
-              label: 'Professional Headline',
-              hint: 'e.g. Senior Flutter Developer',
-              controller: _headlineCtrl,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              'About / Summary',
-              style: AppText.bodyBold.copyWith(color: AppColors.text),
-            ),
-            SizedBox(height: 8.h),
-            UJobRichTextField(
-              label: 'About',
-              hint: 'Write a short bio about yourself...',
-              initialValue: _about,
-              onSave: (v) => setState(() => _about = v),
-            ),
-            SizedBox(height: 16.h),
-            UJobTextField(
-              label: 'Skills',
-              hint: 'Type and press enter...',
-              controller: _skillsCtrl,
-            ),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: UJobDropdown(
-                    label: 'Experience (Years)',
-                    value: _expYears ?? '0',
-                    items: List.generate(10, (i) => i.toString()),
-                    onChanged: (v) {
-                      if (v != null) setState(() => _expYears = v);
-                    },
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: UJobDropdown(
-                    label: 'Months',
-                    value: _expMonths ?? '0',
-                    items: List.generate(11, (i) => i.toString()),
-                    onChanged: (v) {
-                      if (v != null) setState(() => _expMonths = v);
-                    },
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 16.h),
-            UJobDropdown(
-              label: 'Availability',
-              value: _availability ?? 'Immediately',
-              items: const [
-                'Immediately',
-                '1 Week',
-                '2 Weeks',
-                '1 Month',
-                'More than 1 Month',
-              ],
-              onChanged: (v) {
-                if (v != null) setState(() => _availability = v);
-              },
-            ),
-
-            SizedBox(height: 32.h),
-            UJobButton(
-              label: 'Save Changes',
-              color: AppColors.seekPrimary,
-              onTap: () {
-                setState(() {});
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showEditResume() {
-    _showBottomSheet(
-      context,
-      'Resume',
-      Padding(
-        padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 32.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(24.r),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: AppColors.borderLight,
-                  style: BorderStyle.solid,
-                ),
-              ),
-              child: Column(
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedCloudUpload,
-                    color: AppColors.seekPrimary,
-                    size: 40.r,
-                  ),
-                  SizedBox(height: 12.h),
-                  Text('Upload your latest resume', style: AppText.bodyBold),
-                  SizedBox(height: 4.h),
-                  Text(
-                    'PDF, DOC, DOCX (Max 5MB)',
-                    style: AppText.small.copyWith(color: AppColors.muted),
-                  ),
-                  SizedBox(height: 16.h),
-                  UJobButton(
-                    label: 'Browse File',
-                    onTap: () {},
-                    color: AppColors.seekPrimary,
-                    outlined: true,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 32.h),
-            UJobButton(
-              label: 'Done',
-              color: AppColors.seekPrimary,
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-    );
+        await ref.read(seekerProfileServiceProvider).uploadResume(path);
+        
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading dialog
+        
+        UJobToast.success(context, 'Success', sub: 'Resume uploaded successfully!');
+        
+        // Reload to get the new resume data
+        _loadProfile();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog if error happens during upload
+      UJobToast.error(context, 'Error', sub: 'Error uploading resume: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final dashboardAsync = ref.watch(seekerDashboardProvider);
-    final completenessPercentage = dashboardAsync.valueOrNull?.profileCompletion ?? 0;
+    final profileData = ref.watch(seekerProfileProvider);
+    final dashboardData = ref.watch(seekerDashboardProvider).valueOrNull;
+    final email = profileData?.user.email ?? '';
+    
+    final completenessPercentage = profileData?.user.profileCompleted ?? dashboardData?.profileCompletion ?? 0;
     final completenessFraction = completenessPercentage / 100.0;
 
     String fullName = '${_firstNameCtrl.text} ${_lastNameCtrl.text}'.trim();
     if (fullName.isEmpty) fullName = 'User';
 
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColors.bg,
+        body: const Center(
+          child: UJobSpinner(color: AppColors.seekPrimary),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: SingleChildScrollView(
-        padding: EdgeInsets.zero,
-        child: Column(
+      body: RefreshIndicator(
+        onRefresh: _loadProfile,
+        color: AppColors.seekPrimary,
+        child: SingleChildScrollView(
+          key: ValueKey(_refreshKey),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _SeekerProfileHeader(
               name: fullName,
               headline: _headlineCtrl.text,
-              email: 'azad@example.com',
+              email: email,
               completeness: completenessFraction,
               onEditImage: () {},
             ),
@@ -410,131 +306,1023 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // 1. Personal Information
                   _SectionCard(
                     title: 'Personal Information',
-                    subtitle: [
-                      fullName,
-                      _phoneCtrl.text,
-                    ].where((e) => e.isNotEmpty).join(' · '),
+                    subtitle: 'Your name and contact details',
                     icon: HugeIcons.strokeRoundedUser,
-                    onEdit: _showEditPersonalInfo,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _DetailRow(
-                          label: 'First Name',
-                          value: _firstNameCtrl.text,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: UJobTextField(
+                                label: 'First Name',
+                                hint: 'John',
+                                controller: _firstNameCtrl,
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: UJobTextField(
+                                label: 'Last Name',
+                                hint: 'Doe',
+                                controller: _lastNameCtrl,
+                              ),
+                            ),
+                          ],
                         ),
-                        _DetailRow(
-                          label: 'Last Name',
-                          value: _lastNameCtrl.text,
+                        SizedBox(height: 16.h),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final countriesAsync = ref.watch(countriesProvider);
+                            final countries = countriesAsync.valueOrNull ?? [];
+                            return UJobPhoneNumberField(
+                              label: "Phone Number",
+                              isRequired: false,
+                              countries: countries,
+                              controller: _phoneCtrl,
+                              initialDialCode: _phoneCode,
+                              onCountryCodeChanged: (v) {
+                                setState(() {
+                                  _phoneCode = v ?? '+44';
+                                });
+                              },
+                            );
+                          },
                         ),
-                        _DetailRow(label: 'Phone', value: _phoneCtrl.text),
-
+                        SizedBox(height: 16.h),
+                        Container(
+                          padding: EdgeInsets.all(16.r),
+                          decoration: BoxDecoration(
+                            color: AppColors.seekPrimary.withValues(alpha: 0.05),
+                            borderRadius: AppRadius.md,
+                            border: Border.all(
+                                color: AppColors.seekPrimary.withValues(alpha: 0.15)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 24.r,
+                                    height: 24.r,
+                                    child: Checkbox(
+                                      value: _showPhone,
+                                      onChanged: (v) {
+                                        if (v != null) {
+                                          setState(() => _showPhone = v);
+                                        }
+                                      },
+                                      activeColor: AppColors.seekPrimary,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: Text(
+                                      "Show my number to employers",
+                                      style: AppText.bodyBold.copyWith(color: AppColors.text),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 12.h),
+                              Text(
+                                "By ticking this box, you confirm that you are the primary user and subscriber to the telephone number provided, and you agree to receive calls, texts and WhatsApp messages from employers.",
+                                style: AppText.small.copyWith(color: AppColors.muted),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  _SectionCard(
-                    title: 'Professional Info',
-                    subtitle:
-                        [
-                              _headlineCtrl.text,
-                              _expYears != null ? '$_expYears years exp' : null,
-                            ]
-                            .whereType<String>()
-                            .where((e) => e.isNotEmpty)
-                            .join(' · '),
-                    icon: HugeIcons.strokeRoundedBriefcase01,
-                    onEdit: _showEditProfessionalInfo,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _DetailRow(
-                          label: 'Headline',
-                          value: _headlineCtrl.text,
-                        ),
-                        _DetailRow(label: 'Skills', value: _skillsCtrl.text),
-                        _DetailRow(
-                          label: 'Experience',
-                          value: (_expYears != null && _expMonths != null)
-                              ? '$_expYears yrs $_expMonths mos'
-                              : null,
-                        ),
-                        _DetailRow(label: 'Availability', value: _availability),
 
-                        SizedBox(height: 8.h),
-                        Text(
-                          'About Me',
-                          style: AppText.bodyMd.copyWith(
-                            color: AppColors.muted,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _about.isNotEmpty
-                              ? getPlainTextFromQuillJson(_about)
-                              : 'Not set',
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.bodyMd.copyWith(
-                            color: _about.isNotEmpty
-                                ? AppColors.text2
-                                : AppColors.muted2,
-                            fontStyle: _about.isNotEmpty
-                                ? FontStyle.normal
-                                : FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
+                  // 2. Location
                   _SectionCard(
-                    title: 'Location & Relocation',
-                    subtitle: [
-                      _cityCtrl.text,
-                      _countryCtrl.text,
-                    ].where((e) => e.isNotEmpty).join(' · '),
+                    title: 'Location',
+                    subtitle: "Where you're based",
                     icon: HugeIcons.strokeRoundedLocation01,
-                    onEdit: _showEditLocation,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _DetailRow(label: 'Country', value: _countryCtrl.text),
-                        _DetailRow(label: 'City', value: _cityCtrl.text),
-                        _DetailRow(label: 'Address', value: _addressCtrl.text),
-                        _DetailRow(
-                          label: 'Zip/Post Code',
-                          value: _zipCtrl.text,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: UJobCountryDropdown(
+                                value: _country,
+                                onChanged: (v) {
+                                  setState(() {
+                                    _country = v;
+                                  });
+                                },
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: UJobTextField(
+                                label: 'City',
+                                hint: 'London',
+                                controller: _cityCtrl,
+                              ),
+                            ),
+                          ],
                         ),
-                        _DetailRow(
-                          label: 'Relocation',
-                          value: _willingToRelocate
-                              ? 'Willing to relocate'
-                              : 'Not willing to relocate',
+                        SizedBox(height: 16.h),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: UJobTextField(
+                                label: 'Address',
+                                hint: '123 Oxford Street',
+                                controller: _addressCtrl,
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: UJobTextField(
+                                label: 'Zip / Post Code',
+                                hint: 'W1D 1BS',
+                                controller: _zipCtrl,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                   SizedBox(height: 16.h),
+
+                  // 3. Relocation
+                  _SectionCard(
+                    title: 'Relocation',
+                    subtitle: "Let employers know if you're open to moving",
+                    icon: HugeIcons.strokeRoundedAirplane01,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 24.r,
+                              height: 24.r,
+                              child: Checkbox(
+                                value: _willingToRelocate,
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    setState(() {
+                                      _willingToRelocate = v;
+                                      if (!v) _relocationType = null;
+                                    });
+                                  }
+                                },
+                                activeColor: AppColors.seekPrimary,
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                "Yes, I'm willing to relocate",
+                                style: AppText.body.copyWith(color: AppColors.text),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_willingToRelocate) ...[
+                          SizedBox(height: 16.h),
+                          Text('Relocation Type', style: AppText.bodyBold),
+                          SizedBox(height: 8.h),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: RadioListTile<String>(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text('Anywhere'),
+                                  value: 'anywhere',
+                                  groupValue: _relocationType,
+                                  onChanged: (v) => setState(() => _relocationType = v),
+                                  activeColor: AppColors.seekPrimary,
+                                ),
+                              ),
+                              Expanded(
+                                child: RadioListTile<String>(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text('Specific Cities'),
+                                  value: 'specific',
+                                  groupValue: _relocationType,
+                                  onChanged: (v) => setState(() => _relocationType = v),
+                                  activeColor: AppColors.seekPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                            if (_relocationType == 'specific') ...[
+                              SizedBox(height: 16.h),
+                              UJobTextField(
+                                label: 'Desired Work Location',
+                                hint: _relocationCities.length >= 3 ? 'Maximum 3 cities reached' : 'Type a city and press Enter',
+                                controller: _relocationCitiesCtrl,
+                                readOnly: _relocationCities.length >= 3,
+                                onChanged: (val) {
+                                  if (_relocationCities.length >= 3) return;
+                                  if (val.endsWith(',') || val.endsWith(' ')) {
+                                    final city = val.replaceAll(',', '').trim();
+                                    if (city.isNotEmpty && !_relocationCities.contains(city)) {
+                                      setState(() {
+                                        _relocationCities.add(city);
+                                        _relocationCitiesCtrl.clear();
+                                      });
+                                    } else {
+                                      _relocationCitiesCtrl.clear();
+                                      setState(() {});
+                                    }
+                                  } else {
+                                    setState(() {});
+                                  }
+                                },
+                                onSubmitted: (val) {
+                                  if (_relocationCities.length >= 3) return;
+                                  final city = val.trim();
+                                  if (city.isNotEmpty && !_relocationCities.contains(city)) {
+                                    setState(() {
+                                      _relocationCities.add(city);
+                                      _relocationCitiesCtrl.clear();
+                                    });
+                                  }
+                                },
+                              ),
+                              SizedBox(height: 6.h),
+                              Text(
+                                'You can add up to 3 cities. Press Enter or click Add.',
+                                style: AppText.small.copyWith(color: AppColors.muted),
+                              ),
+                              if (_relocationCitiesCtrl.text.trim().isNotEmpty && _relocationCities.length < 3) ...[
+                                SizedBox(height: 8.h),
+                              InkWell(
+                                onTap: () {
+                                  final city = _relocationCitiesCtrl.text.trim();
+                                  if (city.isNotEmpty && !_relocationCities.contains(city)) {
+                                    setState(() {
+                                      _relocationCities.add(city);
+                                      _relocationCitiesCtrl.clear();
+                                    });
+                                  }
+                                },
+                                borderRadius: AppRadius.md,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.seekPrimary.withValues(alpha: 0.1),
+                                    borderRadius: AppRadius.md,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      HugeIcon(
+                                        icon: HugeIcons.strokeRoundedAdd01,
+                                        color: AppColors.seekPrimary,
+                                        size: 20.r,
+                                      ),
+                                      SizedBox(width: 8.w),
+                                      Expanded(
+                                        child: Text(
+                                          'Tap to add "${_relocationCitiesCtrl.text.trim()}"',
+                                          style: AppText.bodyBold.copyWith(color: AppColors.seekPrimary),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (_relocationCities.isNotEmpty) ...[
+                              SizedBox(height: 12.h),
+                              Wrap(
+                                spacing: 8.w,
+                                runSpacing: 8.h,
+                                children: _relocationCities.map((city) {
+                                  return Chip(
+                                    label: Text(city, style: AppText.body.copyWith(color: AppColors.seekPrimary)),
+                                    onDeleted: () {
+                                      setState(() {
+                                        _relocationCities.remove(city);
+                                      });
+                                    },
+                                    backgroundColor: AppColors.seekPrimary.withValues(alpha: 0.15),
+                                    deleteIconColor: AppColors.seekPrimary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(100.r),
+                                      side: BorderSide.none,
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ],
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 4. Resume
                   _SectionCard(
                     title: 'Resume',
-                    subtitle: 'Resume.pdf',
+                    subtitle: "Upload your CV for employers to review",
                     icon: HugeIcons.strokeRoundedDocumentAttachment,
-                    onEdit: _showEditResume,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _DetailRow(
-                          label: 'Current Resume',
-                          value: 'Resume.pdf (2.4 MB)',
+                        if (_primaryResume != null) ...[
+                          Container(
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: AppRadius.md,
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedPdf01,
+                                  color: AppColors.error,
+                                  size: 32.r,
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _primaryResume!.fileName,
+                                        style: AppText.bodyBold,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      Text(
+                                        "Delete this resume to upload a new one",
+                                        style: AppText.small.copyWith(color: AppColors.muted),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => _deleteResume(_primaryResume!.id),
+                                  icon: HugeIcon(
+                                    icon: HugeIcons.strokeRoundedDelete01,
+                                    color: AppColors.error,
+                                    size: 20.r,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 12.h),
+                          UJobButton(
+                            label: 'View',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => UJobPdfViewerScreen(
+                                    title: 'My Resume',
+                                    pdfUrl: _primaryResume!.fileUrl,
+                                    isAsset: false,
+                                  ),
+                                ),
+                              );
+                            },
+                            color: AppColors.seekPrimary,
+                            outlined: true,
+                          ),
+                        ] else ...[
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedCloudUpload,
+                                color: AppColors.seekPrimary,
+                                size: 40.r,
+                              ),
+                              SizedBox(height: 12.h),
+                              Text('Upload your latest resume', style: AppText.bodyBold),
+                              SizedBox(height: 4.h),
+                              Text(
+                                'PDF, DOC, DOCX (Max 5MB)',
+                                style: AppText.small.copyWith(color: AppColors.muted),
+                              ),
+                              SizedBox(height: 16.h),
+                              UJobButton(
+                                label: 'Browse File',
+                                onTap: _pickAndUploadResume,
+                                color: AppColors.seekPrimary,
+                                outlined: true,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 5. Professional Info
+                  _SectionCard(
+                    title: 'Professional Info',
+                    subtitle: "Headline, experience and salary expectations",
+                    icon: HugeIcons.strokeRoundedBriefcase01,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        UJobTextField(
+                          label: 'Professional Headline',
+                          hint: 'e.g. Senior React Developer with 5+ years experience',
+                          controller: _headlineCtrl,
+                        ),
+                        SizedBox(height: 16.h),
+                        UJobTextField(
+                          label: "About / Summary",
+                          hint: 'Tap to open editor',
+                          readOnly: true,
+                          maxLines: 4,
+                          minLines: 4,
+                          controller: TextEditingController(
+                            text: getPlainTextFromQuillJson(_about),
+                          ),
+                          labelTrailing: HugeIcon(
+                            icon: HugeIcons.strokeRoundedMaximize01,
+                            color: AppColors.seekPrimary,
+                            size: 20.r,
+                          ),
+                          onTap: () => showUJobRichTextEditor(
+                            context: context,
+                            title: 'About Me',
+                            initialValue: _about,
+                            returnHtml: true,
+                            onSave: (val) {
+                              setState(() {
+                                _about = val;
+                              });
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: UJobDropdownField<String>(
+                                label: 'Experience - Years',
+                                value: _expYears,
+                                options: List.generate(
+                                  50,
+                                  (i) => ('${i + 1} years', (i + 1).toString()),
+                                ),
+                                onChanged: (v) => setState(() => _expYears = v),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: UJobDropdownField<String>(
+                                label: 'Months',
+                                value: _expMonths,
+                                options: List.generate(
+                                  12,
+                                  (i) => ('$i months', i.toString()),
+                                ),
+                                onChanged: (v) => setState(() => _expMonths = v),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16.h),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: UJobTextField(
+                                label: 'Expected Salary',
+                                hint: 'e.g. 65000',
+                                controller: _expectedSalaryCtrl,
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Consumer(
+                                builder: (context, ref, child) {
+                                  final optionsAsync = ref.watch(jobFormOptionsProvider);
+                                  final currencies = optionsAsync.valueOrNull?.currencies ?? [];
+                                  final currencyOptions = currencies
+                                      .map((c) => (c.label, c.value))
+                                      .toList();
+                                  
+                                  return UJobDropdownField<String>(
+                                    label: 'Currency',
+                                    value: _currency,
+                                    options: currencyOptions.isNotEmpty 
+                                        ? currencyOptions 
+                                        : [('USD', 'USD'), ('GBP', 'GBP'), ('EUR', 'EUR')],
+                                    onChanged: (v) => setState(() => _currency = v),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16.h),
+                        UJobDropdownField<String>(
+                          label: 'Availability',
+                          value: _availability,
+                          options: const [
+                            ('Immediately', 'immediately'),
+                            ('Within 1 month', 'within_1_month'),
+                            ('Within 3 months', 'within_3_months'),
+                            ('Not looking', 'not_looking'),
+                          ],
+                          onChanged: (v) => setState(() => _availability = v),
+                        ),
+                        SizedBox(height: 16.h),
+                        UJobDropdownField<String>(
+                          label: 'Profile Visibility',
+                          value: _profileVisibility,
+                          options: const [
+                            ('Public', 'public'),
+                            ('Private', 'private'),
+                          ],
+                          onChanged: (v) => setState(() => _profileVisibility = v),
+                        ),
+                        SizedBox(height: 8.h),
+                        if (_profileVisibility == 'public')
+                          Text(
+                            'Everyone can see your profile.',
+                            style: AppText.small.copyWith(color: AppColors.muted),
+                          )
+                        else if (_profileVisibility == 'private')
+                          Text(
+                            'Only the employers you apply to can see your profile.',
+                            style: AppText.small.copyWith(color: AppColors.muted),
+                          ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 6. Skills
+                  _SectionCard(
+                    title: 'Skills',
+                    subtitle: "Add skills to improve your job matches",
+                    icon: HugeIcons.strokeRoundedAward01,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_selectedSkills.isNotEmpty) ...[
+                          Wrap(
+                            spacing: 8.w,
+                            runSpacing: 8.h,
+                            children: _selectedSkills.map((skill) {
+                              return Chip(
+                                label: Text(skill.name, style: AppText.body.copyWith(color: AppColors.seekPrimary)),
+                                onDeleted: () {
+                                  setState(() {
+                                    _selectedSkills.remove(skill);
+                                  });
+                                },
+                                backgroundColor: AppColors.seekPrimary.withValues(alpha: 0.15),
+                                deleteIconColor: AppColors.seekPrimary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(100.r),
+                                  side: BorderSide.none,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          SizedBox(height: 16.h),
+                        ],
+                        UJobSkillAutocomplete(
+                          controller: _skillSearchCtrl,
+                          label: 'Search skills to add...',
+                          hint: 'Type a skill...',
+                          onSkillSelected: (skill) {
+                            if (skill != null && skill.id != -1) {
+                              if (!_selectedSkills.any((s) => s.id == skill.id)) {
+                                setState(() {
+                                  _selectedSkills.add(skill);
+                                  _skillSearchCtrl.clear();
+                                });
+                              }
+                            }
+                          },
                         ),
                       ],
                     ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 7. Work Experience
+                  _SectionCard(
+                    title: 'Work Experience',
+                    subtitle: "Your work history",
+                    icon: HugeIcons.strokeRoundedBriefcase02,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_experiences.isNotEmpty) ...[
+                          ..._experiences.map((exp) => Container(
+                            margin: EdgeInsets.only(bottom: 12.h),
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: AppRadius.md,
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(exp.jobTitle, style: AppText.bodyBold),
+                                      SizedBox(height: 4.h),
+                                      Text(exp.companyName, style: AppText.body.copyWith(color: AppColors.seekPrimary)),
+                                      if (exp.location != null && exp.location!.isNotEmpty) ...[
+                                        SizedBox(height: 4.h),
+                                        Row(
+                                          children: [
+                                            HugeIcon(
+                                              icon: HugeIcons.strokeRoundedLocation01,
+                                              color: AppColors.muted,
+                                              size: 14.r,
+                                            ),
+                                            SizedBox(width: 4.w),
+                                            Expanded(
+                                              child: Text(
+                                                exp.location!,
+                                                style: AppText.small.copyWith(color: AppColors.muted),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                      SizedBox(height: 4.h),
+                                      Row(
+                                        children: [
+                                          HugeIcon(
+                                            icon: HugeIcons.strokeRoundedCalendar01,
+                                            color: AppColors.muted,
+                                            size: 14.r,
+                                          ),
+                                          SizedBox(width: 4.w),
+                                          Expanded(
+                                            child: Text(
+                                              "${exp.startDate != null ? DateFormat('MMM yyyy').format(exp.startDate!) : 'N/A'} - ${exp.isCurrent ? 'Present' : (exp.endDate != null ? DateFormat('MMM yyyy').format(exp.endDate!) : 'N/A')}",
+                                              style: AppText.small.copyWith(color: AppColors.muted),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (exp.description != null && exp.description!.isNotEmpty) ...[
+                                        SizedBox(height: 8.h),
+                                        Text(
+                                          getPlainTextFromQuillJson(exp.description!),
+                                          style: AppText.small.copyWith(color: AppColors.text),
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    InkWell(
+                                      onTap: () async {
+                                        final result = await showModalBottomSheet<SeekerExperience>(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (ctx) => AddExperienceSheet(initialData: exp),
+                                        );
+                                        if (result != null) {
+                                          setState(() {
+                                            final idx = _experiences.indexOf(exp);
+                                            if (idx != -1) {
+                                              _experiences[idx] = result;
+                                            }
+                                          });
+                                        }
+                                      },
+                                      child: HugeIcon(
+                                        icon: HugeIcons.strokeRoundedEdit02,
+                                        color: AppColors.seekPrimary,
+                                        size: 20.r,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _experiences.remove(exp);
+                                        });
+                                      },
+                                      child: HugeIcon(
+                                        icon: HugeIcons.strokeRoundedDelete01,
+                                        color: AppColors.error,
+                                        size: 20.r,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )),
+                          SizedBox(height: 16.h),
+                        ],
+                        UJobButton(
+                          label: 'Add Experience',
+                          onTap: () async {
+                            final result = await showModalBottomSheet<SeekerExperience>(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (ctx) => const AddExperienceSheet(),
+                            );
+                            if (result != null) {
+                              setState(() {
+                                _experiences.add(result);
+                              });
+                            }
+                          },
+                          color: AppColors.seekPrimary,
+                          outlined: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 8. Education
+                  _SectionCard(
+                    title: 'Education',
+                    subtitle: "Your academic background",
+                    icon: HugeIcons.strokeRoundedBook01,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_educations.isNotEmpty) ...[
+                          ..._educations.map((edu) => Container(
+                            margin: EdgeInsets.only(bottom: 12.h),
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: AppRadius.md,
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(edu.institution, style: AppText.bodyBold),
+                                      SizedBox(height: 4.h),
+                                      Text(
+                                        '${edu.degree} in ${edu.fieldOfStudy}',
+                                        style: AppText.body.copyWith(color: AppColors.seekPrimary),
+                                      ),
+                                      if (edu.grade != null && edu.grade!.isNotEmpty) ...[
+                                        SizedBox(height: 4.h),
+                                        Row(
+                                          children: [
+                                            HugeIcon(
+                                              icon: HugeIcons.strokeRoundedAward01,
+                                              color: AppColors.muted,
+                                              size: 14.r,
+                                            ),
+                                            SizedBox(width: 4.w),
+                                            Expanded(
+                                              child: Text(
+                                                'Grade: ${edu.grade}',
+                                                style: AppText.small.copyWith(color: AppColors.muted),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                      SizedBox(height: 4.h),
+                                      Row(
+                                        children: [
+                                          HugeIcon(
+                                            icon: HugeIcons.strokeRoundedCalendar01,
+                                            color: AppColors.muted,
+                                            size: 14.r,
+                                          ),
+                                          SizedBox(width: 4.w),
+                                          Expanded(
+                                            child: Text(
+                                              "${edu.startDate != null ? DateFormat('MMM yyyy').format(edu.startDate!) : 'N/A'} - ${edu.endDate != null ? DateFormat('MMM yyyy').format(edu.endDate!) : 'N/A'}",
+                                              style: AppText.small.copyWith(color: AppColors.muted),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    InkWell(
+                                      onTap: () async {
+                                        final result = await showModalBottomSheet<SeekerEducation>(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (ctx) => AddEducationSheet(initialData: edu),
+                                        );
+                                        if (result != null) {
+                                          setState(() {
+                                            final idx = _educations.indexOf(edu);
+                                            if (idx != -1) {
+                                              _educations[idx] = result;
+                                            }
+                                          });
+                                        }
+                                      },
+                                      child: HugeIcon(
+                                        icon: HugeIcons.strokeRoundedEdit02,
+                                        color: AppColors.seekPrimary,
+                                        size: 20.r,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _educations.remove(edu);
+                                        });
+                                      },
+                                      child: HugeIcon(
+                                        icon: HugeIcons.strokeRoundedDelete01,
+                                        color: AppColors.error,
+                                        size: 20.r,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )),
+                          SizedBox(height: 16.h),
+                        ],
+                        UJobButton(
+                          label: 'Add Education',
+                          onTap: () async {
+                            final result = await showModalBottomSheet<SeekerEducation>(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (ctx) => const AddEducationSheet(),
+                            );
+                            if (result != null) {
+                              setState(() {
+                                _educations.add(result);
+                              });
+                            }
+                          },
+                          color: AppColors.seekPrimary,
+                          outlined: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // 9. Online Presence
+                  _SectionCard(
+                    title: 'Online Presence',
+                    subtitle: "Add links to your profiles and website",
+                    icon: HugeIcons.strokeRoundedLink01,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        UJobTextField(
+                          label: 'LinkedIn',
+                          hint: 'https://linkedin.com/in/...',
+                          controller: _linkedinCtrl,
+                        ),
+                        SizedBox(height: 12.h),
+                        UJobTextField(
+                          label: 'GitHub',
+                          hint: 'https://github.com/...',
+                          controller: _githubCtrl,
+                        ),
+                        SizedBox(height: 12.h),
+                        UJobTextField(
+                          label: 'Portfolio',
+                          hint: 'https://...',
+                          controller: _portfolioCtrl,
+                        ),
+                        SizedBox(height: 12.h),
+                        UJobTextField(
+                          label: 'X / Twitter',
+                          hint: 'https://x.com/...',
+                          controller: _twitterCtrl,
+                        ),
+                        SizedBox(height: 12.h),
+                        UJobTextField(
+                          label: 'Website',
+                          hint: 'https://...',
+                          controller: _websiteCtrl,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 24.h),
+                  UJobButton(
+                    label: "Update Profile",
+                    color: AppColors.seekPrimary,
+                    onTap: () async {
+                      final service = ref.read(seekerProfileServiceProvider);
+                      try {
+                        final data = {
+                          "first_name": _firstNameCtrl.text,
+                          "last_name": _lastNameCtrl.text,
+                          "phone_code": _phoneCode,
+                          "phone": _phoneCtrl.text,
+                          "show_phone": _showPhone,
+                          "country": _country ?? '',
+                          "city": _cityCtrl.text,
+                          "address": _addressCtrl.text,
+                          "zip_code": _zipCtrl.text,
+                          "open_to_relocation": _willingToRelocate,
+                          if (_willingToRelocate && _relocationType != null)
+                            "relocation_type": _relocationType,
+                          if (_willingToRelocate && _relocationType == 'specific')
+                            "relocation_cities": _relocationCities.join(', '),
+                          "headline": _headlineCtrl.text,
+                          "experience_years": double.tryParse(_expYears ?? '') ?? 0, // Using integer field values mapped to backend API
+                          "expected_salary": double.tryParse(_expectedSalaryCtrl.text) ?? 0,
+                          "salary_currency": _currency,
+                          "availability": _availability,
+                          "profile_visibility": _profileVisibility,
+                          "about": _about, // Note backend uses "summary" in the payload sometimes but about in response, mapping to summary based on user payload
+                          "summary": _about, 
+                          "linkedin_url": _linkedinCtrl.text,
+                          "github_url": _githubCtrl.text,
+                          "portfolio_url": _portfolioCtrl.text,
+                          "twitter_url": _twitterCtrl.text,
+                          "website_url": _websiteCtrl.text,
+                          "skills": _selectedSkills.map((e) => e.id).toList(),
+                          "seeker_experiences": _experiences.map((e) => {
+                            if (e.id.isNotEmpty) "id": e.id,
+                            "job_title": e.jobTitle,
+                            "company_name": e.companyName,
+                            "location": e.location ?? "",
+                            "start_date": e.startDate != null ? DateFormat('yyyy-MM-dd').format(e.startDate!) : null,
+                            "end_date": e.endDate != null ? DateFormat('yyyy-MM-dd').format(e.endDate!) : "",
+                            "is_current": e.isCurrent,
+                            "description": e.description ?? "",
+                          }).toList(),
+                          "seeker_educations": _educations.map((e) => {
+                            if (e.id.isNotEmpty) "id": e.id,
+                            "institution": e.institution,
+                            "degree": e.degree,
+                            "field_of_study": e.fieldOfStudy,
+                            "grade": e.grade ?? "",
+                            "start_date": e.startDate != null ? DateFormat('yyyy-MM-dd').format(e.startDate!) : null,
+                            "end_date": e.endDate != null ? DateFormat('yyyy-MM-dd').format(e.endDate!) : "",
+                          }).toList(),
+                        };
+                        
+                        await service.updateProfile(data);
+                        
+                        ref.invalidate(fetchSeekerProfileProvider);
+                        ref.invalidate(seekerDashboardProvider);
+                        if (context.mounted) {
+                          UJobToast.success(context, 'Success', sub: 'Profile updated successfully!');
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          UJobToast.error(context, 'Update Failed', sub: 'Failed to update profile. Please try again.');
+                        }
+                      }
+                    },
                   ),
                   SizedBox(height: 40.h),
                 ],
               ),
             ),
           ],
+          ),
         ),
       ),
     );
@@ -560,7 +1348,6 @@ class _SeekerProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     int percentCompleted = (completeness * 100).toInt();
 
-    // Replicate CompanyProfileHeader design but with Seeker colors
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -582,7 +1369,6 @@ class _SeekerProfileHeader extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -603,32 +1389,9 @@ class _SeekerProfileHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: -6.r,
-                    right: -6.r,
-                    child: GestureDetector(
-                      onTap: onEditImage,
-                      child: Container(
-                        width: 24.r,
-                        height: 24.r,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedCamera01,
-                            size: 14.r,
-                            color: AppColors.seekPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
               SizedBox(width: 16.w),
-              // Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -677,7 +1440,6 @@ class _SeekerProfileHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              // Settings Button
               IconButton(
                 onPressed: () => context.push('/seeker/settings'),
                 tooltip: 'Settings',
@@ -694,7 +1456,6 @@ class _SeekerProfileHeader extends StatelessWidget {
             ],
           ),
           SizedBox(height: 24.h),
-          // Progress Section
           Container(
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
@@ -715,7 +1476,7 @@ class _SeekerProfileHeader extends StatelessWidget {
                       style: AppText.bodyMd.copyWith(color: AppColors.white),
                     ),
                     Text(
-                      '${percentCompleted}%',
+                      '$percentCompleted%',
                       style: AppText.bodyBold.copyWith(color: AppColors.white),
                     ),
                   ],
@@ -753,14 +1514,12 @@ class _SectionCard extends StatefulWidget {
   final String? subtitle;
   final dynamic icon;
   final Widget child;
-  final VoidCallback onEdit;
 
   const _SectionCard({
     required this.title,
     this.subtitle,
     required this.icon,
     required this.child,
-    required this.onEdit,
   });
 
   @override
@@ -796,18 +1555,9 @@ class _SectionCardState extends State<_SectionCard> {
                 _isExpanded = !_isExpanded;
               });
             },
-            borderRadius: _isExpanded
-                ? BorderRadius.vertical(
-                    top: Radius.circular(AppRadius.xl.topLeft.x),
-                  )
-                : AppRadius.xl,
+            borderRadius: AppRadius.xl,
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                20.r,
-                20.r,
-                20.r,
-                _isExpanded ? 0 : 20.r,
-              ),
+              padding: EdgeInsets.all(20.r),
               child: Row(
                 children: [
                   Container(
@@ -834,9 +1584,7 @@ class _SectionCardState extends State<_SectionCard> {
                             color: AppColors.text2,
                           ),
                         ),
-                        if (!_isExpanded &&
-                            widget.subtitle != null &&
-                            widget.subtitle!.isNotEmpty) ...[
+                        if (widget.subtitle != null && widget.subtitle!.isNotEmpty) ...[
                           SizedBox(height: 2.h),
                           Text(
                             widget.subtitle!,
@@ -846,147 +1594,27 @@ class _SectionCardState extends State<_SectionCard> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ] else if (!_isExpanded) ...[
-                          SizedBox(height: 2.h),
-                          Text(
-                            'Not set',
-                            style: AppText.caption.copyWith(
-                              color: AppColors.muted2,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
                         ],
                       ],
                     ),
                   ),
-                  TextButton.icon(
-                    onPressed: widget.onEdit,
-                    icon: HugeIcon(
-                      icon: HugeIcons.strokeRoundedEdit02,
-                      color: AppColors.seekPrimary,
-                      size: 14.r,
-                    ),
-                    label: Text(
-                      'Edit',
-                      style: AppText.caption.copyWith(
-                        color: AppColors.seekPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 4.h,
-                      ),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  AnimatedRotation(
-                    turns: _isExpanded ? 0.125 : 0.0, // Rotates + to x
-                    duration: const Duration(milliseconds: 300),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedAdd01,
-                      color: AppColors.muted,
-                      size: 20.r,
-                    ),
+                  SizedBox(width: 12.w),
+                  HugeIcon(
+                    icon: _isExpanded
+                        ? HugeIcons.strokeRoundedArrowUp01
+                        : HugeIcons.strokeRoundedArrowDown01,
+                    color: AppColors.muted,
+                    size: 20.r,
                   ),
                 ],
               ),
             ),
           ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox(width: double.infinity, height: 0),
-            secondChild: Padding(
+          if (_isExpanded)
+            Padding(
               padding: EdgeInsets.fromLTRB(20.r, 0, 20.r, 20.r),
               child: widget.child,
             ),
-            crossFadeState: _isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 300),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final String label;
-  final String? value;
-
-  const _DetailRow({required this.label, this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isEmpty = value == null || value!.isEmpty;
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120.w,
-            child: Text(
-              label,
-              style: AppText.bodyMd.copyWith(color: AppColors.muted),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              isEmpty ? 'Not set' : value!,
-              style: AppText.bodyMd.copyWith(
-                color: isEmpty ? AppColors.muted2 : AppColors.text2,
-                fontStyle: isEmpty ? FontStyle.italic : FontStyle.normal,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CheckboxTile extends StatelessWidget {
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _CheckboxTile({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(top: 12.h),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 24.r,
-            height: 24.r,
-            child: Checkbox(
-              value: value,
-              onChanged: (v) {
-                if (v != null) onChanged(v);
-              },
-              activeColor: AppColors.seekPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4.r),
-              ),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              label,
-              style: AppText.body.copyWith(color: AppColors.text),
-            ),
-          ),
         ],
       ),
     );

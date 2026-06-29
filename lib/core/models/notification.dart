@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class AppNotification {
   final String id;
   final String userId;
@@ -22,13 +24,22 @@ class AppNotification {
   });
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
+    Map<String, dynamic>? parsedData;
+    if (json['data'] is Map) {
+      parsedData = Map<String, dynamic>.from(json['data']);
+    } else if (json['data'] is String) {
+      try {
+        parsedData = Map<String, dynamic>.from(jsonDecode(json['data']));
+      } catch (_) {}
+    }
+
     return AppNotification(
       id: json['id'].toString(),
       userId: json['user_id'].toString(),
       type: json['type'] as String? ?? 'system',
       title: json['title'] as String? ?? '',
       body: json['body'] as String? ?? '',
-      data: json['data'] is Map ? Map<String, dynamic>.from(json['data']) : null,
+      data: parsedData,
       isRead: json['is_read'] as bool? ?? false,
       readAt: json['read_at'] != null ? DateTime.parse(json['read_at']) : null,
       createdAt: json['created_at'] != null

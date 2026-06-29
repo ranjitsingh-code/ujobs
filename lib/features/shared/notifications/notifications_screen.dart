@@ -127,16 +127,18 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
   }
 
   Color _borderColor(String type, Color primaryColor) => switch (type) {
-    'application' => Colors.blue,
-    'job' => Colors.green,
+    'application' || 'application_submitted' || 'stage_change' => Colors.blue,
+    'job' || 'job_approved' || 'new_matching_job' => Colors.green,
     'message' => primaryColor,
+    'new_company_registered' => Colors.purple,
     _ => Colors.orange,
   };
 
   dynamic _iconFor(String type) => switch (type) {
-    'application' || 'new_application' => HugeIcons.strokeRoundedNote01,
-    'job' || 'job_approved' => HugeIcons.strokeRoundedBriefcase02,
+    'application' || 'new_application' || 'application_submitted' || 'stage_change' => HugeIcons.strokeRoundedNote01,
+    'job' || 'job_approved' || 'new_matching_job' => HugeIcons.strokeRoundedBriefcase02,
     'message' => HugeIcons.strokeRoundedMessage01,
+    'new_company_registered' => HugeIcons.strokeRoundedBuilding02,
     _ => HugeIcons.strokeRoundedNotification01,
   };
 
@@ -187,11 +189,11 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                 if (filter == 'unread') {
                   filtered = filtered.where((n) => !n.isRead).toList();
                 } else if (filter == 'application') {
-                  filtered = filtered.where((n) => n.type == 'new_application' || n.type == 'application').toList();
+                  filtered = filtered.where((n) => n.type == 'new_application' || n.type == 'application' || n.type == 'application_submitted' || n.type == 'stage_change').toList();
                 } else if (filter == 'message') {
                   filtered = filtered.where((n) => n.type == 'message').toList();
                 } else if (filter == 'system') {
-                  filtered = filtered.where((n) => n.type != 'new_application' && n.type != 'application' && n.type != 'message').toList();
+                  filtered = filtered.where((n) => n.type != 'new_application' && n.type != 'application' && n.type != 'application_submitted' && n.type != 'stage_change' && n.type != 'message').toList();
                 }
                 if (_query.isNotEmpty) {
                   filtered = filtered
@@ -244,7 +246,10 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                                                               n.type == 'job' || 
                                                               n.type == 'job_approved' || 
                                                               n.type == 'application' || 
-                                                              n.type == 'new_application';
+                                                              n.type == 'new_application' ||
+                                                              n.type == 'application_submitted' ||
+                                                              n.type == 'stage_change' ||
+                                                              n.type == 'new_matching_job';
 
                                     showDialog(
                                       context: context,
@@ -299,19 +304,28 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                                                           Navigator.pop(ctx);
                                                           final jobId = n.data?['job_id']?.toString();
                                                           final appId = n.data?['app_id']?.toString();
+                                                          final stage = n.data?['stage']?.toString();
 
                                                           if (n.type == 'new_application' && appId != null) {
-                                                            context.push('/employer/applicants/${1}');
-                                                          } else if (n.type == 'job_approved' && jobId != null) {
+                                                            context.push('/employer/applicants/$appId');
+                                                          } else if ((n.type == 'job_approved' || n.type == 'application_submitted' || n.type == 'new_matching_job') && jobId != null) {
                                                             context.push(isEmployer ? '/employer/jobs/$jobId' : '/seeker/jobs/$jobId');
+                                                          } else if (n.type == 'stage_change') {
+                                                            int tabIndex = 0; // Default to 'All'
+                                                            if (stage == 'shortlisted') tabIndex = 3;
+                                                            if (stage == 'interview') tabIndex = 4;
+                                                            if (stage == 'offered') tabIndex = 5;
+                                                            if (stage == 'hired') tabIndex = 6;
+                                                            if (stage == 'rejected') tabIndex = 7;
+                                                            context.push('/seeker/applied', extra: tabIndex);
                                                           } else if (n.type == 'message') {
                                                             context.push('/conversations/1', extra: {'name': isEmployer ? 'Jim' : 'Nexovia Solutions'});
                                                           } else {
                                                             // Fallbacks if IDs are missing
                                                             if (n.type == 'job' || n.type == 'job_approved') {
                                                               context.push(isEmployer ? '/employer/jobs' : '/seeker/jobs');
-                                                            } else if (n.type == 'application' || n.type == 'new_application') {
-                                                              context.push(isEmployer ? '/employer/applicants' : '/seeker/applications');
+                                                            } else if (n.type == 'application' || n.type == 'new_application' || n.type == 'application_submitted') {
+                                                              context.push(isEmployer ? '/employer/applicants' : '/seeker/applied');
                                                             }
                                                           }
                                                         },

@@ -252,7 +252,7 @@ class EmployerApplicantService {
       initials: initials,
       role: profile['headline']?.toString() ?? 'Applicant',
       targetJobTitle: 'Target Job', // Will be overridden in the provider with actual job title
-      status: (application['status']?.toString().toLowerCase() == 'pending') ? 'Applied' : (application['status']?.toString() ?? 'Applied'),
+      status: ((application['stage'] ?? application['status'])?.toString().toLowerCase() == 'pending') ? 'Applied' : ((application['stage'] ?? application['status'])?.toString() ?? 'Applied'),
       appliedAt: DateTime.tryParse(application['applied_at']?.toString() ?? '') ?? DateTime.now(),
       email: users['email']?.toString() ?? '',
       phone: '${users['phone_code'] ?? ''}${users['phone'] ?? ''}',

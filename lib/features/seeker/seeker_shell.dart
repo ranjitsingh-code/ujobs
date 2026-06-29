@@ -14,8 +14,8 @@ class SeekerShell extends ConsumerWidget {
   int _indexFromPath(String path) {
     if (path.startsWith('/seeker/jobs')) return 1;
     if (path.startsWith('/seeker/applied')) return 2;
-    if (path.startsWith('/seeker/companies')) return 3;
-    if (path.startsWith('/seeker/profile')) return 4;
+    // if (path.startsWith('/seeker/companies')) return 3;
+    if (path.startsWith('/seeker/profile')) return 3;
     return 0;
   }
 
@@ -42,10 +42,10 @@ class SeekerShell extends ConsumerWidget {
             case 2:
               context.go('/seeker/applied');
               break;
+            // case 3:
+            //   context.go('/seeker/companies');
+            //   break;
             case 3:
-              context.go('/seeker/companies');
-              break;
-            case 4:
               context.go('/seeker/profile');
               break;
           }
@@ -104,19 +104,19 @@ class SeekerShell extends ConsumerWidget {
           //   ),
           //   label: context.l10n.messages,
           // ),
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedBuilding01,
-              color: AppColors.muted2,
-              size: 22,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedBuilding01,
-              color: AppColors.primary,
-              size: 22,
-            ),
-            label: context.l10n.companiesTab,
-          ),
+          // BottomNavigationBarItem(
+          //   icon: HugeIcon(
+          //     icon: HugeIcons.strokeRoundedBuilding01,
+          //     color: AppColors.muted2,
+          //     size: 22,
+          //   ),
+          //   activeIcon: HugeIcon(
+          //     icon: HugeIcons.strokeRoundedBuilding01,
+          //     color: AppColors.primary,
+          //     size: 22,
+          //   ),
+          //   label: context.l10n.companiesTab,
+          // ),
           BottomNavigationBarItem(
             icon: HugeIcon(
               icon: HugeIcons.strokeRoundedUser03,

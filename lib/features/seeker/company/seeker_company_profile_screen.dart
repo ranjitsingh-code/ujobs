@@ -320,7 +320,7 @@ class _SeekerCompanyProfileScreenState
                             onTap: () {
                               final url = widget.company.website;
                               if (url == null || url.isEmpty) {
-                                UJobToast.info(context, 'No website available');
+                                UJobToast.info(context, 'Unavailable', sub: 'No website available for this company');
                                 return;
                               }
 
@@ -341,12 +341,13 @@ class _SeekerCompanyProfileScreenState
                                   onConfirm: () async {
                                     Navigator.pop(context);
                                     final uri = Uri.parse(url);
-                                    if (await canLaunchUrl(uri)) {
-                                      await launchUrl(
+                                    try {
+                                      final launched = await launchUrl(
                                         uri,
                                         mode: LaunchMode.externalApplication,
                                       );
-                                    } else {
+                                      if (!launched) throw Exception('Could not launch');
+                                    } catch (e) {
                                       if (context.mounted) {
                                         UJobToast.error(
                                           context,
@@ -545,11 +546,12 @@ class _SeekerCompanyProfileScreenState
         child: InkWell(
           onTap: () async {
             final uri = Uri.parse(url);
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            } else {
+            try {
+              final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+              if (!launched) throw Exception('Could not launch');
+            } catch (e) {
               if (context.mounted) {
-                UJobToast.error(context, 'Could not launch URL');
+                UJobToast.error(context, 'Error', sub: 'Could not launch URL');
               }
             }
           },
@@ -565,7 +567,7 @@ class _SeekerCompanyProfileScreenState
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: url));
                     if (context.mounted) {
-                      UJobToast.success(context, 'Link copied to clipboard!');
+                      UJobToast.success(context, 'Copied', sub: 'Link copied to clipboard!');
                     }
                   },
                   icon: HugeIcon(
@@ -734,7 +736,8 @@ class _SeekerCompanyProfileScreenState
                     .toggleSave(job);
                 UJobToast.success(
                   context,
-                  isSaved ? 'unsaved' : 'This has been saved',
+                  isSaved ? 'Job Unsaved' : 'Job Saved',
+                  sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.',
                 );
               },
             );

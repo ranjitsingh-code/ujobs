@@ -137,6 +137,7 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
   }
 
   Future<void> _verify() async {
+    if (_loading) return;
     if (_otp.length < 6) {
       final msg = context.l10n.otpErrorComplete;
       setState(() => _error = msg);
@@ -151,17 +152,28 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
     });
 
     try {
-      await ref.read(dioClientProvider).dio.post(
-        Ep.empEmailVerifyOtp,
+      final isEmployer = ref.read(activeRoleProvider) == 'employer';
+      final res = await ref.read(dioClientProvider).dio.post(
+        isEmployer ? Ep.empEmailVerifyOtp : Ep.seekEmailVerifyOtp,
         data: {'code': _otp},
       );
 
+      final msg = res.data?['message']?.toString() ?? 
+                  'Your email has been changed successfully. Please log in with your new email.';
+
       if (!mounted) return;
-      UJobToast.success(context, 'Email Updated', sub: 'Your email has been changed successfully.');
       
-      final role = ref.read(activeRoleProvider);
-      ref.invalidate(authProvider);
-      context.go(role == 'employer' ? '/employer/settings' : '/seeker/settings');
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => PopScope(
+          canPop: false,
+          child: _SuccessCountdownDialog(message: msg),
+        ),
+      );
+
+      if (!mounted) return;
+      ref.read(authProvider.notifier).logout();
     } on DioException catch (e) {
       if (!mounted) return;
       final msg = e.response?.data?['error']?['message'] ?? 
@@ -288,6 +300,35 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
                       ),
               ),
               SizedBox(height: 24.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.08),
+                  borderRadius: AppRadius.md,
+                  border: Border.all(color: AppColors.info.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedInformationCircle, 
+                      color: AppColors.info, 
+                      size: 20.r,
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Text(
+                        l10n.checkSpamHint,
+                        style: AppText.small.copyWith(
+                          color: AppColors.text2,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 24.h),
 
               UJobButton(
                 label: l10n.verifyEmail,
@@ -297,6 +338,84 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
               SizedBox(height: 24.h),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SuccessCountdownDialog extends StatefulWidget {
+  final String message;
+  const _SuccessCountdownDialog({required this.message});
+
+  @override
+  State<_SuccessCountdownDialog> createState() => _SuccessCountdownDialogState();
+}
+
+class _SuccessCountdownDialogState extends State<_SuccessCountdownDialog> {
+  int _seconds = 3;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _seconds--;
+      });
+      if (_seconds <= 0) {
+        timer.cancel();
+        Navigator.pop(context);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+      backgroundColor: AppColors.surface,
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+              color: AppColors.primary,
+              size: 48.r,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Email Changed',
+              style: AppText.heading3,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              widget.message,
+              style: AppText.bodyMedium.copyWith(color: AppColors.text2),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              'Redirecting to login in $_seconds...',
+              style: AppText.small.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );

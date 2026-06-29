@@ -7,7 +7,7 @@ import 'package:upgrader/upgrader.dart';
 // import 'package:firebase_core/firebase_core.dart'; // TODO: uncomment after flutterfire configure
 import 'core/providers/locale_provider.dart';
 import 'core/providers/role_provider.dart';
-import 'core/providers/theme_provider.dart';
+// import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_colors.dart';
@@ -55,7 +55,7 @@ class UJobApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final role = ref.watch(activeRoleProvider);
     final router = ref.watch(routerProvider);
-    final themeMode = ref.watch(themeModeProvider);
+    // final themeMode = ref.watch(themeModeProvider); // Disabled for now
     final locale = ref.watch(localeProvider);
 
     final isEmployer = role == 'employer';
@@ -82,7 +82,7 @@ class UJobApp extends ConsumerWidget {
               durationUntilAlertAgain: const Duration(days: 3),
             ),
             child: MaterialApp.router(
-              title: 'UJob',
+              title: 'Ujobs',
               debugShowCheckedModeBanner: false,
 
               // ── Themes (light + dark per role) ──────────────────────────────────
@@ -92,7 +92,7 @@ class UJobApp extends ConsumerWidget {
               darkTheme: isEmployer
                   ? AppTheme.employerDarkTheme()
                   : AppTheme.seekerDarkTheme(),
-              themeMode: themeMode,
+              themeMode: ThemeMode.light,
 
               // ── i18n ────────────────────────────────────────────────────────────
               locale: locale,

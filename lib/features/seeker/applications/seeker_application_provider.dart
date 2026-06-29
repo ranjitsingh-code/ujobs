@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/application.dart';
 import '../../../core/models/job.dart';
-import '../../employer/jobs/employer_job_provider.dart';
-import '../../../core/providers/auth_provider.dart';
 import '../../../core/api/api_endpoints.dart';
+import '../../../core/providers/auth_provider.dart';
 
 class SeekerApplicationsNotifier
     extends StateNotifier<AsyncValue<List<Application>>> {
@@ -14,33 +13,38 @@ class SeekerApplicationsNotifier
   }
 
   Future<void> _loadInitialData() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final jobs = ref.read(demoEmployerJobsProvider);
-
-    final mockApps = [
-      Application(
-        id: 1,
-        job: jobs.first,
-        status: ApplicationStatus.applied,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      if (jobs.length > 1)
-        Application(
-          id: 2,
-          job: jobs[1],
-          status: ApplicationStatus.applied,
-          createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        ),
-      if (jobs.length > 2)
-        Application(
-          id: 3,
-          job: jobs[2],
-          status: ApplicationStatus.rejected,
-          createdAt: DateTime.now().subtract(const Duration(days: 5)),
-        ),
-    ];
-
-    state = AsyncValue.data(mockApps);
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final results = await Future.wait([
+        dio.get(Ep.seekerApplications),
+        dio.get(Ep.seekerSavedJobs),
+      ]);
+      
+      final appsData = (results[0].data['data'] as List).map((a) => Application.fromJson(a)).toList();
+      
+      final savedData = (results[1].data['data'] as List).map((a) {
+        // saved-jobs might return Jobs directly or a nested structure
+        // If it's nested like application, fromJson will handle it.
+        // Otherwise, if it returns jobs directly, we wrap them in an Application.
+        Job job;
+        if (a['jobs'] != null || a['job'] != null) {
+          job = Job.fromJson(a['jobs'] ?? a['job']);
+        } else {
+          job = Job.fromJson(a);
+        }
+        
+        return Application(
+          id: int.tryParse(a['id']?.toString() ?? '0') ?? 0,
+          job: job,
+          status: ApplicationStatus.saved,
+          createdAt: DateTime.tryParse(a['saved_at'] ?? a['created_at'] ?? '') ?? DateTime.now(),
+        );
+      }).toList();
+      
+      state = AsyncValue.data([...appsData, ...savedData]);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
   }
 
   bool isJobSaved(int jobId) {
@@ -75,17 +79,16 @@ class SeekerApplicationsNotifier
     }
     state = AsyncValue.data(currentList);
 
-    // Removed API call for UI testing mode
-    // try {
-    //   final dio = ref.read(dioClientProvider).dio;
-    //   if (isSaved) {
-    //     await dio.delete(Ep.saveJob(job.id.toString()));
-    //   } else {
-    //     await dio.post(Ep.saveJob(job.id.toString()));
-    //   }
-    // } catch (e) {
-    //   // API call failed, ignore for optimistic UI or add revert logic
-    // }
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      if (isSaved) {
+        await dio.delete(Ep.saveJob(job.id.toString()));
+      } else {
+        await dio.post(Ep.saveJob(job.id.toString()));
+      }
+    } catch (e) {
+      // API call failed, ignore for optimistic UI or add revert logic
+    }
   }
 }
 

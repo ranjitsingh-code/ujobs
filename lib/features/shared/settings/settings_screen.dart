@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:dio/dio.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../core/api/api_endpoints.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/role_provider.dart';
 import '../../../core/providers/cms_provider.dart';
@@ -22,6 +24,7 @@ import '../../../core/widgets/ujob_radio_card.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_toast.dart';
 import '../../employer/settings/employer_settings_provider.dart';
+import '../../seeker/settings/seeker_settings_provider.dart';
 
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -102,6 +105,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _updateSeekerPref(String key, dynamic value) async {
+    try {
+      await ref.read(seekerSettingsServiceProvider).updatePreferences({key: value});
+      if (mounted) {
+        UJobToast.success(
+          context, 
+          'Update Successful',
+          sub: 'Your preferences have been successfully updated.'
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        UJobToast.error(
+          context, 
+          'Update Failed',
+          sub: 'Failed to update preference. Please try again.'
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -138,6 +162,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                _dateFormat = prefs.dateFormat;
                
                // Read 2FA from settings user payload if available
+               final userPayload = settingsAsync.value!.user;
+               if (userPayload.containsKey('two_factor_enabled') || userPayload.containsKey('two_factor_authentication')) {
+                 _twoFa = (userPayload['two_factor_enabled'] ?? userPayload['two_factor_authentication']) == true;
+               }
+
+               _hasInitializedPrefs = true;
+             });
+           }
+         });
+      }
+    } else {
+      final settingsAsync = ref.watch(seekerSettingsProvider);
+      if (settingsAsync.isLoading) {
+         return Scaffold(
+           backgroundColor: AppColors.background,
+           appBar: UJobAppBar(title: l10n.settings, showBack: true, backgroundColor: AppColors.background),
+           body: const Center(child: CircularProgressIndicator()),
+         );
+      } else if (settingsAsync.hasValue && !_hasInitializedPrefs) {
+         final prefs = settingsAsync.value!.prefs;
+         WidgetsBinding.instance.addPostFrameCallback((_) {
+           if (mounted) {
+             setState(() {
+               _emailNewJobApplication = prefs.notifNewApplication;
+               _emailCandidateMessage = prefs.notifMessages;
+               _emailInterviewResponse = prefs.notifInterview;
+               _emailMarketing = prefs.notifMarketing;
+               
+               _notifSecurity = prefs.notifSecurity;
+               _notifBrowser = prefs.notifBrowser;
+               
+               _profileVisible = prefs.companyProfilePublic;
+               _showEmailToCandidates = prefs.showEmailToCandidates;
+               _showPhoneToCandidates = prefs.showPhoneToCandidates;
+               
+               _language = prefs.language;
+               _timezone = prefs.timezone;
+               _dateFormat = prefs.dateFormat;
+               
                final userPayload = settingsAsync.value!.user;
                if (userPayload.containsKey('two_factor_enabled') || userPayload.containsKey('two_factor_authentication')) {
                  _twoFa = (userPayload['two_factor_enabled'] ?? userPayload['two_factor_authentication']) == true;
@@ -249,6 +312,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ],
                   ),
                 ),
+                /*
                 _NavTile(
                   label: l10n.auditLog,
                   subtitle: l10n.auditLogSubtitle,
@@ -261,6 +325,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     }
                   },
                 ),
+                */
               ],
             ),
 
@@ -287,6 +352,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _SectionTitle('NOTIFICATIONS'),
             _SectionContainer(
               children: [
+                /*
                 if (isEmployer) ...[
                   _ToggleTile(
                     label: l10n.newJobApplication,
@@ -345,23 +411,58 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ] else ...[
                   _ToggleTile(
-                    label: l10n.jobRecommendations,
-                    value: _emailJobRecommendations,
-                    onChanged: (v) =>
-                        setState(() => _emailJobRecommendations = v),
-                  ),
-                  _ToggleTile(
                     label: l10n.applicationUpdates,
-                    value: _emailApplicationUpdates,
-                    onChanged: (v) =>
-                        setState(() => _emailApplicationUpdates = v),
+                    value: _emailNewJobApplication,
+                    onChanged: (v) {
+                        setState(() => _emailNewJobApplication = v);
+                        _updateSeekerPref('notif_new_application', v);
+                    },
                   ),
                   _ToggleTile(
                     label: l10n.messages,
-                    value: _emailMessages,
-                    onChanged: (v) => setState(() => _emailMessages = v),
+                    value: _emailCandidateMessage,
+                    onChanged: (v) {
+                        setState(() => _emailCandidateMessage = v);
+                        _updateSeekerPref('notif_messages', v);
+                    },
+                  ),
+                  _ToggleTile(
+                    label: l10n.interviewResponses,
+                    value: _emailInterviewResponse,
+                    onChanged: (v) {
+                        setState(() => _emailInterviewResponse = v);
+                        _updateSeekerPref('notif_interview', v);
+                    },
+                  ),
+                  _ToggleTile(
+                    label: 'Security Alerts',
+                    subtitle: 'Login attempts and password changes',
+                    value: _notifSecurity,
+                    onChanged: (v) {
+                       setState(() => _notifSecurity = v);
+                       _updateSeekerPref('notif_security', v);
+                    },
+                  ),
+                  _ToggleTile(
+                    label: l10n.marketingEmails,
+                    subtitle: l10n.marketingEmailsSubtitle,
+                    value: _emailMarketing,
+                    onChanged: (v) {
+                       setState(() => _emailMarketing = v);
+                       _updateSeekerPref('notif_marketing', v);
+                    },
+                  ),
+                  _ToggleTile(
+                    label: 'Push Notifications',
+                    subtitle: 'Receive notifications on this device',
+                    value: _notifBrowser,
+                    onChanged: (v) {
+                       setState(() => _notifBrowser = v);
+                       _updateSeekerPref('notif_browser', v);
+                    },
                   ),
                 ],
+                */
                 _ToggleTile(
                   label: l10n.allowNotifications,
                   subtitle: l10n.allowNotificationsSubtitle,
@@ -374,6 +475,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             SizedBox(height: 24.h),
 
+            /*
             // ================= PRIVACY =================
             _SectionTitle(l10n.privacySection),
             if (isEmployer) ...[
@@ -415,15 +517,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     label: l10n.profileVisibility,
                     subtitle: l10n.profileVisibilitySubtitle,
                     value: _profileVisible,
-                    onChanged: (v) => setState(() => _profileVisible = v),
+                    onChanged: (v) {
+                        setState(() => _profileVisible = v);
+                        _updateSeekerPref('company_profile_public', v);
+                    },
                     showBorder: true,
                   ),
                   _ToggleTile(
-                    label: l10n.showSalaryExpectations,
-                    subtitle: l10n.showSalaryExpectationsSubtitle,
-                    value: _showSalaryExpectations,
-                    onChanged: (v) =>
-                        setState(() => _showSalaryExpectations = v),
+                    label: 'Show Email to Employers',
+                    subtitle: 'Display email on your profile',
+                    value: _showEmailToCandidates,
+                    onChanged: (v) {
+                        setState(() => _showEmailToCandidates = v);
+                        _updateSeekerPref('show_email_to_candidates', v);
+                    },
+                    showBorder: true,
+                  ),
+                  _ToggleTile(
+                    label: 'Show Phone to Employers',
+                    subtitle: 'Display phone on your profile',
+                    value: _showPhoneToCandidates,
+                    onChanged: (v) {
+                        setState(() => _showPhoneToCandidates = v);
+                        _updateSeekerPref('show_phone_to_candidates', v);
+                    },
                     showBorder: false,
                   ),
                 ],
@@ -431,8 +548,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
 
             SizedBox(height: 24.h),
+            */
 
             if (isEmployer) ...[
+              /*
               // ================= GENERAL PREFERENCES =================
               _SectionTitle('GENERAL PREFERENCES'),
               _SectionContainer(
@@ -458,6 +577,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
               ),
               SizedBox(height: 24.h),
+              */
 
               // ================= DOWNLOAD ACCOUNT DATA =================
               _SectionTitle(l10n.downloadAccountData.toUpperCase()),
@@ -536,15 +656,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: () => _showDeleteDialog(context),
                   showBorder: !isEmployer,
                 ),
-                if (!isEmployer)
+                if (!isEmployer) ...[
                   _NavTile(
                     label: l10n.signOut,
                     subtitle: 'Sign out of your account on this device',
                     textColor: AppColors.error,
                     showArrow: false,
-                    showBorder: false,
+                    showBorder: false, // Change to true if Sign Out All is uncommented
                     onTap: () => _showSignOutDialog(context),
                   ),
+                  /*
+                  _NavTile(
+                    label: 'Sign Out All Devices',
+                    subtitle: 'Revoke access on all logged-in devices',
+                    textColor: AppColors.error,
+                    showArrow: false,
+                    showBorder: false,
+                    onTap: () => _showSignOutAllDialog(context),
+                  ),
+                  */
+                ],
               ],
             ),
 
@@ -557,9 +688,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle: 'Log out of this session',
                     textColor: AppColors.error,
                     showArrow: false,
-                    showBorder: true,
+                    showBorder: false, // Changed from true to false since it is now the only item in the section
                     onTap: () => _showSignOutDialog(context),
                   ),
+                  /*
                   _NavTile(
                     label: 'Sign Out All Devices',
                     subtitle: 'Revoke access on all logged-in devices',
@@ -568,6 +700,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     showBorder: false,
                     onTap: () => _showSignOutAllDialog(context),
                   ),
+                  */
                 ],
               ),
             ],
@@ -641,12 +774,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     },
                   );
                 } else {
-                  await ref.read(dioClientProvider).dio.patch(
+                  await ref.read(dioClientProvider).dio.put(
                     Ep.seekPassword,
                     data: {
                       'current_password': current,
                       'new_password': next,
-                      'password_confirmation': confirm,
                     },
                   );
                 }
@@ -748,9 +880,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final currentUser = ref.read(authProvider).valueOrNull;
     final currentEmail =
         currentUser?.email ??
-        (isEmployer
-            ? 'nexoviasolutions@gmail.com'
-            : 'mdazadhossain95@gmail.com');
+        (kDebugMode
+            ? (isEmployer
+                ? 'nexoviasolutions@gmail.com'
+                : 'mdazadhossain95@gmail.com')
+            : '');
     final fieldKey = isEmail ? 'email' : 'phone';
     final successMessage = isEmail
         ? l10n.verificationCodeSent
@@ -773,6 +907,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
             Future<void> submit() async {
+              if (loading) return;
               final value = controller.text.trim();
               final phoneValue = isPhone ? '$countryCode$value' : value;
               final error = UJobValidator.validate(
@@ -797,9 +932,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               setSheetState(() => loading = true);
 
               try {
-                if (isEmployer && isEmail) {
+                if (isEmail) {
                   await ref.read(dioClientProvider).dio.post(
-                    Ep.empEmailRequestOtp,
+                    isEmployer ? Ep.empEmailRequestOtp : Ep.seekEmailRequestOtp,
                     data: {
                       'new_email': value,
                       'current_password': passwordCtrl.text,
@@ -824,7 +959,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   if (isEmail) {
                     final success = await context.push<bool>('/change-email-otp', extra: {'email': currentEmail});
                     if (success == true) {
-                      ref.invalidate(authProvider);
+                      // Handled by the OTP screen's countdown dialog
                     }
                   } else {
                     ref.invalidate(authProvider);
@@ -873,7 +1008,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ] else ...[
                   UJobTextField(
                     label: fieldLabel,
-                    hint: isEmail && !isEmployer ? currentEmail : null,
+                    hint: isEmail ? l10n.emailHint : null,
                     controller: controller,
                     keyboardType: type,
                     textInputAction: TextInputAction.done,
@@ -976,6 +1111,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     enable
                         ? l10n.twoFAEnabledSuccess
                         : l10n.twoFADisabledSuccess,
+                    sub: enable ? 'Two-factor authentication is now active on your account.' : 'Two-factor authentication has been turned off.',
                   );
                 }
               } catch (_) {
@@ -1059,8 +1195,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (isEmployer) {
         await ref.read(dioClientProvider).dio.delete('/employer/settings/account');
       } else {
-        // Fallback for seeker if it exists, otherwise just ignore for now
-        await ref.read(dioClientProvider).dio.delete('/seeker/settings/account');
+        await ref.read(dioClientProvider).dio.delete(Ep.seekAccount);
       }
 
       if (!context.mounted) return;
@@ -1082,6 +1217,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         'Failed to delete account', 
         sub: 'Please try again or contact support.'
       );
+    }
+  }
+
+  Future<void> _signOutAllDevices(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final isEmployer = ref.read(activeRoleProvider) == 'employer';
+      
+      if (isEmployer) {
+        // Employer specific logic if any. 
+      } else {
+        await ref.read(dioClientProvider).dio.post(Ep.seekSignOutAll);
+      }
+
+      if (!context.mounted) return;
+      
+      Navigator.pop(context);
+      ref.read(authProvider.notifier).logout(localOnly: true);
+      context.go('/');
+
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.pop(context);
+      UJobToast.error(context, 'Error', sub: 'Failed to sign out all devices. Please try again.');
     }
   }
 
@@ -1107,6 +1271,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
   }
+
 
   void _signOut(BuildContext context) {
     // Standard sign out logic (calls the normal logout endpoint)
@@ -1145,7 +1310,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
 
     try {
-      await ref.read(dioClientProvider).dio.post('/employer/settings/sign-out-all');
+      final isEmployer = ref.read(activeRoleProvider) == 'employer';
+      await ref.read(dioClientProvider).dio.post(isEmployer ? '/employer/settings/sign-out-all' : Ep.seekSignOutAll);
 
       if (!context.mounted) return;
       

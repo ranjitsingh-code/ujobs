@@ -18,6 +18,10 @@ class SeekerApplicationService {
       queryParameters: queryParams,
     );
     final data = res.data['data'] as List;
+    print('--- APPLICATIONS DATA ---');
+    if (data.isNotEmpty) {
+      print(data.first);
+    }
     return data.map((json) => Application.fromJson(json)).toList();
   }
 

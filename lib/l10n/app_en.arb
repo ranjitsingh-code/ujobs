@@ -1,6 +1,7 @@
 {
   "@@locale": "en",
-  "appName": "UJob",
+  "appName": "Ujobs",
+  "checkSpamHint": "Didn't receive the email? Please make sure to check your Spam or Junk folder.",
   "@appName": {
     "description": "Application name"
   },

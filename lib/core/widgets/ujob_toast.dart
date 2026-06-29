@@ -27,7 +27,9 @@ class UJobToast {
     ToastType type, {
     Duration duration = const Duration(seconds: 3),
   }) {
-    final overlay = Overlay.of(context);
+    final overlayState = Overlay.of(context);
+    if (overlayState == null) return;
+    
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) => _ToastOverlay(
@@ -49,7 +51,7 @@ class UJobToast {
         ),
       ),
     );
-    overlay.insert(entry);
+    overlayState.insert(entry);
   }
 }
 
