@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/api/api_endpoints.dart';
-import '../../../core/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
@@ -24,12 +23,14 @@ class ApplyScreen extends ConsumerStatefulWidget {
   final String jobTitle;
   final String? companyName;
   final String? location;
+  final String? source;
 
   const ApplyScreen({
     required this.jobId,
     required this.jobTitle,
     this.companyName,
     this.location,
+    this.source,
     super.key,
   });
 
@@ -45,6 +46,35 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
   final Map<int, String> _questionAnswers = {};
   bool _submitting = false;
   bool _submitted = false;
+
+  String get _source => widget.source ?? 'jobs';
+
+  String _resultButtonLabel(BuildContext context) {
+    switch (_source) {
+      case 'dashboard':
+        return '${context.l10n.back} to ${context.l10n.dashboard}';
+      case 'applications':
+        return '${context.l10n.back} to ${context.l10n.applications}';
+      case 'jobs':
+      default:
+        return '${context.l10n.back} to ${context.l10n.jobs}';
+    }
+  }
+
+  void _goBackToSource(BuildContext context) {
+    switch (_source) {
+      case 'dashboard':
+        context.go('/seeker');
+        return;
+      case 'applications':
+        context.go('/seeker/applied');
+        return;
+      case 'jobs':
+      default:
+        context.go('/seeker/jobs');
+        return;
+    }
+  }
 
   bool _canProceed(ApplyStep step, dynamic job) {
     if (step == ApplyStep.coverLetter) {
@@ -145,10 +175,8 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
         title: 'Application Submitted!',
         subtitle:
             'Your application has been sent. We\'ll notify you when the employer responds.',
-        buttonLabel: 'Back to Job',
-        onTap: () {
-          Navigator.pop(context, true);
-        },
+        buttonLabel: _resultButtonLabel(context),
+        onTap: () => _goBackToSource(context),
       );
     }
 

@@ -82,6 +82,10 @@ class Ep {
   static const publicJobs = '/public/jobs';
   static String publicJob(String id) => '/public/jobs/$id';
   static const publicCompanies = '/public/companies';
+  static const publicCompaniesHouseSearch =
+      '/public/companies-house/search';
+  static String publicCompaniesHouseCompany(String number) =>
+      '/public/companies-house/company/$number';
   static String publicCompany(String id) => '/public/companies/$id';
   static const publicCategories = '/public/categories';
   static const publicSkills = '/public/skills';

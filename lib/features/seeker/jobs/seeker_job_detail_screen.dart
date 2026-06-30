@@ -25,7 +25,12 @@ import '../profile/seeker_profile_provider.dart';
 
 class SeekerJobDetailScreen extends ConsumerStatefulWidget {
   final int jobId;
-  const SeekerJobDetailScreen({required this.jobId, super.key});
+  final String? source;
+  const SeekerJobDetailScreen({
+    required this.jobId,
+    this.source,
+    super.key,
+  });
 
   @override
   ConsumerState<SeekerJobDetailScreen> createState() =>
@@ -75,7 +80,6 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
     final l10n = context.l10n;
 
     final isSaved = jobAsync.valueOrNull?.isSaved ?? false;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: UJobAppBar(
@@ -147,6 +151,8 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
         },
         data: (job) {
           final isApplied = _hasApplied || job.isApplied;
+          final isDeadlineExpired =
+              job.closesAt != null && _isDeadlinePassed(job.closesAt!);
           String applyLabel = 'Applied';
           if (job.applicationStatus != null && job.applicationStatus!.isNotEmpty) {
             applyLabel = 'Status: ${job.applicationStatus![0].toUpperCase()}${job.applicationStatus!.substring(1)}';
@@ -898,42 +904,43 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
               ),
 
               // --- BOTTOM BAR ---
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    border: Border(
-                      top: BorderSide(color: AppColors.borderLight),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, -5),
+              if (!isDeadlineExpired || isApplied)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      border: Border(
+                        top: BorderSide(color: AppColors.borderLight),
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: UJobButton(
-                          label: isApplied
-                              ? applyLabel
-                              : 'Apply for this Position',
-                          color: isApplied
-                              ? AppColors.success
-                              : AppColors.seekPrimary,
-                          onTap: isApplied ? null : () => _apply(context, job),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: UJobButton(
+                            label: isApplied
+                                ? applyLabel
+                                : 'Apply for this Position',
+                            color: isApplied
+                                ? AppColors.success
+                                : AppColors.seekPrimary,
+                            onTap: isApplied ? null : () => _apply(context, job),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           );
         },
@@ -942,6 +949,10 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
   }
 
   void _apply(BuildContext context, dynamic job) async {
+    if (job.closesAt != null && _isDeadlinePassed(job.closesAt!)) {
+      return;
+    }
+
     // 1. Initial Confirmation
     final confirmed = await showDialog<bool>(
       context: context,
@@ -1071,7 +1082,11 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
     // 4. Navigate to ApplyScreen
     final result = await context.push<bool>(
       '/seeker/jobs/${widget.jobId}/apply',
-      extra: {'title': job.title, 'company': job.company?.name ?? ''},
+      extra: {
+        'title': job.title,
+        'company': job.company?.name ?? '',
+        'source': widget.source ?? 'jobs',
+      },
     );
     if (result == true) {
       setState(() => _hasApplied = true);

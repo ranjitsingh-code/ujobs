@@ -420,10 +420,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String get companyDetailsSub => 'Tell us about your organisation';
 
   @override
+  String get limitedCompanyQuestion =>
+      'Are you registered as a limited company?';
+
+  @override
+  String get yesOption => 'Yes';
+
+  @override
+  String get noOption => 'No';
+
+  @override
   String get companyNameLabel => 'Company name';
 
   @override
   String get companyNameHint => 'e.g. Acme Inc.';
+
+  @override
+  String get companiesHouseSearchLabel => 'Company name';
+
+  @override
+  String get companiesHouseSearchHint => 'Search registered UK companies';
+
+  @override
+  String get companiesHouseVerified => 'Companies House Verified';
+
+  @override
+  String get companyNumberLabel => 'Company Number';
+
+  @override
+  String get statusLabel => 'Status';
+
+  @override
+  String get companyTypeLabel => 'Company Type';
+
+  @override
+  String get incorporatedLabel => 'Incorporated';
+
+  @override
+  String get jurisdictionLabel => 'Jurisdiction';
+
+  @override
+  String get registeredAddressLabel => 'Registered Address';
+
+  @override
+  String get searchingCompanies => 'Searching companies...';
+
+  @override
+  String get noCompaniesFound => 'No companies found.';
+
+  @override
+  String get selectLimitedCompanyOption =>
+      'Select whether your company is limited or not';
+
+  @override
+  String get selectCompaniesHouseCompany =>
+      'Select a company from Companies House';
+
+  @override
+  String get companyDetailsUnavailable =>
+      'Company details are unavailable right now. You can switch to No and continue manually.';
 
   @override
   String get websiteLabel => 'Website (optional)';

@@ -422,10 +422,62 @@ class AppLocalizationsAr extends AppLocalizations {
   String get companyDetailsSub => 'أخبرنا عن مؤسستك';
 
   @override
+  String get limitedCompanyQuestion => 'هل شركتك مسجلة كشركة محدودة؟';
+
+  @override
+  String get yesOption => 'نعم';
+
+  @override
+  String get noOption => 'لا';
+
+  @override
   String get companyNameLabel => 'اسم الشركة';
 
   @override
   String get companyNameHint => 'مثال: شركة الحلول';
+
+  @override
+  String get companiesHouseSearchLabel => 'اسم الشركة';
+
+  @override
+  String get companiesHouseSearchHint => 'ابحث عن الشركات البريطانية المسجلة';
+
+  @override
+  String get companiesHouseVerified => 'تم التحقق عبر Companies House';
+
+  @override
+  String get companyNumberLabel => 'رقم الشركة';
+
+  @override
+  String get statusLabel => 'الحالة';
+
+  @override
+  String get companyTypeLabel => 'نوع الشركة';
+
+  @override
+  String get incorporatedLabel => 'تاريخ التأسيس';
+
+  @override
+  String get jurisdictionLabel => 'الاختصاص';
+
+  @override
+  String get registeredAddressLabel => 'العنوان المسجل';
+
+  @override
+  String get searchingCompanies => 'جارٍ البحث عن الشركات...';
+
+  @override
+  String get noCompaniesFound => 'لم يتم العثور على شركات.';
+
+  @override
+  String get selectLimitedCompanyOption => 'حدد ما إذا كانت شركتك محدودة أم لا';
+
+  @override
+  String get selectCompaniesHouseCompany => 'اختر شركة من Companies House';
+
+  @override
+  String get companyDetailsUnavailable =>
+      'تفاصيل الشركة غير متاحة الآن. يمكنك اختيار \"لا\" والمتابعة يدويًا.';
 
   @override
   String get websiteLabel => 'الموقع الإلكتروني (اختياري)';

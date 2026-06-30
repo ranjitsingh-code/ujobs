@@ -333,9 +333,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/seeker/jobs/:id',
-            builder: (_, state) => SeekerJobDetailScreen(
-              jobId: int.parse(state.pathParameters['id']!),
-            ),
+            builder: (_, state) {
+              final extra = state.extra as Map<String, dynamic>? ?? {};
+              return SeekerJobDetailScreen(
+                jobId: int.parse(state.pathParameters['id']!),
+                source: extra['source'] as String?,
+              );
+            },
           ),
           GoRoute(
             path: '/seeker/company',
@@ -355,6 +359,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 jobTitle: extra['title'] as String? ?? 'Job',
                 companyName: extra['company'] as String?,
                 location: extra['location'] as String?,
+                source: extra['source'] as String?,
               );
             },
           ),

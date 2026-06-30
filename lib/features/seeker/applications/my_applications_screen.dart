@@ -232,7 +232,10 @@ class _ApplicationList extends ConsumerWidget {
             isSaved: isSaved,
             applicationStatus: app.status != ApplicationStatus.saved ? app.status.name : '',
           ),
-          onTap: () => context.push('/seeker/jobs/${app.job.id}'),
+          onTap: () => context.push(
+            '/seeker/jobs/${app.job.id}',
+            extra: {'source': 'applications'},
+          ),
           onSaveTap: () {
             ref
                 .read(seekerApplicationsProvider(null).notifier)

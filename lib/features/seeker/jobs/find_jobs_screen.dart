@@ -276,7 +276,10 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                   final isSaved = apps.any((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
                   return UJobJobCard(
                     job: job.copyWith(isSaved: isSaved),
-                    onTap: () => context.push('/seeker/jobs/${job.id}'),
+                    onTap: () => context.push(
+                      '/seeker/jobs/${job.id}',
+                      extra: {'source': 'jobs'},
+                    ),
                     onSaveTap: () {
                       ref.read(seekerApplicationsProvider(null).notifier).toggleSave(job);
                       UJobToast.success(
@@ -395,7 +398,10 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                         final isSaved = apps.any((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
                         return UJobJobCard(
                           job: job.copyWith(isSaved: isSaved),
-                          onTap: () => context.push('/seeker/jobs/${job.id}'),
+                          onTap: () => context.push(
+                            '/seeker/jobs/${job.id}',
+                            extra: {'source': 'jobs'},
+                          ),
                           onSaveTap: () {
                             ref.read(seekerApplicationsProvider(null).notifier).toggleSave(job);
                             UJobToast.success(
@@ -814,4 +820,3 @@ class _UJobTabsDelegate extends SliverPersistentHeaderDelegate {
     return true;
   }
 }
-

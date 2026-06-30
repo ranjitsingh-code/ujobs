@@ -908,6 +908,24 @@ abstract class AppLocalizations {
   /// **'Tell us about your organisation'**
   String get companyDetailsSub;
 
+  /// No description provided for @limitedCompanyQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you registered as a limited company?'**
+  String get limitedCompanyQuestion;
+
+  /// No description provided for @yesOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yesOption;
+
+  /// No description provided for @noOption.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get noOption;
+
   /// No description provided for @companyNameLabel.
   ///
   /// In en, this message translates to:
@@ -919,6 +937,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'e.g. Acme Inc.'**
   String get companyNameHint;
+
+  /// No description provided for @companiesHouseSearchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Company name'**
+  String get companiesHouseSearchLabel;
+
+  /// No description provided for @companiesHouseSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search registered UK companies'**
+  String get companiesHouseSearchHint;
+
+  /// No description provided for @companiesHouseVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Companies House Verified'**
+  String get companiesHouseVerified;
+
+  /// No description provided for @companyNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Number'**
+  String get companyNumberLabel;
+
+  /// No description provided for @statusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get statusLabel;
+
+  /// No description provided for @companyTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Type'**
+  String get companyTypeLabel;
+
+  /// No description provided for @incorporatedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorporated'**
+  String get incorporatedLabel;
+
+  /// No description provided for @jurisdictionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Jurisdiction'**
+  String get jurisdictionLabel;
+
+  /// No description provided for @registeredAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered Address'**
+  String get registeredAddressLabel;
+
+  /// No description provided for @searchingCompanies.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching companies...'**
+  String get searchingCompanies;
+
+  /// No description provided for @noCompaniesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No companies found.'**
+  String get noCompaniesFound;
+
+  /// No description provided for @selectLimitedCompanyOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Select whether your company is limited or not'**
+  String get selectLimitedCompanyOption;
+
+  /// No description provided for @selectCompaniesHouseCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a company from Companies House'**
+  String get selectCompaniesHouseCompany;
+
+  /// No description provided for @companyDetailsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Company details are unavailable right now. You can switch to No and continue manually.'**
+  String get companyDetailsUnavailable;
 
   /// No description provided for @websiteLabel.
   ///

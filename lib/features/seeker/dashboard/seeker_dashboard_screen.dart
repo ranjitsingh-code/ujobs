@@ -141,7 +141,10 @@ class SeekerDashboardScreen extends ConsumerWidget {
                           );
                           return UJobJobCard(
                             job: job.copyWith(isSaved: isSaved),
-                            onTap: () => context.push('/seeker/jobs/${job.id}'),
+                            onTap: () => context.push(
+                              '/seeker/jobs/${job.id}',
+                              extra: {'source': 'dashboard'},
+                            ),
                             onSaveTap: () {
                               ref
                                   .read(
@@ -336,4 +339,3 @@ class _StatCard extends StatelessWidget {
     );
   }
 }
-
