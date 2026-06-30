@@ -421,7 +421,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get limitedCompanyQuestion =>
-      'Are you registered as a limited company?';
+      'Is your company registered with Companies House?';
 
   @override
   String get yesOption => 'Yes';
@@ -439,7 +439,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get companiesHouseSearchLabel => 'Company name';
 
   @override
-  String get companiesHouseSearchHint => 'Search registered UK companies';
+  String get companiesHouseSearchHint => 'Search Companies House';
 
   @override
   String get companiesHouseVerified => 'Companies House Verified';

@@ -911,7 +911,7 @@ abstract class AppLocalizations {
   /// No description provided for @limitedCompanyQuestion.
   ///
   /// In en, this message translates to:
-  /// **'Are you registered as a limited company?'**
+  /// **'Is your company registered with Companies House?'**
   String get limitedCompanyQuestion;
 
   /// No description provided for @yesOption.
@@ -947,7 +947,7 @@ abstract class AppLocalizations {
   /// No description provided for @companiesHouseSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search registered UK companies'**
+  /// **'Search Companies House'**
   String get companiesHouseSearchHint;
 
   /// No description provided for @companiesHouseVerified.

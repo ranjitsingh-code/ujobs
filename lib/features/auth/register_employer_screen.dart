@@ -49,7 +49,7 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
   final _companySearchFocusNode = FocusNode();
   final _companyResultsScrollController = ScrollController();
   String? _country;
-  bool? _isLimitedCompany;
+  bool? _isLimitedCompany = true;
   Timer? _companySearchDebounce;
   List<_CompaniesHouseSearchItem> _companySearchResults = [];
   _CompaniesHouseCompanyDetail? _selectedCompanyDetail;
@@ -254,6 +254,9 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
       _selectedCompanyDetail = null;
       _companySelectionLocked = false;
       _companyCtrl.clear();
+      if (!isLimited) {
+        _cityCtrl.clear();
+      }
       if (isLimited && _country == null) {
         _country = 'GB';
       }
