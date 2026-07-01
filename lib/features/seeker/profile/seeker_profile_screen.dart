@@ -1,4 +1,6 @@
 
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -53,7 +55,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   bool _willingToRelocate = false;
   String? _relocationType;
   final _relocationCitiesCtrl = TextEditingController();
-  List<String> _relocationCities = [];
+  final List<String> _relocationCities = [];
 
   // Resume
   SeekerResume? _primaryResume;
@@ -65,7 +67,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   final _expectedSalaryCtrl = TextEditingController();
   String? _currency;
   String? _availability;
-  String? _profileVisibility;
+  String? _profileVisibility = 'private';
   String _about = '';
 
   // Skills
@@ -104,7 +106,8 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   Future<void> _loadProfile() async {
     try {
       ref.invalidate(seekerDashboardProvider);
-      await ref.refresh(fetchSeekerProfileProvider.future);
+      ref.invalidate(fetchSeekerProfileProvider);
+      await ref.read(fetchSeekerProfileProvider.future);
       final freshData = ref.read(seekerProfileProvider);
       if (freshData != null) {
         _populateFields(freshData);
@@ -166,7 +169,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
       }
       _currency = profile.salaryCurrency;
       _availability = profile.availability;
-      _profileVisibility = profile.profileVisibility;
+      _profileVisibility = 'private';
       _about = profile.about ?? '';
 
       _selectedSkills = profile.skills.map((s) => Skill(id: int.tryParse(s.id) ?? 0, name: s.name)).toList();
@@ -351,51 +354,6 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               },
                             );
                           },
-                        ),
-                        SizedBox(height: 16.h),
-                        Container(
-                          padding: EdgeInsets.all(16.r),
-                          decoration: BoxDecoration(
-                            color: AppColors.seekPrimary.withValues(alpha: 0.05),
-                            borderRadius: AppRadius.md,
-                            border: Border.all(
-                                color: AppColors.seekPrimary.withValues(alpha: 0.15)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 24.r,
-                                    height: 24.r,
-                                    child: Checkbox(
-                                      value: _showPhone,
-                                      onChanged: (v) {
-                                        if (v != null) {
-                                          setState(() => _showPhone = v);
-                                        }
-                                      },
-                                      activeColor: AppColors.seekPrimary,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12.w),
-                                  Expanded(
-                                    child: Text(
-                                      "Show my number to employers",
-                                      style: AppText.bodyBold.copyWith(color: AppColors.text),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 12.h),
-                              Text(
-                                "By ticking this box, you confirm that you are the primary user and subscriber to the telephone number provided, and you agree to receive calls, texts and WhatsApp messages from employers.",
-                                style: AppText.small.copyWith(color: AppColors.muted),
-                              ),
-                            ],
-                          ),
                         ),
                       ],
                     ),
@@ -849,18 +807,12 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                           label: 'Profile Visibility',
                           value: _profileVisibility,
                           options: const [
-                            ('Public', 'public'),
                             ('Private', 'private'),
                           ],
                           onChanged: (v) => setState(() => _profileVisibility = v),
                         ),
                         SizedBox(height: 8.h),
-                        if (_profileVisibility == 'public')
-                          Text(
-                            'Everyone can see your profile.',
-                            style: AppText.small.copyWith(color: AppColors.muted),
-                          )
-                        else if (_profileVisibility == 'private')
+                        if (_profileVisibility == 'private')
                           Text(
                             'Only the employers you apply to can see your profile.',
                             style: AppText.small.copyWith(color: AppColors.muted),
