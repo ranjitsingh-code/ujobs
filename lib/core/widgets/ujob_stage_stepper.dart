@@ -28,13 +28,15 @@ class UJobStageStepper extends StatelessWidget {
     );
 
     // Fallbacks
-    if (currentStage.toLowerCase() == 'hired')
+    if (currentStage.toLowerCase() == 'hired') {
       currentIndex = _stages.length; // all completed
+    }
     // If rejected, we don't advance the index, so it stays where it was, but we need to know the 'previous' stage.
     // For simplicity, let's assume if rejected, it just marks the last active stage as rejected.
     // However, the model doesn't store the "rejected at" stage. If it's -1, we'll just put it at 0.
-    if (currentIndex == -1 && currentStage.toLowerCase() == 'rejected')
+    if (currentIndex == -1 && currentStage.toLowerCase() == 'rejected') {
       currentIndex = 0;
+    }
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16.h),

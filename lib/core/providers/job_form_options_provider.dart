@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_endpoints.dart';
-import '../api/dio_client.dart';
 import 'auth_provider.dart';
 import '../models/job_form_options.dart';
 

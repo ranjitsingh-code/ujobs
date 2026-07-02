@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../utils/l10n_extensions.dart';
 import 'ujob_button.dart';
 
 class UJobAlertDialog extends StatelessWidget {
@@ -11,8 +11,8 @@ class UJobAlertDialog extends StatelessWidget {
   final String title;
   final String description;
   final Widget? child;
-  final String cancelText;
-  final String confirmText;
+  final String? cancelText;
+  final String? confirmText;
   final VoidCallback onCancel;
   final VoidCallback onConfirm;
   final Color confirmColor;
@@ -23,8 +23,8 @@ class UJobAlertDialog extends StatelessWidget {
     required this.description,
     this.child,
     required this.onConfirm,
-    this.cancelText = 'Cancel',
-    this.confirmText = 'Confirm',
+    this.cancelText,
+    this.confirmText,
     this.iconBgColor = AppColors.error,
     this.confirmColor = AppColors.error,
     VoidCallback? onCancel,
@@ -35,6 +35,9 @@ class UJobAlertDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedCancelText = cancelText ?? context.l10n.cancel;
+    final resolvedConfirmText = confirmText ?? context.l10n.confirm;
+
     return Dialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
@@ -65,7 +68,7 @@ class UJobAlertDialog extends StatelessWidget {
               children: [
                 Expanded(
                   child: UJobButton(
-                    label: cancelText,
+                    label: resolvedCancelText,
                     outlined: true,
                     color: AppColors.muted,
                     onTap: () {
@@ -79,7 +82,7 @@ class UJobAlertDialog extends StatelessWidget {
                 SizedBox(width: 12.w),
                 Expanded(
                   child: UJobButton(
-                    label: confirmText,
+                    label: resolvedConfirmText,
                     color: confirmColor,
                     gradient: LinearGradient(
                       colors: [confirmColor, confirmColor],

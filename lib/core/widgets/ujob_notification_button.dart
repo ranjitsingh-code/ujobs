@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../utils/l10n_extensions.dart';
 import '../../features/shared/notifications/notifications_provider.dart';
 
 class UJobNotificationButton extends ConsumerWidget {
@@ -18,14 +19,15 @@ class UJobNotificationButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unreadCount = ref.watch(unreadNotificationCountProvider).valueOrNull ?? 0;
+    final unreadCount =
+        ref.watch(unreadNotificationCountProvider).valueOrNull ?? 0;
 
     return Stack(
       clipBehavior: Clip.none,
       children: [
         IconButton(
           onPressed: onTap,
-          tooltip: 'Notifications',
+          tooltip: context.l10n.notifications,
           style: IconButton.styleFrom(
             backgroundColor: AppColors.surface.withValues(alpha: 0.12),
             fixedSize: Size(44.r, 44.r),

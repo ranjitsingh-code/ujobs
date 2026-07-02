@@ -55,13 +55,13 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
         ? widget.countries!
         : [fallback];
 
-    String norm = widget.initialDialCode ?? '+44';
-    if (!norm.startsWith('+')) norm = '+' + norm;
+    String norm = widget.initialDialCode;
+    if (!norm.startsWith('+')) norm = '+$norm';
 
     _selected = active.firstWhere((c) {
       final cDial = c.phoneCode.startsWith('+')
           ? c.phoneCode
-          : '+' + c.phoneCode;
+          : '+${c.phoneCode}';
       return cDial == norm;
     }, orElse: () => active.first);
     _focusNode.addListener(() {
@@ -85,14 +85,14 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
           ? widget.countries!
           : [fallback];
 
-      String norm = widget.initialDialCode ?? '+44';
-      if (!norm.startsWith('+')) norm = '+' + norm;
+      String norm = widget.initialDialCode;
+      if (!norm.startsWith('+')) norm = '+$norm';
 
       setState(() {
         _selected = active.firstWhere((c) {
           final cDial = c.phoneCode.startsWith('+')
               ? c.phoneCode
-              : '+' + c.phoneCode;
+              : '+${c.phoneCode}';
           return cDial == norm;
         }, orElse: () => _selected);
       });
@@ -131,7 +131,7 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
           widget.onCountryCodeChanged?.call(
             (country.phoneCode.startsWith('+')
                 ? country.phoneCode
-                : '+' + country.phoneCode),
+                : '+${country.phoneCode}'),
           );
           Navigator.pop(ctx);
         },
@@ -148,9 +148,18 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label.isNotEmpty) ...[
-          Text(
-            widget.label,
-            style: AppText.label.copyWith(color: AppColors.muted),
+          RichText(
+            text: TextSpan(
+              text: widget.label,
+              style: AppText.label.copyWith(color: AppColors.muted),
+              children: [
+                if (widget.isRequired)
+                  TextSpan(
+                    text: ' *',
+                    style: AppText.label.copyWith(color: AppColors.error),
+                  ),
+              ],
+            ),
           ),
           SizedBox(height: 6.h),
         ],
@@ -185,7 +194,7 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
                       Text(
                         (_selected.phoneCode.startsWith('+')
                             ? _selected.phoneCode
-                            : '+' + _selected.phoneCode),
+                            : '+${_selected.phoneCode}'),
                         style: AppText.bodyBold.copyWith(color: AppColors.text),
                       ),
                       SizedBox(width: 4.w),
@@ -276,7 +285,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
           .where(
             (c) =>
                 c.name.toLowerCase().contains(query) ||
-                (c.phoneCode.startsWith('+') ? c.phoneCode : '+' + c.phoneCode)
+                (c.phoneCode.startsWith('+') ? c.phoneCode : '+${c.phoneCode}')
                     .contains(query),
           )
           .toList();
@@ -345,7 +354,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                   trailing: Text(
                     (c.phoneCode.startsWith('+')
                         ? c.phoneCode
-                        : '+' + c.phoneCode),
+                        : '+${c.phoneCode}'),
                     style: AppText.body.copyWith(
                       color: isSelected ? AppColors.primary : AppColors.muted,
                       fontWeight: isSelected

@@ -78,7 +78,19 @@ class UJobDropdownField<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppText.label.copyWith(color: AppColors.muted)),
+        RichText(
+          text: TextSpan(
+            text: label,
+            style: AppText.label.copyWith(color: AppColors.muted),
+            children: [
+              if (isRequired)
+                TextSpan(
+                  text: ' *',
+                  style: AppText.label.copyWith(color: AppColors.error),
+                ),
+            ],
+          ),
+        ),
         SizedBox(height: 6.h),
         GestureDetector(
           onTap: () => _showSelectionSheet(context),
@@ -275,7 +287,7 @@ class UJobCountryDropdown extends ConsumerWidget {
     return countriesAsync.when(
       data: (countries) {
         return UJobDropdownField<String>(
-          label: l10n.country ?? '',
+          label: l10n.country,
           hint: l10n.countryHint,
           isRequired: isRequired,
           value: value,
@@ -287,15 +299,15 @@ class UJobCountryDropdown extends ConsumerWidget {
         );
       },
       loading: () => UJobDropdownField<String>(
-        label: l10n.country ?? '',
+        label: l10n.country,
         hint: 'Loading countries...',
         value: value,
         errorText: errorText,
         onChanged: onChanged,
         options: const [],
       ),
-      error: (_, __) => UJobDropdownField<String>(
-        label: l10n.country ?? '',
+      error: (_, _) => UJobDropdownField<String>(
+        label: l10n.country,
         hint: 'Failed to load countries',
         value: value,
         errorText: errorText,

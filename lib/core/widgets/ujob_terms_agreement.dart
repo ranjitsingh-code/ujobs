@@ -7,6 +7,7 @@ import '../utils/l10n_extensions.dart';
 import 'ujob_checkbox.dart';
 
 class UJobTermsAgreement extends StatelessWidget {
+  final bool showCheckbox;
   final bool value;
   final ValueChanged<bool> onChanged;
   final VoidCallback onTermsTap;
@@ -16,6 +17,7 @@ class UJobTermsAgreement extends StatelessWidget {
   final String? privacyLabel;
 
   const UJobTermsAgreement({
+    this.showCheckbox = true,
     required this.value,
     required this.onChanged,
     required this.onTermsTap,
@@ -39,14 +41,15 @@ class UJobTermsAgreement extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.only(top: 1.h, bottom: 8.h, right: 8.w),
-          child: UJobCheckbox(
-            value: value,
-            onChanged: onChanged,
-            semanticsLabel: prefix ?? l10n.agreeTo,
+        if (showCheckbox)
+          Padding(
+            padding: EdgeInsets.only(top: 1.h, bottom: 8.h, right: 8.w),
+            child: UJobCheckbox(
+              value: value,
+              onChanged: onChanged,
+              semanticsLabel: prefix ?? l10n.agreeTo,
+            ),
           ),
-        ),
         Expanded(
           child: Wrap(
             alignment: WrapAlignment.start,

@@ -1,5 +1,3 @@
-// TODO: Run `flutterfire configure` to replace this stub with real config.
-//
 // Steps:
 //   1. Install CLI:  dart pub global activate flutterfire_cli
 //   2. Create Firebase project at https://console.firebase.google.com

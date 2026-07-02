@@ -3,23 +3,26 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../utils/l10n_extensions.dart';
 
 class UJobProfileSetupPrompt extends StatelessWidget {
   final VoidCallback onSetup;
-  final String title;
-  final String subtitle;
-  final String buttonLabel;
+  final String? title;
+  final String? subtitle;
+  final String? buttonLabel;
 
   const UJobProfileSetupPrompt({
     required this.onSetup,
-    this.title = 'Complete your profile',
-    this.subtitle = 'A complete profile helps you stand out to employers.',
-    this.buttonLabel = 'Setup now',
+    this.title,
+    this.subtitle,
+    this.buttonLabel,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Container(
       margin: EdgeInsets.only(bottom: 24.h),
       padding: EdgeInsets.all(20.r),
@@ -55,12 +58,12 @@ class UJobProfileSetupPrompt extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  title ?? l10n.completeYourProfile,
                   style: AppText.titleSm.copyWith(color: AppColors.text),
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  subtitle,
+                  subtitle ?? l10n.completeProfileHelps,
                   style: AppText.small.copyWith(color: AppColors.muted),
                 ),
                 SizedBox(height: 16.h),
@@ -75,7 +78,7 @@ class UJobProfileSetupPrompt extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                   ),
-                  child: Text(buttonLabel),
+                  child: Text(buttonLabel ?? l10n.setupNow),
                 ),
               ],
             ),

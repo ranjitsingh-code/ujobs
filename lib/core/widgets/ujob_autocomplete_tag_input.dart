@@ -10,6 +10,7 @@ class UJobAutocompleteTagInput extends StatefulWidget {
   final List<String> tags;
   final ValueChanged<List<String>> onChanged;
   final List<String> suggestions;
+  final Future<String?> Function(String value)? onCreateTag;
 
   const UJobAutocompleteTagInput({
     required this.label,
@@ -17,6 +18,7 @@ class UJobAutocompleteTagInput extends StatefulWidget {
     required this.tags,
     required this.onChanged,
     required this.suggestions,
+    this.onCreateTag,
     super.key,
   });
 
@@ -28,6 +30,14 @@ class UJobAutocompleteTagInput extends StatefulWidget {
 class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  bool _isCreatingTag = false;
+
+  String _normalizeTagValue(String value) {
+    return value
+        .replaceFirst('__ADD_CUSTOM__', '')
+        .replaceFirst('__NO_RESULTS__', '')
+        .trim();
+  }
 
   @override
   void initState() {
@@ -36,12 +46,37 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
   }
 
   void _addTag(String value) {
-    final text = value.trim();
+    final text = _normalizeTagValue(value);
     if (text.isNotEmpty && !widget.tags.contains(text)) {
       final newTags = List<String>.from(widget.tags)..add(text);
       widget.onChanged(newTags);
     }
     _controller.clear();
+  }
+
+  Future<void> _handleCreateTag(String value) async {
+    final text = _normalizeTagValue(value);
+    if (text.isEmpty || _isCreatingTag) return;
+
+    _controller.clear();
+
+    if (widget.onCreateTag == null) {
+      _addTag(text);
+      return;
+    }
+
+    setState(() => _isCreatingTag = true);
+    try {
+      final createdTag = await widget.onCreateTag!(text);
+      if (!mounted) return;
+      if (createdTag != null && createdTag.trim().isNotEmpty) {
+        _addTag(createdTag);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCreatingTag = false);
+      }
+    }
   }
 
   void _removeTag(String tag) {
@@ -150,6 +185,10 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                       final exactMatch = matches.any(
                         (item) => item.toLowerCase() == query,
                       );
+                      if (matches.isEmpty && query.trim().isNotEmpty) {
+                        matches.add('__NO_RESULTS__');
+                      }
+
                       if (!exactMatch && query.trim().isNotEmpty) {
                         // We use a special prefix to identify the custom option
                         matches.add(
@@ -160,8 +199,13 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                       return matches;
                     },
                     onSelected: (String selection) {
+                      if (selection == '__NO_RESULTS__') {
+                        return;
+                      }
                       if (selection.startsWith('__ADD_CUSTOM__')) {
-                        _addTag(selection.replaceFirst('__ADD_CUSTOM__', ''));
+                        _handleCreateTag(
+                          selection.replaceFirst('__ADD_CUSTOM__', ''),
+                        );
                       } else {
                         _addTag(selection);
                       }
@@ -179,6 +223,22 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                               hintStyle: AppText.bodyMedium.copyWith(
                                 color: AppColors.muted2,
                               ),
+                              suffixIcon: _isCreatingTag
+                                  ? Padding(
+                                      padding: EdgeInsets.all(10.r),
+                                      child: SizedBox(
+                                        width: 16.r,
+                                        height: 16.r,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              const AlwaysStoppedAnimation<Color>(
+                                            AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : null,
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
@@ -189,7 +249,7 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                             ),
                             onSubmitted: (value) {
                               if (value.trim().isNotEmpty) {
-                                _addTag(value);
+                                _handleCreateTag(value);
                               }
                             },
                             textInputAction: TextInputAction.done,
@@ -221,9 +281,26 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                               ),
                               itemBuilder: (context, index) {
                                 final option = options.elementAt(index);
+                                final isNoResults = option == '__NO_RESULTS__';
                                 final isCustom = option.startsWith(
                                   '__ADD_CUSTOM__',
                                 );
+
+                                if (isNoResults) {
+                                  return Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 16.w,
+                                      vertical: 12.h,
+                                    ),
+                                    child: Text(
+                                      'Skills not found',
+                                      style: AppText.bodyMedium.copyWith(
+                                        color: AppColors.muted,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  );
+                                }
 
                                 if (isCustom) {
                                   final customText = option.replaceFirst(
@@ -231,7 +308,9 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                                     '',
                                   );
                                   return InkWell(
-                                    onTap: () => onSelected(option),
+                                    onTap: _isCreatingTag
+                                        ? null
+                                        : () => onSelected(option),
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(
                                         horizontal: 16.w,
@@ -251,6 +330,19 @@ class _UJobAutocompleteTagInputState extends State<UJobAutocompleteTagInput> {
                                               color: AppColors.primary,
                                             ),
                                           ),
+                                          const Spacer(),
+                                          if (_isCreatingTag)
+                                            SizedBox(
+                                              width: 16.r,
+                                              height: 16.r,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor:
+                                                    const AlwaysStoppedAnimation<Color>(
+                                                  AppColors.primary,
+                                                ),
+                                              ),
+                                            ),
                                         ],
                                       ),
                                     ),

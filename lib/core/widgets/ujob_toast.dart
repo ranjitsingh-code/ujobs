@@ -28,7 +28,6 @@ class UJobToast {
     Duration duration = const Duration(seconds: 3),
   }) {
     final overlayState = Overlay.of(context);
-    if (overlayState == null) return;
     
     late OverlayEntry entry;
     entry = OverlayEntry(

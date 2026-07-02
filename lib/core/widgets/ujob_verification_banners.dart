@@ -4,6 +4,67 @@ import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
+class UJobAccountStatusBanner extends StatelessWidget {
+  final String status;
+
+  const UJobAccountStatusBanner({required this.status, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = status.toLowerCase();
+    final isSuspended = s == 'suspended';
+    final color = isSuspended ? AppColors.error : AppColors.warning;
+    final icon = isSuspended
+        ? HugeIcons.strokeRoundedCancel01
+        : HugeIcons.strokeRoundedClock01;
+
+    final title = switch (s) {
+      'suspended' => 'Account Suspended',
+      'inactive' => 'Account Inactive',
+      _ => 'Account Pending Approval',
+    };
+
+    final message = switch (s) {
+      'suspended' => 'Your account has been suspended. Please contact support.',
+      'inactive' => 'Your account is inactive. Please contact support to reactivate.',
+      _ => 'Your account is pending review. You\'ll be able to post jobs once approved.',
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(10.r),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: HugeIcon(icon: icon, color: color, size: 24.r),
+          ),
+          SizedBox(width: 14.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AppText.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: color)),
+                SizedBox(height: 4.h),
+                Text(message, style: AppText.small.copyWith(color: color)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class UJobVerificationPendingBanner extends StatelessWidget {
   const UJobVerificationPendingBanner({super.key});
 

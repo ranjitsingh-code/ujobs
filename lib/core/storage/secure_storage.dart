@@ -10,7 +10,6 @@ class SecureStorage {
   static const _keyRole = 'active_role'; // 'employer' | 'job_seeker'
   static const _keyTheme = 'theme_mode'; // 'light' | 'dark' | 'system'
   static const _keyLocale = 'locale'; // 'en' | 'ar'
-  static const _keyOnboarding = 'onboarding_seen';
   static const _keyEmail = 'remember_email';
   static const _keyPassword = 'remember_password';
 
@@ -44,8 +43,5 @@ class SecureStorage {
   Future<void> saveLocale(String code) =>
       _s.write(key: _keyLocale, value: code);
   Future<String> getLocale() async => await _s.read(key: _keyLocale) ?? 'en';
-
-
-
   Future<void> clearAll() => _s.deleteAll();
 }

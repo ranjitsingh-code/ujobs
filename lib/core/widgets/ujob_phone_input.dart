@@ -16,14 +16,14 @@ class UJobPhoneInput extends ConsumerStatefulWidget {
   final bool isRequired;
 
   const UJobPhoneInput({
-    Key? key,
+    super.key,
     required this.label,
     required this.hint,
     required this.phoneController,
     required this.onCountryCodeChanged,
     this.initialCountry,
     this.isRequired = false,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<UJobPhoneInput> createState() => _UJobPhoneInputState();
@@ -128,7 +128,7 @@ class _UJobPhoneInputState extends ConsumerState<UJobPhoneInput> {
                     ),
                   ),
                 ),
-                error: (_, __) => Padding(
+                error: (_, _) => Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12.w),
                   child: Center(child: Text('Err')),
                 ),

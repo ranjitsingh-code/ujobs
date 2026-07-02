@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import '../api/api_endpoints.dart';
 import '../api/dio_client.dart';
 import 'auth_provider.dart';
@@ -51,7 +50,7 @@ class FeatureFlagsNotifier extends StateNotifier<AsyncValue<FeatureFlags>> {
       final response = await _dioClient.dio.get(Ep.employerFeatureFlags);
       final data = response.data['data'] as Map<String, dynamic>;
       state = AsyncValue.data(FeatureFlags.fromJson(data));
-    } catch (e, st) {
+    } catch (e) {
       // Graceful fallback if API fails
       state = AsyncValue.data(const FeatureFlags());
     }

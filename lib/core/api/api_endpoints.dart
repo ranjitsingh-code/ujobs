@@ -21,6 +21,7 @@ class Ep {
   static const empMe = '/employer/me';
   static const empDashboard = '/employer/dashboard';
   static const employerJobs = '/employer/jobs';
+  static const employerSkills = '/employer/skills';
   static String employerJob(String id) => '/employer/jobs/$id';
   static String applicants(String jobId) =>
       '/employer/jobs/$jobId/applicants'; // ⚠️ no global /employer/applications (404)
@@ -51,6 +52,7 @@ class Ep {
 
   // Seeker
   static const seekerMe = '/seeker/me'; // GET + PUT
+  static const seekerSkills = '/seeker/skills';
   static const seekerDashboard = '/seeker/dashboard';
   static const seekerJobs = '/seeker/jobs';
   static const seekerResumes =
