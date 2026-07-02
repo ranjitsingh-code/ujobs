@@ -296,7 +296,6 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
             children: [
               CompanyProfileHeader(
                 company: ref.watch(companyProfileProvider),
-                completeness: ref.watch(companyProfileCompletenessProvider),
               ),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
@@ -711,16 +710,14 @@ class _SectionCardState extends State<_SectionCard> {
 
 class CompanyProfileHeader extends ConsumerWidget {
   final CompanyProfile company;
-  final double completeness;
   const CompanyProfileHeader({
     super.key,
     required this.company,
-    required this.completeness,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final percentCompleted = (completeness * 100).toInt();
+    final isVerified = company.verified == true;
 
     // Get real country name instead of ISO2
     final countries = ref.read(countriesProvider).valueOrNull ?? [];
@@ -804,7 +801,7 @@ class CompanyProfileHeader extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (completeness == 1.0) ...[
+                        if (isVerified) ...[
                           SizedBox(width: 6.w),
                           HugeIcon(
                             icon: HugeIcons.strokeRoundedCheckmarkBadge01,
@@ -874,53 +871,36 @@ class CompanyProfileHeader extends ConsumerWidget {
               ),
             ],
           ),
-          SizedBox(height: 24.h),
-          // Progress Section
-          Container(
-            padding: EdgeInsets.all(16.r),
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.15),
-              borderRadius: AppRadius.lg,
-              border: Border.all(color: AppColors.white.withValues(alpha: 0.2)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Profile Completeness',
-                      style: AppText.bodyMd.copyWith(color: AppColors.white),
-                    ),
-                    Text(
-                      '$percentCompleted%',
-                      style: AppText.bodyBold.copyWith(color: AppColors.white),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                ClipRRect(
-                  borderRadius: AppRadius.pill,
-                  child: LinearProgressIndicator(
-                    value: completeness,
-                    backgroundColor: AppColors.white.withValues(alpha: 0.2),
-                    color: AppColors.white,
-                    minHeight: 6.h,
+          if (!isVerified) ...[
+            SizedBox(height: 20.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: AppColors.white.withValues(alpha: 0.12),
+                borderRadius: AppRadius.lg,
+                border: Border.all(color: AppColors.white.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                    color: AppColors.white.withValues(alpha: 0.75),
+                    size: 20.r,
                   ),
-                ),
-                if (completeness < 1.0) ...[
-                  SizedBox(height: 12.h),
-                  Text(
-                    'Complete your profile to unlock all features',
-                    style: AppText.caption.copyWith(
-                      color: AppColors.white.withValues(alpha: 0.8),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      'Fill all required fields to receive a verified badge',
+                      style: AppText.caption.copyWith(
+                        color: AppColors.white.withValues(alpha: 0.85),
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
