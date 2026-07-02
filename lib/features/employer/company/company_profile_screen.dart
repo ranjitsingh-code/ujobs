@@ -21,7 +21,6 @@ import '../../../core/widgets/ujob_dropdown_field.dart';
 import '../../../core/widgets/ujob_phone_number_field.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/api/api_endpoints.dart';
-import '../../../core/api/api_endpoints.dart';
 import '../../../core/widgets/ujob_toast.dart';
 import '../dashboard/employer_dashboard_provider.dart';
 
@@ -349,6 +348,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                           SizedBox(height: 16.h),
                           UJobTextField(
                             label: "About Company",
+                            isRequired: true,
                             hint: context.l10n.tapToOpenEditor,
                             readOnly: true,
                             maxLines: 4,
@@ -413,7 +413,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                                     .firstWhereOrNull((c) {
                                       final cDial = c.phoneCode.startsWith('+')
                                           ? c.phoneCode
-                                          : '+' + c.phoneCode;
+                                          : '+${c.phoneCode}';
                                       return cDial == _selectedDialCode;
                                     });
                                 if (matchedCountry != null) {
@@ -438,6 +438,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                         children: [
                           UJobTextField(
                             label: "Address",
+                            isRequired: true,
                             controller: _addressController,
                           ),
                           SizedBox(height: 16.h),
@@ -446,6 +447,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                               Expanded(
                                 child: UJobTextField(
                                   label: "City",
+                                  isRequired: true,
                                   controller: _cityController,
                                 ),
                               ),
@@ -453,6 +455,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                               Expanded(
                                 child: UJobTextField(
                                   label: "Postcode",
+                                  isRequired: true,
                                   controller: _postcodeController,
                                 ),
                               ),
@@ -460,6 +463,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                           ),
                           SizedBox(height: 16.h),
                           UJobCountryDropdown(
+                            isRequired: true,
                             value: _selectedCountry,
                             onChanged: (v) {
                               setState(() {
@@ -471,7 +475,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                                   _selectedDialCode =
                                       matchedCountry.phoneCode.startsWith('+')
                                       ? matchedCountry.phoneCode
-                                      : '+' + matchedCountry.phoneCode;
+                                      : '+${matchedCountry.phoneCode}';
                                 }
                               });
                             },
@@ -490,6 +494,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                         children: [
                           UJobDropdownField<String>(
                             label: "Company Size",
+                            isRequired: true,
                             value: _selectedSize,
                             options: const [
                               ('1-10 employees', 'size_1_10'),
@@ -504,6 +509,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                           SizedBox(height: 16.h),
                           UJobDropdownField<String>(
                             label: "Work Type",
+                            isRequired: true,
                             value: _selectedWorkType,
                             options: const [
                               ('On-site', 'onsite'),
