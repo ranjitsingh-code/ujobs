@@ -6,7 +6,7 @@
       "request": "launch",
       "type": "dart",
       "args": [
-        "--dart-define=API_KEY=your_api_key_here"
+        "--dart-define=API_KEY=jp_56a375680eef542027dc87979dee0f8c0e6c79940bdac564d21f48457d904ccc"
       ]
     }
   ]

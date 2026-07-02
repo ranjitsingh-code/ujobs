@@ -8,14 +8,14 @@ void main() {
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => Scaffold(
+        builder: (_, _) => Scaffold(
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               try {
                 navKey.currentContext!.go('/locked');
-                print('Success');
+                debugPrint('Success');
               } catch (e) {
-                print('Error: $e');
+                debugPrint('Error: $e');
               }
             },
           ),
@@ -23,7 +23,7 @@ void main() {
       ),
       GoRoute(
         path: '/locked',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       )
     ],
   );

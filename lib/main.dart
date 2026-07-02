@@ -4,15 +4,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:upgrader/upgrader.dart';
-// import 'package:firebase_core/firebase_core.dart'; // TODO: uncomment after flutterfire configure
 import 'core/providers/locale_provider.dart';
 import 'core/providers/role_provider.dart';
-// import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_colors.dart';
-// import 'core/firebase_options.dart';               // TODO: uncomment after flutterfire configure
-// import 'core/services/notification_service.dart';  // TODO: uncomment after flutterfire configure
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'l10n/app_localizations.dart';

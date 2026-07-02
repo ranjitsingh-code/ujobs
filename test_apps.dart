@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 
 void main() async {
@@ -12,8 +13,8 @@ void main() async {
         },
       ),
     );
-    print(res.data);
+    debugPrint('${res.data}');
   } catch (e) {
-    print(e);
+    debugPrint('$e');
   }
 }
