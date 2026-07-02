@@ -8,6 +8,7 @@ class SeekerProfile {
   final double? experienceYears;
   final double? expectedSalary;
   final String? salaryCurrency;
+  final String? salaryPeriod;
   final String? availability;
   final String? profileVisibility;
   final String? address;
@@ -15,6 +16,7 @@ class SeekerProfile {
   final bool showPhone;
   final bool openToRelocation;
   final String? relocationType;
+  final String? relocationCities;
   final String? linkedinUrl;
   final String? githubUrl;
   final String? portfolioUrl;
@@ -23,11 +25,14 @@ class SeekerProfile {
   final String? about;
   final int? experienceYearsInt;
   final int? experienceMonths;
-  
+  final String? createdAt;
+  final String? updatedAt;
+
   final List<SeekerSkill> skills;
   final List<SeekerExperience> experiences;
   final List<SeekerEducation> educations;
   final List<SeekerResume> resumes;
+  final List<dynamic> certifications;
 
   const SeekerProfile({
     required this.id,
@@ -39,6 +44,7 @@ class SeekerProfile {
     this.experienceYears,
     this.expectedSalary,
     this.salaryCurrency,
+    this.salaryPeriod,
     this.availability,
     this.profileVisibility,
     this.address,
@@ -46,6 +52,7 @@ class SeekerProfile {
     this.showPhone = true,
     this.openToRelocation = false,
     this.relocationType,
+    this.relocationCities,
     this.linkedinUrl,
     this.githubUrl,
     this.portfolioUrl,
@@ -54,10 +61,13 @@ class SeekerProfile {
     this.about,
     this.experienceYearsInt,
     this.experienceMonths,
+    this.createdAt,
+    this.updatedAt,
     this.skills = const [],
     this.experiences = const [],
     this.educations = const [],
     this.resumes = const [],
+    this.certifications = const [],
   });
 
   factory SeekerProfile.fromJson(Map<String, dynamic> json) {
@@ -71,6 +81,7 @@ class SeekerProfile {
       experienceYears: (json['experience_years'] as num?)?.toDouble(),
       expectedSalary: (json['expected_salary'] as num?)?.toDouble(),
       salaryCurrency: json['salary_currency'] as String?,
+      salaryPeriod: json['salary_period'] as String?,
       availability: json['availability'] as String?,
       profileVisibility: json['profile_visibility'] as String?,
       address: json['address'] as String?,
@@ -78,6 +89,7 @@ class SeekerProfile {
       showPhone: json['show_phone'] as bool? ?? true,
       openToRelocation: json['open_to_relocation'] as bool? ?? false,
       relocationType: json['relocation_type'] as String?,
+      relocationCities: json['relocation_cities'] as String?,
       linkedinUrl: json['linkedin_url'] as String?,
       githubUrl: json['github_url'] as String?,
       portfolioUrl: json['portfolio_url'] as String?,
@@ -86,6 +98,9 @@ class SeekerProfile {
       about: json['about'] as String?,
       experienceYearsInt: json['experience_years_int'] as int?,
       experienceMonths: json['experience_months'] as int?,
+      createdAt: json['created_at'] as String?,
+      updatedAt: json['updated_at'] as String?,
+      certifications: (json['certifications'] as List?) ?? [],
       skills: (json['seeker_skills'] as List?)
               ?.map((e) => SeekerSkill.fromJson(e as Map<String, dynamic>))
               .toList() ??
