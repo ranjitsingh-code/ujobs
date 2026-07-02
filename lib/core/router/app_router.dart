@@ -14,6 +14,7 @@ import '../../features/auth/account_locked_screen.dart';
 import '../../features/auth/register_employer_screen.dart';
 import '../../features/auth/register_seeker_screen.dart';
 import '../../features/auth/otp_screen.dart';
+import '../../features/auth/two_factor_auth_screen.dart';
 import '../../features/shared/settings/change_email_otp_verify_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/onboarding_screen.dart';
@@ -31,6 +32,7 @@ import '../../features/shared/notifications/notifications_screen.dart';
 import '../../features/seeker/seeker_shell.dart';
 import '../../features/seeker/dashboard/seeker_dashboard_screen.dart';
 import '../../features/seeker/jobs/find_jobs_screen.dart';
+import '../../features/seeker/jobs/saved_jobs_screen.dart';
 import '../../features/seeker/jobs/seeker_job_detail_screen.dart';
 import '../../features/seeker/company/seeker_company_profile_screen.dart';
 import '../../features/seeker/company/seeker_companies_screen.dart';
@@ -105,6 +107,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           loc == '/privacy-policy' ||
           loc == '/locked' ||
           loc == '/suspended' ||
+          loc == '/2fa' ||
           loc.startsWith('/register');
 
       if (!isLoggedIn && !isPublicRoute) {
@@ -158,6 +161,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/locked',
         pageBuilder: (_, state) => _fadeTransition(AccountLockedScreen(message: state.extra as String?)),
+      ),
+      GoRoute(
+        path: '/2fa',
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          return TwoFactorAuthScreen(
+            userId: extra['userId'] as String? ?? '',
+            email: extra['email'] as String?,
+          );
+        },
       ),
       GoRoute(
         path: '/register/employer',
@@ -371,6 +384,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 child: MyApplicationsScreen(initialIndex: index),
               );
             },
+          ),
+          GoRoute(
+            path: '/seeker/saved-jobs',
+            pageBuilder: (_, _) =>
+                const NoTransitionPage(child: SavedJobsScreen()),
           ),
           GoRoute(
             path: '/seeker/companies',

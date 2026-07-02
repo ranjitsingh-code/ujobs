@@ -3116,6 +3116,36 @@ abstract class AppLocalizations {
   /// **'Sign Out'**
   String get signOutBtn;
 
+  /// No description provided for @accountLockedBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Locked — Action Required'**
+  String get accountLockedBanner;
+
+  /// No description provided for @accountLockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Temporarily Locked'**
+  String get accountLockedTitle;
+
+  /// No description provided for @accountLockedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been locked due to too many failed login attempts. Please try again later or contact support.'**
+  String get accountLockedDesc;
+
+  /// No description provided for @twoFactorVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-Factor Authentication'**
+  String get twoFactorVerifyTitle;
+
+  /// No description provided for @twoFactorVerifyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code sent to your registered email to complete sign in.'**
+  String get twoFactorVerifyDesc;
+
   /// No description provided for @supportFeaturesAreNotAvailableInTheDemo.
   ///
   /// In en, this message translates to:
@@ -4063,6 +4093,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View'**
   String get viewButton;
+
+  /// No description provided for @noSavedJobsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved jobs yet'**
+  String get noSavedJobsYet;
+
+  /// No description provided for @savedJobsEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Jobs you save from Home or Jobs will appear here.'**
+  String get savedJobsEmptySubtitle;
+
+  /// No description provided for @jobUnsavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Job Unsaved'**
+  String get jobUnsavedTitle;
+
+  /// No description provided for @jobSavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Job Saved'**
+  String get jobSavedTitle;
+
+  /// No description provided for @savedJobRemovedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This job has been removed from your saved jobs.'**
+  String get savedJobRemovedSubtitle;
+
+  /// No description provided for @savedJobAddedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This job has been saved to your list.'**
+  String get savedJobAddedSubtitle;
+
+  /// No description provided for @savedJobsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 saved jobs} =1{1 saved job} other{{count} saved jobs}}'**
+  String savedJobsCount(int count);
+
+  /// No description provided for @searchJobsSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Search jobs, skills...'**
+  String get searchJobsSkills;
+
+  /// No description provided for @forYouTab.
+  ///
+  /// In en, this message translates to:
+  /// **'For You'**
+  String get forYouTab;
+
+  /// No description provided for @adjustFiltersOrSearchTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting your filters or search terms.'**
+  String get adjustFiltersOrSearchTerms;
+
+  /// No description provided for @recommendedJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get recommendedJobsTitle;
+
+  /// No description provided for @matchesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} matches'**
+  String matchesCount(int count);
+
+  /// No description provided for @positionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} positions'**
+  String positionsCount(int count);
+
+  /// No description provided for @documentEmptyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Document is empty.'**
+  String get documentEmptyError;
+
+  /// No description provided for @couldNotLoadDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load document.'**
+  String get couldNotLoadDocument;
+
+  /// No description provided for @couldNotOpenDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open document'**
+  String get couldNotOpenDocument;
+
+  /// No description provided for @noSupportedAppFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No supported app was found on this device.'**
+  String get noSupportedAppFound;
+
+  /// No description provided for @fileTypeNotSupportedInPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'This file type is not supported for in-app preview yet.'**
+  String get fileTypeNotSupportedInPreview;
+
+  /// No description provided for @legacyDocNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Legacy .doc preview is not supported in-app.'**
+  String get legacyDocNotSupported;
+
+  /// No description provided for @openWithDeviceViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open with device viewer'**
+  String get openWithDeviceViewer;
+
+  /// No description provided for @completeProfileHelps.
+  ///
+  /// In en, this message translates to:
+  /// **'A complete profile helps you stand out to employers.'**
+  String get completeProfileHelps;
+
+  /// No description provided for @setupNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup now'**
+  String get setupNow;
+
+  /// No description provided for @skillsNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills not found'**
+  String get skillsNotFound;
+
+  /// No description provided for @addSkillOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Add \"{skillName}\"'**
+  String addSkillOption(String skillName);
 }
 
 class _AppLocalizationsDelegate

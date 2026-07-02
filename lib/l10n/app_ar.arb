@@ -340,6 +340,10 @@
   "editProfile": "تعديل الملف الشخصي",
   "resumeManagement": "إدارة السيرة الذاتية",
   "otpErrorInvalid": "تم إدخال رمز غير صالح.",
+  "otpVerificationSuccess": "تم التحقق بنجاح!",
+  "@otpVerificationSuccess": {},
+  "otpResendSuccess": "تم إرسال الرمز بنجاح!",
+  "@otpResendSuccess": {},
   "jobPreferences": "تفضيلات الوظيفة",
   "securitySection": "الأمان",
   "auditLog": "سجل التدقيق",
@@ -534,6 +538,16 @@
     }
   },
   "signOutBtn": "تسجيل الخروج",
+  "accountLockedBanner": "تم قفل الحساب — إجراء مطلوب",
+  "@accountLockedBanner": {},
+  "accountLockedTitle": "تم قفل حسابك مؤقتًا",
+  "@accountLockedTitle": {},
+  "accountLockedDesc": "تم قفل حسابك بسبب محاولات تسجيل دخول فاشلة متعددة. يرجى المحاولة لاحقًا أو التواصل مع الدعم.",
+  "@accountLockedDesc": {},
+  "twoFactorVerifyTitle": "التحقق بخطوتين",
+  "@twoFactorVerifyTitle": {},
+  "twoFactorVerifyDesc": "أدخل الرمز المكون من 6 أرقام المُرسل إلى بريدك الإلكتروني لإتمام تسجيل الدخول.",
+  "@twoFactorVerifyDesc": {},
   "@signOutBtn": {},
   "supportFeaturesAreNotAvailableInTheDemo": "Support features are not available in the demo.",
   "@supportFeaturesAreNotAvailableInTheDemo": {},
@@ -845,5 +859,57 @@
     }
   },
   "verified": "موثق",
-  "viewButton": "عرض"
+  "viewButton": "عرض",
+  "noSavedJobsYet": "لا توجد وظائف محفوظة بعد",
+  "savedJobsEmptySubtitle": "الوظائف التي تحفظها من الرئيسية أو الوظائف ستظهر هنا.",
+  "jobUnsavedTitle": "تمت إزالة الوظيفة",
+  "jobSavedTitle": "تم حفظ الوظيفة",
+  "savedJobRemovedSubtitle": "تمت إزالة هذه الوظيفة من الوظائف المحفوظة.",
+  "savedJobAddedSubtitle": "تم حفظ هذه الوظيفة في قائمتك.",
+  "savedJobsCount": "{count, plural, =0{0 وظائف محفوظة} =1{وظيفة محفوظة واحدة} =2{وظيفتان محفوظتان} other{{count} وظائف محفوظة}}",
+  "@savedJobsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchJobsSkills": "ابحث عن وظائف أو مهارات...",
+  "forYouTab": "لك",
+  "adjustFiltersOrSearchTerms": "حاول تعديل الفلاتر أو كلمات البحث.",
+  "recommendedJobsTitle": "موصى بها",
+  "matchesCount": "{count} نتيجة",
+  "@matchesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "positionsCount": "{count} وظيفة",
+  "@positionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "documentEmptyError": "المستند فارغ.",
+  "couldNotLoadDocument": "تعذر تحميل المستند.",
+  "couldNotOpenDocument": "تعذر فتح المستند",
+  "noSupportedAppFound": "لم يتم العثور على تطبيق مناسب على هذا الجهاز.",
+  "fileTypeNotSupportedInPreview": "نوع هذا الملف غير مدعوم للمعاينة داخل التطبيق حالياً.",
+  "legacyDocNotSupported": "معاينة ملفات ‎.doc القديمة غير مدعومة داخل التطبيق.",
+  "openWithDeviceViewer": "افتح باستخدام عارض الجهاز",
+  "completeProfileHelps": "الملف الشخصي المكتمل يساعدك على الظهور بشكل أفضل أمام أصحاب العمل.",
+  "setupNow": "أكمل الآن",
+  "skillsNotFound": "المهارة غير موجودة",
+  "addSkillOption": "أضف \"{skillName}\"",
+  "@addSkillOption": {
+    "placeholders": {
+      "skillName": {
+        "type": "String"
+      }
+    }
+  }
 }

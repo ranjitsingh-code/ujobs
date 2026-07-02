@@ -1067,6 +1067,16 @@
     }
   },
   "signOutBtn": "Sign Out",
+  "accountLockedBanner": "Account Locked — Action Required",
+  "@accountLockedBanner": {},
+  "accountLockedTitle": "Account Temporarily Locked",
+  "@accountLockedTitle": {},
+  "accountLockedDesc": "Your account has been locked due to too many failed login attempts. Please try again later or contact support.",
+  "@accountLockedDesc": {},
+  "twoFactorVerifyTitle": "Two-Factor Authentication",
+  "@twoFactorVerifyTitle": {},
+  "twoFactorVerifyDesc": "Enter the 6-digit code sent to your registered email to complete sign in.",
+  "@twoFactorVerifyDesc": {},
   "@signOutBtn": {},
   "supportFeaturesAreNotAvailableInTheDemo": "Support features are not available in the demo.",
   "@supportFeaturesAreNotAvailableInTheDemo": {},
@@ -1385,5 +1395,77 @@
   "verified": "Verified",
   "@verified": {},
   "viewButton": "View",
-  "@viewButton": {}
+  "@viewButton": {},
+  "noSavedJobsYet": "No saved jobs yet",
+  "@noSavedJobsYet": {},
+  "savedJobsEmptySubtitle": "Jobs you save from Home or Jobs will appear here.",
+  "@savedJobsEmptySubtitle": {},
+  "jobUnsavedTitle": "Job Unsaved",
+  "@jobUnsavedTitle": {},
+  "jobSavedTitle": "Job Saved",
+  "@jobSavedTitle": {},
+  "savedJobRemovedSubtitle": "This job has been removed from your saved jobs.",
+  "@savedJobRemovedSubtitle": {},
+  "savedJobAddedSubtitle": "This job has been saved to your list.",
+  "@savedJobAddedSubtitle": {},
+  "savedJobsCount": "{count, plural, =0{0 saved jobs} =1{1 saved job} other{{count} saved jobs}}",
+  "@savedJobsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchJobsSkills": "Search jobs, skills...",
+  "@searchJobsSkills": {},
+  "forYouTab": "For You",
+  "@forYouTab": {},
+  "adjustFiltersOrSearchTerms": "Try adjusting your filters or search terms.",
+  "@adjustFiltersOrSearchTerms": {},
+  "recommendedJobsTitle": "Recommended",
+  "@recommendedJobsTitle": {},
+  "matchesCount": "{count} matches",
+  "@matchesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "positionsCount": "{count} positions",
+  "@positionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "documentEmptyError": "Document is empty.",
+  "@documentEmptyError": {},
+  "couldNotLoadDocument": "Could not load document.",
+  "@couldNotLoadDocument": {},
+  "couldNotOpenDocument": "Could not open document",
+  "@couldNotOpenDocument": {},
+  "noSupportedAppFound": "No supported app was found on this device.",
+  "@noSupportedAppFound": {},
+  "fileTypeNotSupportedInPreview": "This file type is not supported for in-app preview yet.",
+  "@fileTypeNotSupportedInPreview": {},
+  "legacyDocNotSupported": "Legacy .doc preview is not supported in-app.",
+  "@legacyDocNotSupported": {},
+  "openWithDeviceViewer": "Open with device viewer",
+  "@openWithDeviceViewer": {},
+  "completeProfileHelps": "A complete profile helps you stand out to employers.",
+  "@completeProfileHelps": {},
+  "setupNow": "Setup now",
+  "@setupNow": {},
+  "skillsNotFound": "Skills not found",
+  "@skillsNotFound": {},
+  "addSkillOption": "Add \"{skillName}\"",
+  "@addSkillOption": {
+    "placeholders": {
+      "skillName": {
+        "type": "String"
+      }
+    }
+  }
 }

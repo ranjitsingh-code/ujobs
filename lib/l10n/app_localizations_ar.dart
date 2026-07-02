@@ -1053,10 +1053,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get securitySection => 'الأمان';
 
   @override
-  String get otpVerificationSuccess => 'Verified Successfully!';
+  String get otpVerificationSuccess => 'تم التحقق بنجاح!';
 
   @override
-  String get otpResendSuccess => 'Code sent successfully!';
+  String get otpResendSuccess => 'تم إرسال الرمز بنجاح!';
 
   @override
   String get otpErrorInvalid => 'تم إدخال رمز غير صالح.';
@@ -1574,6 +1574,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get signOutBtn => 'تسجيل الخروج';
 
   @override
+  String get accountLockedBanner => 'تم قفل الحساب — إجراء مطلوب';
+
+  @override
+  String get accountLockedTitle => 'تم قفل حسابك مؤقتًا';
+
+  @override
+  String get accountLockedDesc =>
+      'تم قفل حسابك بسبب محاولات تسجيل دخول فاشلة متعددة. يرجى المحاولة لاحقًا أو التواصل مع الدعم.';
+
+  @override
+  String get twoFactorVerifyTitle => 'التحقق بخطوتين';
+
+  @override
+  String get twoFactorVerifyDesc =>
+      'أدخل الرمز المكون من 6 أرقام المُرسل إلى بريدك الإلكتروني لإتمام تسجيل الدخول.';
+
+  @override
   String get supportFeaturesAreNotAvailableInTheDemo =>
       'Support features are not available in the demo.';
 
@@ -2074,4 +2091,98 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get viewButton => 'عرض';
+
+  @override
+  String get noSavedJobsYet => 'لا توجد وظائف محفوظة بعد';
+
+  @override
+  String get savedJobsEmptySubtitle =>
+      'الوظائف التي تحفظها من الرئيسية أو الوظائف ستظهر هنا.';
+
+  @override
+  String get jobUnsavedTitle => 'تمت إزالة الوظيفة';
+
+  @override
+  String get jobSavedTitle => 'تم حفظ الوظيفة';
+
+  @override
+  String get savedJobRemovedSubtitle =>
+      'تمت إزالة هذه الوظيفة من الوظائف المحفوظة.';
+
+  @override
+  String get savedJobAddedSubtitle => 'تم حفظ هذه الوظيفة في قائمتك.';
+
+  @override
+  String savedJobsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count وظائف محفوظة',
+      two: 'وظيفتان محفوظتان',
+      one: 'وظيفة محفوظة واحدة',
+      zero: '0 وظائف محفوظة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchJobsSkills => 'ابحث عن وظائف أو مهارات...';
+
+  @override
+  String get forYouTab => 'لك';
+
+  @override
+  String get adjustFiltersOrSearchTerms => 'حاول تعديل الفلاتر أو كلمات البحث.';
+
+  @override
+  String get recommendedJobsTitle => 'موصى بها';
+
+  @override
+  String matchesCount(int count) {
+    return '$count نتيجة';
+  }
+
+  @override
+  String positionsCount(int count) {
+    return '$count وظيفة';
+  }
+
+  @override
+  String get documentEmptyError => 'المستند فارغ.';
+
+  @override
+  String get couldNotLoadDocument => 'تعذر تحميل المستند.';
+
+  @override
+  String get couldNotOpenDocument => 'تعذر فتح المستند';
+
+  @override
+  String get noSupportedAppFound =>
+      'لم يتم العثور على تطبيق مناسب على هذا الجهاز.';
+
+  @override
+  String get fileTypeNotSupportedInPreview =>
+      'نوع هذا الملف غير مدعوم للمعاينة داخل التطبيق حالياً.';
+
+  @override
+  String get legacyDocNotSupported =>
+      'معاينة ملفات ‎.doc القديمة غير مدعومة داخل التطبيق.';
+
+  @override
+  String get openWithDeviceViewer => 'افتح باستخدام عارض الجهاز';
+
+  @override
+  String get completeProfileHelps =>
+      'الملف الشخصي المكتمل يساعدك على الظهور بشكل أفضل أمام أصحاب العمل.';
+
+  @override
+  String get setupNow => 'أكمل الآن';
+
+  @override
+  String get skillsNotFound => 'المهارة غير موجودة';
+
+  @override
+  String addSkillOption(String skillName) {
+    return 'أضف \"$skillName\"';
+  }
 }

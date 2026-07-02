@@ -1580,6 +1580,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOutBtn => 'Sign Out';
 
   @override
+  String get accountLockedBanner => 'Account Locked — Action Required';
+
+  @override
+  String get accountLockedTitle => 'Account Temporarily Locked';
+
+  @override
+  String get accountLockedDesc =>
+      'Your account has been locked due to too many failed login attempts. Please try again later or contact support.';
+
+  @override
+  String get twoFactorVerifyTitle => 'Two-Factor Authentication';
+
+  @override
+  String get twoFactorVerifyDesc =>
+      'Enter the 6-digit code sent to your registered email to complete sign in.';
+
+  @override
   String get supportFeaturesAreNotAvailableInTheDemo =>
       'Support features are not available in the demo.';
 
@@ -2083,4 +2100,98 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewButton => 'View';
+
+  @override
+  String get noSavedJobsYet => 'No saved jobs yet';
+
+  @override
+  String get savedJobsEmptySubtitle =>
+      'Jobs you save from Home or Jobs will appear here.';
+
+  @override
+  String get jobUnsavedTitle => 'Job Unsaved';
+
+  @override
+  String get jobSavedTitle => 'Job Saved';
+
+  @override
+  String get savedJobRemovedSubtitle =>
+      'This job has been removed from your saved jobs.';
+
+  @override
+  String get savedJobAddedSubtitle => 'This job has been saved to your list.';
+
+  @override
+  String savedJobsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saved jobs',
+      one: '1 saved job',
+      zero: '0 saved jobs',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchJobsSkills => 'Search jobs, skills...';
+
+  @override
+  String get forYouTab => 'For You';
+
+  @override
+  String get adjustFiltersOrSearchTerms =>
+      'Try adjusting your filters or search terms.';
+
+  @override
+  String get recommendedJobsTitle => 'Recommended';
+
+  @override
+  String matchesCount(int count) {
+    return '$count matches';
+  }
+
+  @override
+  String positionsCount(int count) {
+    return '$count positions';
+  }
+
+  @override
+  String get documentEmptyError => 'Document is empty.';
+
+  @override
+  String get couldNotLoadDocument => 'Could not load document.';
+
+  @override
+  String get couldNotOpenDocument => 'Could not open document';
+
+  @override
+  String get noSupportedAppFound =>
+      'No supported app was found on this device.';
+
+  @override
+  String get fileTypeNotSupportedInPreview =>
+      'This file type is not supported for in-app preview yet.';
+
+  @override
+  String get legacyDocNotSupported =>
+      'Legacy .doc preview is not supported in-app.';
+
+  @override
+  String get openWithDeviceViewer => 'Open with device viewer';
+
+  @override
+  String get completeProfileHelps =>
+      'A complete profile helps you stand out to employers.';
+
+  @override
+  String get setupNow => 'Setup now';
+
+  @override
+  String get skillsNotFound => 'Skills not found';
+
+  @override
+  String addSkillOption(String skillName) {
+    return 'Add \"$skillName\"';
+  }
 }

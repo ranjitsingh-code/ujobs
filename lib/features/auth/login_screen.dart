@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -14,6 +14,7 @@ import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_checkbox.dart';
 import '../../core/widgets/ujob_logo.dart';
 import '../../core/widgets/ujob_text_field.dart';
+import '../../core/widgets/ujob_terms_agreement.dart';
 import '../../core/widgets/ujob_toast.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -88,17 +89,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           _rememberMe = true;
         });
       }
-    } else {
-      if (kDebugMode) {
-        if (mounted) {
-          setState(() {
-            _emailCtrl.text = _role == 'employer'
-                ? 'azadhossainsocialmedia@gmail.com'
-                : 'mdazadhossain95@gmail.com';
-            _passwordCtrl.text = _role == 'employer' ? '233O5h]>' : 'Azad613051@';
-          });
-        }
-      }
     }
   }
 
@@ -139,25 +129,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final (result, userId) = await ref
         .read(authProvider.notifier)
         .login(_emailCtrl.text.trim(), _passwordCtrl.text, _role);
-        
+
     if (mounted) setState(() => _loading = false);
 
     if (!mounted) return;
 
     switch (result) {
       case LoginResult.success:
-        UJobToast.success(
-          context,
-          'Login Successful',
-          sub: 'Welcome back!',
-        );
+        UJobToast.success(context, 'Login Successful', sub: 'Welcome back!');
         final storage = ref.read(secureStorageProvider);
         if (_rememberMe) {
-          await storage.saveRememberMe(_emailCtrl.text.trim(), _passwordCtrl.text);
+          await storage.saveRememberMe(
+            _emailCtrl.text.trim(),
+            _passwordCtrl.text,
+          );
         } else {
           await storage.clearRememberMe();
         }
-        
+
         if (_role == 'employer') {
           context.go('/employer');
         } else {
@@ -167,7 +156,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
       case LoginResult.requiresOtp:
         if (mounted) {
-          context.push('/otp', extra: userId);
+          context.push('/2fa', extra: {
+            'userId': userId,
+            'email': _emailCtrl.text.trim(),
+          });
         }
         break;
 
@@ -183,12 +175,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         break;
 
       case LoginResult.locked:
-        UJobToast.error(context, 'Account Locked', sub: userId ?? 'Too many failed attempts.');
+        UJobToast.error(
+          context,
+          'Account Locked',
+          sub: userId ?? 'Too many failed attempts.',
+        );
         if (mounted) context.go('/locked', extra: userId);
         break;
 
       case LoginResult.error:
-        UJobToast.error(context, 'Login Failed', sub: userId ?? 'A network error occurred. Please try again.');
+        UJobToast.error(
+          context,
+          'Login Failed',
+          sub: userId ?? 'A network error occurred. Please try again.',
+        );
         break;
     }
   }
@@ -288,17 +288,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             onChanged: (r) {
                               setState(() {
                                 _role = r;
-                                final currentEmail = _emailCtrl.text.trim();
-                                if (currentEmail.isEmpty ||
-                                    currentEmail == 'mdazadhossain95@gmail.com' ||
-                                    currentEmail == 'azadhossainsocialmedia@gmail.com' ||
-                                    currentEmail == 'testccount222@gmail.com' ||
-                                    currentEmail == 'john.doe@example.com') {
-                                  _emailCtrl.text = r == 'employer'
-                                      ? 'azadhossainsocialmedia@gmail.com'
-                                      : 'mdazadhossain95@gmail.com';
-                                  _passwordCtrl.text = r == 'employer' ? '233O5h]>' : 'Azad613051@';
-                                }
                               });
                             },
                             labels: [l10n.jobSeekerTab, l10n.employerTab],
@@ -362,7 +351,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   ],
                                 ),
                                 SizedBox(height: 16.h),
-                                UJobButton(label: l10n.logIn, onTap: _login, isLoading: _loading),
+                                UJobButton(
+                                  label: l10n.logIn,
+                                  onTap: _login,
+                                  isLoading: _loading,
+                                ),
+                                SizedBox(height: 12.h),
+                                UJobTermsAgreement(
+                                  showCheckbox: false,
+                                  value: true,
+                                  onChanged: (_) {},
+                                  onTermsTap: () =>
+                                      context.push('/pages/terms'),
+                                  onPrivacyTap: () =>
+                                      context.push('/pages/privacy-policy'),
+                                  termsLabel: l10n.termsAndConditions,
+                                  privacyLabel: l10n.privacyPolicy,
+                                ),
                               ],
                             ),
                           ),

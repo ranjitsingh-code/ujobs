@@ -39,7 +39,7 @@ class AccountLockedScreen extends ConsumerWidget {
                 ),
               ),
               child: Text(
-                'Account Locked',
+                context.l10n.accountLockedBanner,
                 style: AppText.body.copyWith(
                   color: AppColors.error,
                   fontWeight: FontWeight.w500,
@@ -76,7 +76,7 @@ class AccountLockedScreen extends ConsumerWidget {
 
                     // Title
                     Text(
-                      'Account Temporarily Locked',
+                      context.l10n.accountLockedTitle,
                       style: AppText.heading1.copyWith(
                         color: AppColors.text,
                         fontSize: 28.sp,
@@ -89,7 +89,7 @@ class AccountLockedScreen extends ConsumerWidget {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
                       child: Text(
-                        message ?? 'Your account has been locked due to too many failed attempts. Please try again later or contact support.',
+                        message ?? context.l10n.accountLockedDesc,
                         style: AppText.body.copyWith(
                           color: AppColors.muted,
                           height: 1.6,
@@ -126,7 +126,7 @@ class AccountLockedScreen extends ConsumerWidget {
                     SizedBox(
                       width: double.infinity,
                       child: UJobButton(
-                        label: 'Back to Login',
+                        label: context.l10n.backToLoginBtn,
                         outlined: true,
                         color: AppColors.primary,
                         onTap: () {
