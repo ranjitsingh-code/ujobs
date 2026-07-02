@@ -2,11 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
-import '../storage/secure_storage.dart';
 import 'api_endpoints.dart';
-import 'dart:convert';
-import 'package:go_router/go_router.dart';
-import '../router/app_router.dart';
 import '../providers/role_provider.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,8 +17,8 @@ class DioClient {
         baseUrl: Ep.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
+        contentType: 'application/json',
         headers: {
-          'Content-Type': 'application/json',
           'X-Api-Key': const String.fromEnvironment('API_KEY', defaultValue: 'jp_56a375680eef542027dc87979dee0f8c0e6c79940bdac564d21f48457d904ccc'),
         },
       ),
@@ -48,6 +44,8 @@ class DioClient {
                      error.type == DioExceptionType.receiveTimeout || 
                      error.type == DioExceptionType.connectionError) {
             EasyLoading.showError('Unable to connect to the server. Please check your internet connection.');
+          } else if (error.response?.statusCode == 413) {
+            EasyLoading.showError('File is too large. Please upload a smaller file.');
           } else if (error.response?.statusCode == 423) {
             // Let the API caller handle the 423 Locked response
           }
