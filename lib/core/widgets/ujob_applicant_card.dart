@@ -10,6 +10,7 @@ import 'ujob_button.dart';
 import 'ujob_alert_dialog.dart';
 import 'ujob_pdf_viewer_screen.dart';
 import 'ujob_toast.dart';
+import '../utils/l10n_extensions.dart';
 import '../../features/employer/applicants/employer_applicant_provider.dart';
 
 class UJobApplicantCard extends ConsumerWidget {
@@ -191,14 +192,21 @@ class UJobApplicantCard extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                       ),
                       onTap: () {
+                        final url = applicant.resumeUrl;
+                        if (url == null || url.isEmpty) {
+                          UJobToast.warning(
+                            context,
+                            context.l10n.noResumeTitle,
+                            sub: context.l10n.noResumeSubtitle,
+                          );
+                          return;
+                        }
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => UJobPdfViewerScreen(
                               title: '${applicant.name} - Resume',
-                              pdfUrl:
-                                  'assets/images/job_resume_md_azad_hossain_tutul.pdf',
-                              isAsset: true,
+                              pdfUrl: url,
                             ),
                           ),
                         );
