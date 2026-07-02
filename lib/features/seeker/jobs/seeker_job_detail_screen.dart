@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/l10n_extensions.dart';
@@ -20,7 +22,6 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/widgets/ujob_rich_text_display.dart';
 import 'seeker_job_provider.dart';
 import '../applications/seeker_application_provider.dart';
-import '../../../core/models/application.dart';
 import '../profile/seeker_profile_provider.dart';
 
 class SeekerJobDetailScreen extends ConsumerStatefulWidget {
@@ -98,8 +99,8 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
               });
               UJobToast.success(
                 context,
-                isSaved ? 'Job Unsaved' : 'Job Saved',
-                sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.',
+                isSaved ? context.l10n.jobUnsavedTitle : context.l10n.jobSavedTitle,
+                sub: isSaved ? context.l10n.savedJobRemovedSubtitle : context.l10n.savedJobAddedSubtitle,
               );
             }
           },
@@ -399,7 +400,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                     child: _QuickFactItem(
                                       icon: HugeIcons.strokeRoundedBriefcase01,
                                       label: l10n.jobType,
-                                      value: (job.employmentType ?? 'full_time').replaceAll('_', ' ').toUpperCase(),
+                                      value: job.employmentType.replaceAll('_', ' ').toUpperCase(),
                                     ),
                                   ),
                                   Container(
@@ -411,7 +412,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                     child: _QuickFactItem(
                                       icon: HugeIcons.strokeRoundedLocation01,
                                       label: l10n.workplace,
-                                      value: (job.workplaceType ?? 'remote').replaceAll('_', ' ').toUpperCase(),
+                                      value: job.workplaceType.replaceAll('_', ' ').toUpperCase(),
                                     ),
                                   ),
                                 ],
@@ -514,7 +515,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                             children: [
                               Text('Job Description', style: AppText.heading3),
                               SizedBox(height: 12.h),
-                              UJobRichTextDisplay(content: job.description!),
+                              UJobRichTextDisplay(content: job.description),
                             ],
                           ),
                         ),
@@ -948,9 +949,90 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
     );
   }
 
+  bool _isProfileComplete(SeekerProfileData data) {
+    final user = data.user;
+    final profile = data.profile;
+
+    // User required fields
+    if (user.firstName.isEmpty) return false;
+    if (user.lastName.isEmpty) return false;
+    if (user.phone == null || user.phone!.isEmpty) return false;
+
+    if (profile == null) return false;
+
+    // Location
+    if (profile.country == null || profile.country!.isEmpty) return false;
+    if (profile.city == null || profile.city!.isEmpty) return false;
+    if (profile.address == null || profile.address!.isEmpty) return false;
+    if (profile.zipCode == null || profile.zipCode!.isEmpty) return false;
+
+    // Professional
+    if (profile.headline == null || profile.headline!.isEmpty) return false;
+    if ((profile.about == null || profile.about!.isEmpty) &&
+        (profile.summary == null || profile.summary!.isEmpty)) {
+      return false;
+    }
+    if (profile.experienceYearsInt == null) return false;
+    if (profile.experienceMonths == null) return false;
+    if (profile.expectedSalary == null) return false;
+    if (profile.salaryCurrency == null || profile.salaryCurrency!.isEmpty) return false;
+    if (profile.salaryPeriod == null || profile.salaryPeriod!.isEmpty) return false;
+    if (profile.availability == null || profile.availability!.isEmpty) return false;
+
+    // At least 1 valid experience
+    final hasExperience = profile.experiences.any((e) =>
+        e.jobTitle.isNotEmpty &&
+        e.companyName.isNotEmpty &&
+        (e.location != null && e.location!.isNotEmpty) &&
+        e.startDate != null);
+    if (!hasExperience) return false;
+
+    // At least 1 valid education
+    final hasEducation = profile.educations.any((e) =>
+        e.institution.isNotEmpty &&
+        e.degree.isNotEmpty &&
+        e.fieldOfStudy.isNotEmpty &&
+        (e.grade != null && e.grade!.isNotEmpty) &&
+        e.startDate != null &&
+        e.endDate != null);
+    if (!hasEducation) return false;
+
+    return true;
+  }
+
   void _apply(BuildContext context, dynamic job) async {
     if (job.closesAt != null && _isDeadlinePassed(job.closesAt!)) {
       return;
+    }
+
+    // 0. Check verification → if not verified, fallback to required fields check
+    var profileData = ref.read(seekerProfileProvider);
+
+    if (profileData == null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const PopScope(
+          canPop: false,
+          child: Center(child: CircularProgressIndicator(color: AppColors.seekPrimary)),
+        ),
+      );
+      try { await ref.read(fetchSeekerProfileProvider.future); } catch (_) {}
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      profileData = ref.read(seekerProfileProvider);
+    }
+
+    if (profileData != null && !profileData.isVerified) {
+      if (!_isProfileComplete(profileData)) {
+        UJobToast.error(
+          context,
+          context.l10n.profileIncompleteTitle,
+          sub: context.l10n.profileIncompleteSubtitle,
+        );
+        return;
+      }
+      // Required fields filled but not verified — allow apply
     }
 
     // 1. Initial Confirmation

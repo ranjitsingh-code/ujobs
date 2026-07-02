@@ -146,7 +146,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
     _phoneCtrl.text = user.phone ?? '';
 
     if (profile != null) {
-      _phoneCode = "+44";
+      _phoneCode = user.phoneCode ?? '+44';
       _showPhone = profile.showPhone;
 
       _country = profile.country;
@@ -423,7 +423,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                 name: fullName,
                 headline: _headlineCtrl.text,
                 email: email,
-                isVerified: profileData?.user.verified == true,
+                isVerified: profileData?.user.isVerified == true,
                 onEditImage: () {},
               ),
               Padding(
@@ -1013,22 +1013,6 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                             ],
                             onChanged: (v) => setState(() => _availability = v),
                           ),
-                          SizedBox(height: 16.h),
-                          UJobDropdownField<String>(
-                            label: 'Profile Visibility',
-                            value: _profileVisibility,
-                            options: const [('Private', 'private')],
-                            onChanged: (v) =>
-                                setState(() => _profileVisibility = v),
-                          ),
-                          SizedBox(height: 8.h),
-                          if (_profileVisibility == 'private')
-                            Text(
-                              'Only the employers you apply to can see your profile.',
-                              style: AppText.small.copyWith(
-                                color: AppColors.muted,
-                              ),
-                            ),
                         ],
                       ),
                     ),
@@ -1926,7 +1910,7 @@ class _SectionCardState extends State<_SectionCard> {
           ),
           if (_isExpanded)
             Padding(
-              padding: EdgeInsets.fromLTRB(20.r, 0, 20.r, 20.r),
+              padding: EdgeInsets.fromLTRB(20.r, 16.r, 20.r, 20.r),
               child: widget.child,
             ),
         ],

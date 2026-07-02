@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import '../../../core/providers/role_provider.dart';
-import '../../shared/notifications/notifications_screen.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -12,7 +10,6 @@ import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_job_card.dart';
-import '../../shared/chat/conversation_provider.dart' hide ApplicationStatus;
 import 'seeker_dashboard_provider.dart';
 import '../applications/seeker_application_provider.dart';
 import '../../../core/models/application.dart';
@@ -29,7 +26,6 @@ class SeekerDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final dashboardAsync = ref.watch(seekerDashboardProvider);
-    final convAsync = ref.watch(seekerConversationsProvider);
     final l10n = context.l10n;
 
     final int hour = DateTime.now().hour;
@@ -81,7 +77,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                 onNotificationsTap: () => context.push('/seeker/notifications'),
                 onAppliedTap: () => context.go('/seeker/applied', extra: 2),
                 onMatchesTap: () => context.go('/seeker/jobs'),
-                onSavedTap: () => context.go('/seeker/applied', extra: 1),
+                onSavedTap: () => context.push('/seeker/saved-jobs'),
               ),
             ),
             SliverToBoxAdapter(
@@ -90,11 +86,13 @@ class SeekerDashboardScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Banner
-                    if (data.profileCompletion < 100)
+                    // Verification banner
+                    if (!data.isVerified) ...[
                       UJobProfileSetupPrompt(
                         onSetup: () => context.go('/seeker/profile'),
                       ),
+                      SizedBox(height: 24.h),
+                    ],
 
                     // Messages (Commented out as per user request)
                     /*
@@ -126,7 +124,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: data.recommendedJobs.length,
-                        separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                        separatorBuilder: (_, _) => const SizedBox.shrink(),
                         itemBuilder: (context, index) {
                           final job = data.recommendedJobs[index];
                           final apps =
@@ -153,8 +151,8 @@ class SeekerDashboardScreen extends ConsumerWidget {
                                   .toggleSave(job);
                               UJobToast.success(
                                 context,
-                                isSaved ? 'Job Unsaved' : 'Job Saved',
-                                sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.',
+                                isSaved ? context.l10n.jobUnsavedTitle : context.l10n.jobSavedTitle,
+                                sub: isSaved ? context.l10n.savedJobRemovedSubtitle : context.l10n.savedJobAddedSubtitle,
                               );
                             },
                           );

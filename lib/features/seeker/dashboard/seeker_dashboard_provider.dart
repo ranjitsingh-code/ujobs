@@ -5,39 +5,51 @@ import '../../../core/models/job.dart';
 
 
 class SeekerDashboardData {
-  final int profileCompletion;
   final int applicationsCount;
   final int savedCount;
   final int matchesCount;
   final List<Job> recommendedJobs;
+  final bool isVerified;
+  final String verificationStatus;
+  final String accountStatus;
 
   SeekerDashboardData({
-    required this.profileCompletion,
     required this.applicationsCount,
     required this.savedCount,
     required this.matchesCount,
     required this.recommendedJobs,
+    required this.isVerified,
+    required this.verificationStatus,
+    required this.accountStatus,
   });
+
+  bool get canApply => isVerified;
 }
 
 final seekerDashboardProvider = FutureProvider.autoDispose<SeekerDashboardData>(
   (ref) async {
     final dio = ref.watch(dioClientProvider).dio;
 
-    // Fetch dashboard stats
+    final profileRes = await dio.get(Ep.seekerMe);
+    final profileData = profileRes.data['data'] ?? {};
+
     final statsRes = await dio.get(Ep.seekerDashboard);
     final statsData = statsRes.data['data'];
-    
-    // Fetch matching jobs
+
     final jobsRes = await dio.get(Ep.seekerMatching);
     final jobsData = (jobsRes.data['data'] as List).map((j) => Job.fromJson(j)).toList();
 
+    final verificationStatus = profileData['verification_status']?.toString() ?? 'unverified';
+    final accountStatus = profileData['account_status']?.toString() ?? 'pending';
+
     return SeekerDashboardData(
-      profileCompletion: statsData['profile_completed'] ?? statsData['profile_completion_percentage'] ?? 0,
       applicationsCount: statsData['stats']['applied_count'] ?? 0,
       savedCount: statsData['stats']['saved_count'] ?? 0,
       matchesCount: statsData['stats']['matches_count'] ?? 0,
       recommendedJobs: jobsData,
+      isVerified: verificationStatus == 'verified' && accountStatus == 'verified',
+      verificationStatus: verificationStatus,
+      accountStatus: accountStatus,
     );
   },
 );

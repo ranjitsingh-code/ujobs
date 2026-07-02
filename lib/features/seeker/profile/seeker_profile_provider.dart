@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/models/skill.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/models/seeker_profile.dart';
 import '../../../core/models/user.dart';
@@ -9,11 +10,12 @@ import '../../../core/models/user.dart';
 class SeekerProfileData {
   final User user;
   final SeekerProfile? profile;
-  
-  SeekerProfileData({
-    required this.user,
-    this.profile,
-  });
+
+  SeekerProfileData({required this.user, this.profile});
+
+  bool get isVerified => user.isVerified;
+  String get verificationStatus => user.verificationStatus ?? 'unverified';
+  String get accountStatus => user.accountStatus ?? 'pending';
 }
 
 final seekerProfileProvider = StateProvider<SeekerProfileData?>((ref) => null);
@@ -44,15 +46,32 @@ class SeekerProfileService {
     await _client.dio.put(Ep.seekerMe, data: data);
   }
 
-  Future<void> uploadResume(String filePath) async {
+  Future<List<SeekerResume>> listResumes() async {
+    final response = await _client.dio.get(Ep.seekerResumes);
+    final data = response.data['data'] as List;
+    return data
+        .map((item) => SeekerResume.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<SeekerResume> uploadResume(String filePath) async {
     final formData = FormData.fromMap({
       'resume': await MultipartFile.fromFile(filePath),
     });
-    await _client.dio.post(Ep.seekerResumes, data: formData);
+    final response = await _client.dio.post(Ep.seekerResumes, data: formData);
+    return SeekerResume.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 
   Future<void> deleteResume(String id) async {
     await _client.dio.delete('${Ep.seekerResumes}/$id');
+  }
+
+  Future<Skill> createSkill(String name) async {
+    final response = await _client.dio.post(
+      Ep.seekerSkills,
+      data: {'name': name},
+    );
+    return Skill.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 }
 
