@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../employer/applicants/applicant_detail_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -29,7 +28,6 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
   final _searchCtrl = TextEditingController();
   int _selectedTabIndex = 0;
   bool _isSearching = false;
-  final Set<String> _selectedIds = {};
   String _query = '';
 
   @override
@@ -226,7 +224,7 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                                 vertical: 16.h,
                               ),
                               itemCount: filtered.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   SizedBox(height: 12.h),
                               itemBuilder: (ctx, i) {
                                 final n = filtered[i];

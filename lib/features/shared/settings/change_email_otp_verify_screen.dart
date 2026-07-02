@@ -1,21 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/role_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_auth_header.dart';
 import '../../../core/widgets/ujob_button.dart';
+import '../../../core/widgets/ujob_otp_field.dart';
 import '../../../core/widgets/ujob_toast.dart';
 import 'package:dio/dio.dart';
 import '../../../core/api/api_endpoints.dart';
-import '../../../core/api/dio_client.dart';
 import '../../../core/utils/l10n_extensions.dart';
 
 class ChangeEmailOtpVerifyScreen extends ConsumerStatefulWidget {
@@ -23,51 +21,27 @@ class ChangeEmailOtpVerifyScreen extends ConsumerStatefulWidget {
   const ChangeEmailOtpVerifyScreen({this.email, super.key});
 
   @override
-  ConsumerState<ChangeEmailOtpVerifyScreen> createState() => _ChangeEmailOtpVerifyScreenState();
+  ConsumerState<ChangeEmailOtpVerifyScreen> createState() =>
+      _ChangeEmailOtpVerifyScreenState();
 }
 
-class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerifyScreen>
-    with SingleTickerProviderStateMixin {
-  final List<TextEditingController> _ctrs = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-  final List<FocusNode> _foci = List.generate(6, (_) => FocusNode());
-
+class _ChangeEmailOtpVerifyScreenState
+    extends ConsumerState<ChangeEmailOtpVerifyScreen> {
+  String _otp = '';
   bool _loading = false;
   String? _error;
   int _countdown = 59;
   Timer? _timer;
 
-  late final AnimationController _shakeCtrl;
-  late final Animation<double> _shakeAnim;
-
   @override
   void initState() {
     super.initState();
-    _shakeCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _shakeAnim = TweenSequence([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -8.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -8.0, end: 8.0), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 8.0, end: -4.0), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: -4.0, end: 0.0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _shakeCtrl, curve: Curves.easeInOut));
     _startTimer();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    for (final c in _ctrs) {
-      c.dispose();
-    }
-    for (final f in _foci) {
-      f.dispose();
-    }
-    _shakeCtrl.dispose();
     super.dispose();
   }
 
@@ -87,41 +61,6 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
     });
   }
 
-  void _onDigitChanged(int index, String value) {
-    if (value.length > 1) {
-      // Handle paste of full OTP
-      final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
-      if (digits.length >= 6) {
-        for (int i = 0; i < 6; i++) {
-          _ctrs[i].text = digits[i];
-        }
-        _foci[5].requestFocus();
-        setState(() {});
-        return;
-      }
-      _ctrs[index].text = value.substring(value.length - 1);
-    }
-    if (value.isNotEmpty && index < 5) {
-      _foci[index + 1].requestFocus();
-    } else if (index == 5 && value.isNotEmpty) {
-      // Last digit entered, trigger verification but keep keyboard
-      _verify();
-    }
-    setState(() => _error = null);
-  }
-
-  void _onKeyEvent(int index, KeyEvent event) {
-    if (event is KeyDownEvent &&
-        event.logicalKey == LogicalKeyboardKey.backspace) {
-      if (_ctrs[index].text.isEmpty && index > 0) {
-        _foci[index - 1].requestFocus();
-        _ctrs[index - 1].clear();
-      }
-    }
-  }
-
-  String get _otp => _ctrs.map((c) => c.text).join();
-
   String _maskEmail(String email) {
     if (!email.contains('@')) return email;
     final parts = email.split('@');
@@ -131,21 +70,15 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
     return '${name.substring(0, 2)}***${name.substring(name.length - 1)}@$domain';
   }
 
-  void _skipToApp() {
-    final role = ref.read(activeRoleProvider);
-    context.go(role == 'employer' ? '/employer' : '/seeker');
-  }
-
   Future<void> _verify() async {
     if (_loading) return;
     if (_otp.length < 6) {
       final msg = context.l10n.otpErrorComplete;
       setState(() => _error = msg);
       UJobToast.error(context, 'Invalid OTP', sub: msg);
-      _shakeCtrl.forward(from: 0);
       return;
     }
-    
+
     setState(() {
       _loading = true;
       _error = null;
@@ -153,16 +86,20 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
 
     try {
       final isEmployer = ref.read(activeRoleProvider) == 'employer';
-      final res = await ref.read(dioClientProvider).dio.post(
-        isEmployer ? Ep.empEmailVerifyOtp : Ep.seekEmailVerifyOtp,
-        data: {'code': _otp},
-      );
+      final res = await ref
+          .read(dioClientProvider)
+          .dio
+          .post(
+            isEmployer ? Ep.empEmailVerifyOtp : Ep.seekEmailVerifyOtp,
+            data: {'code': _otp},
+          );
 
-      final msg = res.data?['message']?.toString() ?? 
-                  'Your email has been changed successfully. Please log in with your new email.';
+      final msg =
+          res.data?['message']?.toString() ??
+          'Your email has been changed successfully. Please log in with your new email.';
 
       if (!mounted) return;
-      
+
       await showDialog(
         context: context,
         barrierDismissible: false,
@@ -176,15 +113,15 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
       ref.read(authProvider.notifier).logout();
     } on DioException catch (e) {
       if (!mounted) return;
-      final msg = e.response?.data?['error']?['message'] ?? 
-                  e.response?.data?['message'] ?? 
-                  'Invalid or expired OTP';
+      final msg =
+          e.response?.data?['error']?['message'] ??
+          e.response?.data?['message'] ??
+          'Invalid or expired OTP';
       UJobToast.error(context, 'Verification Failed', sub: msg);
       setState(() {
         _loading = false;
         _error = msg;
       });
-      _shakeCtrl.forward(from: 0);
     } catch (_) {
       if (!mounted) return;
       final msg = context.l10n.error;
@@ -193,7 +130,6 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
         _loading = false;
         _error = msg;
       });
-      _shakeCtrl.forward(from: 0);
     }
   }
 
@@ -234,27 +170,14 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
               SizedBox(height: 32.h),
 
               // OTP boxes
-              AnimatedBuilder(
-                animation: _shakeAnim,
-                builder: (_, child) => Transform.translate(
-                  offset: Offset(_shakeAnim.value, 0),
-                  child: child,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(
-                    6,
-                    (i) => _OtpBox(
-                      controller: _ctrs[i],
-                      focusNode: _foci[i],
-                      autofocus: i == 0,
-                      hasValue: _ctrs[i].text.isNotEmpty,
-                      hasError: _error != null,
-                      onChanged: (v) => _onDigitChanged(i, v),
-                      onKeyEvent: (e) => _onKeyEvent(i, e),
-                    ),
-                  ),
-                ),
+              UJobOtpField(
+                hasError: _error != null,
+                semanticLabel: l10n.otpVerification,
+                onChanged: (value) => setState(() {
+                  _otp = value;
+                  _error = null;
+                }),
+                onCompleted: (_) => _verify(),
               ),
 
               // Error
@@ -287,7 +210,12 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
                       )
                     : GestureDetector(
                         onTap: () {
-                          UJobToast.info(context, 'Request New Code', sub: 'Please request a new code from the settings page.');
+                          UJobToast.info(
+                            context,
+                            'Request New Code',
+                            sub:
+                                'Please request a new code from the settings page.',
+                          );
                           context.pop();
                         },
                         child: Text(
@@ -305,14 +233,16 @@ class _ChangeEmailOtpVerifyScreenState extends ConsumerState<ChangeEmailOtpVerif
                 decoration: BoxDecoration(
                   color: AppColors.info.withValues(alpha: 0.08),
                   borderRadius: AppRadius.md,
-                  border: Border.all(color: AppColors.info.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: AppColors.info.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     HugeIcon(
-                      icon: HugeIcons.strokeRoundedInformationCircle, 
-                      color: AppColors.info, 
+                      icon: HugeIcons.strokeRoundedInformationCircle,
+                      color: AppColors.info,
                       size: 20.r,
                     ),
                     SizedBox(width: 10.w),
@@ -349,7 +279,8 @@ class _SuccessCountdownDialog extends StatefulWidget {
   const _SuccessCountdownDialog({required this.message});
 
   @override
-  State<_SuccessCountdownDialog> createState() => _SuccessCountdownDialogState();
+  State<_SuccessCountdownDialog> createState() =>
+      _SuccessCountdownDialogState();
 }
 
 class _SuccessCountdownDialogState extends State<_SuccessCountdownDialog> {
@@ -420,69 +351,4 @@ class _SuccessCountdownDialogState extends State<_SuccessCountdownDialog> {
       ),
     );
   }
-}
-
-class _OtpBox extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final bool hasValue, hasError, autofocus;
-  final ValueChanged<String> onChanged;
-  final ValueChanged<KeyEvent> onKeyEvent;
-
-  const _OtpBox({
-    required this.controller,
-    required this.focusNode,
-    required this.hasValue,
-    required this.hasError,
-    this.autofocus = false,
-    required this.onChanged,
-    required this.onKeyEvent,
-  });
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 50.r,
-    height: 60.r,
-    child: KeyboardListener(
-      focusNode: FocusNode(),
-      onKeyEvent: onKeyEvent,
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        autofocus: autofocus,
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        inputFormatters: [LengthLimitingTextInputFormatter(1)],
-        style: AppText.heading2.copyWith(
-          color: AppColors.text,
-          fontWeight: FontWeight.w700,
-        ),
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          counterText: '',
-          filled: true,
-          fillColor: hasError
-              ? AppColors.errorBg
-              : hasValue
-              ? AppColors.primary.withValues(alpha: 0.1)
-              : AppColors.bg,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16.r),
-            borderSide: BorderSide(
-              color: hasError ? AppColors.error : AppColors.border,
-              width: 1.5,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16.r),
-            borderSide: BorderSide(
-              color: hasError ? AppColors.error : AppColors.primary,
-              width: 2,
-            ),
-          ),
-          contentPadding: EdgeInsets.symmetric(vertical: 12.h),
-        ),
-      ),
-    ),
-  );
 }

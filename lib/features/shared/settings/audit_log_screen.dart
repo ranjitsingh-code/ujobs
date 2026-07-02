@@ -111,7 +111,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
               controller: _scrollController,
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
               itemCount: _logs.length + (_hasMore ? 1 : 0),
-              separatorBuilder: (_, __) => SizedBox(height: 16.h),
+              separatorBuilder: (_, _) => SizedBox(height: 16.h),
               itemBuilder: (context, index) {
                 if (index == _logs.length) {
                   return Center(
@@ -177,7 +177,7 @@ class _AuditLogCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(10.r),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: HugeIcon(

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:dio/dio.dart';
@@ -8,7 +7,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../core/api/api_endpoints.dart';
-import '../../../core/router/app_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/role_provider.dart';
 import '../../../core/providers/cms_provider.dart';
@@ -20,7 +18,6 @@ import '../../../core/widgets/ujob_alert_dialog.dart';
 import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_phone_number_field.dart';
-import '../../../core/widgets/ujob_radio_card.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_toast.dart';
 import '../../employer/settings/employer_settings_provider.dart';
@@ -38,31 +35,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // Shared States
   bool _twoFa = false;
   bool _allowNotifications = true;
-  String _visibilityMode = 'public';
 
-  // Notifications - Employer email
-  bool _emailNewJobApplication = true;
-  bool _emailCandidateMessage = true;
-  bool _emailInterviewResponse = true;
-  bool _emailMarketing = false;
-
-  // Notifications - Seeker email
-  bool _emailJobRecommendations = true;
-  bool _emailApplicationUpdates = true;
-  bool _emailMessages = true;
-
-  // Privacy & Preferences
-  bool _profileVisible = true;
-  bool _showSalaryExpectations = false;
-
-  // Additional Employer Prefs
-  bool _notifSecurity = true;
-  bool _notifBrowser = false;
-  bool _showEmailToCandidates = false;
-  bool _showPhoneToCandidates = false;
-  String _language = 'en';
-  String _timezone = 'UTC';
-  String _dateFormat = 'DD/MM/YYYY';
+  // Employer notification prefs
+  bool _notifNewApplication = true;
+  bool _notifInterview = true;
+  bool _notifMarketing = false;
 
   bool _hasInitializedPrefs = false;
 
@@ -77,53 +54,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         });
       }
     });
-  }
-
-  Future<void> _updateEmployerPref(String key, dynamic value) async {
-    try {
-      // The local setState inside the ToggleTile's onChanged has already updated the UI instantly.
-      // We just quietly sync the change to the backend here without rebuilding the entire screen!
-      await ref.read(employerSettingsServiceProvider).updatePreferences({key: value});
-      
-      if (mounted) {
-        UJobToast.success(
-          context, 
-          'Update Successful',
-          sub: 'Your preferences have been successfully updated.'
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        UJobToast.error(
-          context, 
-          'Update Failed',
-          sub: 'Failed to update preference. Please try again.'
-        );
-      }
-      // If we wanted to revert local state on failure, we could re-read from the provider
-      // but for now, we just show the error toast.
-    }
-  }
-
-  Future<void> _updateSeekerPref(String key, dynamic value) async {
-    try {
-      await ref.read(seekerSettingsServiceProvider).updatePreferences({key: value});
-      if (mounted) {
-        UJobToast.success(
-          context, 
-          'Update Successful',
-          sub: 'Your preferences have been successfully updated.'
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        UJobToast.error(
-          context, 
-          'Update Failed',
-          sub: 'Failed to update preference. Please try again.'
-        );
-      }
-    }
   }
 
   @override
@@ -143,30 +73,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
            body: const Center(child: CircularProgressIndicator()),
          );
       } else if (settingsAsync.hasValue && !_hasInitializedPrefs) {
-         final prefs = settingsAsync.value!.prefs;
          WidgetsBinding.instance.addPostFrameCallback((_) {
            if (mounted) {
              setState(() {
-               _emailNewJobApplication = prefs.notifNewApplication;
-               _emailCandidateMessage = prefs.notifMessages;
-               _emailInterviewResponse = prefs.notifInterview;
-               _emailMarketing = prefs.notifMarketing;
-               _visibilityMode = prefs.companyProfilePublic ? 'public' : 'private';
-               
-               _notifSecurity = prefs.notifSecurity;
-               _notifBrowser = prefs.notifBrowser;
-               _showEmailToCandidates = prefs.showEmailToCandidates;
-               _showPhoneToCandidates = prefs.showPhoneToCandidates;
-               _language = prefs.language;
-               _timezone = prefs.timezone;
-               _dateFormat = prefs.dateFormat;
-               
-               // Read 2FA from settings user payload if available
                final userPayload = settingsAsync.value!.user;
                if (userPayload.containsKey('two_factor_enabled') || userPayload.containsKey('two_factor_authentication')) {
                  _twoFa = (userPayload['two_factor_enabled'] ?? userPayload['two_factor_authentication']) == true;
                }
-
+               final prefs = settingsAsync.value!.prefs;
+               _notifNewApplication = prefs.notifNewApplication;
+               _notifInterview = prefs.notifInterview;
+               _notifMarketing = prefs.notifMarketing;
                _hasInitializedPrefs = true;
              });
            }
@@ -181,26 +98,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
            body: const Center(child: CircularProgressIndicator()),
          );
       } else if (settingsAsync.hasValue && !_hasInitializedPrefs) {
-         final prefs = settingsAsync.value!.prefs;
          WidgetsBinding.instance.addPostFrameCallback((_) {
            if (mounted) {
              setState(() {
-               _emailNewJobApplication = prefs.notifNewApplication;
-               _emailCandidateMessage = prefs.notifMessages;
-               _emailInterviewResponse = prefs.notifInterview;
-               _emailMarketing = prefs.notifMarketing;
-               
-               _notifSecurity = prefs.notifSecurity;
-               _notifBrowser = prefs.notifBrowser;
-               
-               _profileVisible = prefs.companyProfilePublic;
-               _showEmailToCandidates = prefs.showEmailToCandidates;
-               _showPhoneToCandidates = prefs.showPhoneToCandidates;
-               
-               _language = prefs.language;
-               _timezone = prefs.timezone;
-               _dateFormat = prefs.dateFormat;
-               
                final userPayload = settingsAsync.value!.user;
                if (userPayload.containsKey('two_factor_enabled') || userPayload.containsKey('two_factor_authentication')) {
                  _twoFa = (userPayload['two_factor_enabled'] ?? userPayload['two_factor_authentication']) == true;
@@ -349,129 +249,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SizedBox(height: 24.h),
 
             // ================= NOTIFICATIONS =================
-            _SectionTitle('NOTIFICATIONS'),
-            _SectionContainer(
-              children: [
-                /*
-                if (isEmployer) ...[
+            if (isEmployer) ...[
+              _SectionTitle('EMAIL NOTIFICATIONS'),
+              _SectionContainer(
+                children: [
                   _ToggleTile(
                     label: l10n.newJobApplication,
                     subtitle: l10n.newJobApplicationSubtitle,
-                    value: _emailNewJobApplication,
+                    value: _notifNewApplication,
                     onChanged: (v) {
-                        setState(() => _emailNewJobApplication = v);
-                        _updateEmployerPref('notif_new_application', v);
+                      setState(() => _notifNewApplication = v);
+                      _updateEmployerPref('notif_new_application', v);
                     },
                   ),
-                  if (featureFlags?.chat == true)
-                    _ToggleTile(
-                      label: l10n.candidateMessages,
-                      subtitle: l10n.candidateMessagesSubtitle,
-                      value: _emailCandidateMessage,
-                      onChanged: (v) {
-                          setState(() => _emailCandidateMessage = v);
-                          _updateEmployerPref('notif_messages', v);
-                      },
-                    ),
                   _ToggleTile(
                     label: l10n.interviewResponses,
                     subtitle: l10n.interviewResponsesSubtitle,
-                    value: _emailInterviewResponse,
+                    value: _notifInterview,
                     onChanged: (v) {
-                        setState(() => _emailInterviewResponse = v);
-                        _updateEmployerPref('notif_interview', v);
-                    },
-                  ),
-                  _ToggleTile(
-                    label: 'Security Alerts',
-                    subtitle: 'Login attempts and password changes',
-                    value: _notifSecurity,
-                    onChanged: (v) {
-                       setState(() => _notifSecurity = v);
-                       _updateEmployerPref('notif_security', v);
+                      setState(() => _notifInterview = v);
+                      _updateEmployerPref('notif_interview', v);
                     },
                   ),
                   _ToggleTile(
                     label: l10n.marketingEmails,
                     subtitle: l10n.marketingEmailsSubtitle,
-                    value: _emailMarketing,
+                    value: _notifMarketing,
                     onChanged: (v) {
-                       setState(() => _emailMarketing = v);
-                       _updateEmployerPref('notif_marketing', v);
+                      setState(() => _notifMarketing = v);
+                      _updateEmployerPref('notif_marketing', v);
                     },
                   ),
                   _ToggleTile(
-                    label: 'Push Notifications',
-                    subtitle: 'Receive notifications on this device',
-                    value: _notifBrowser,
-                    onChanged: (v) {
-                       setState(() => _notifBrowser = v);
-                       _updateEmployerPref('notif_browser', v);
-                    },
-                  ),
-                ] else ...[
-                  _ToggleTile(
-                    label: l10n.applicationUpdates,
-                    value: _emailNewJobApplication,
-                    onChanged: (v) {
-                        setState(() => _emailNewJobApplication = v);
-                        _updateSeekerPref('notif_new_application', v);
-                    },
-                  ),
-                  _ToggleTile(
-                    label: l10n.messages,
-                    value: _emailCandidateMessage,
-                    onChanged: (v) {
-                        setState(() => _emailCandidateMessage = v);
-                        _updateSeekerPref('notif_messages', v);
-                    },
-                  ),
-                  _ToggleTile(
-                    label: l10n.interviewResponses,
-                    value: _emailInterviewResponse,
-                    onChanged: (v) {
-                        setState(() => _emailInterviewResponse = v);
-                        _updateSeekerPref('notif_interview', v);
-                    },
-                  ),
-                  _ToggleTile(
-                    label: 'Security Alerts',
-                    subtitle: 'Login attempts and password changes',
-                    value: _notifSecurity,
-                    onChanged: (v) {
-                       setState(() => _notifSecurity = v);
-                       _updateSeekerPref('notif_security', v);
-                    },
-                  ),
-                  _ToggleTile(
-                    label: l10n.marketingEmails,
-                    subtitle: l10n.marketingEmailsSubtitle,
-                    value: _emailMarketing,
-                    onChanged: (v) {
-                       setState(() => _emailMarketing = v);
-                       _updateSeekerPref('notif_marketing', v);
-                    },
-                  ),
-                  _ToggleTile(
-                    label: 'Push Notifications',
-                    subtitle: 'Receive notifications on this device',
-                    value: _notifBrowser,
-                    onChanged: (v) {
-                       setState(() => _notifBrowser = v);
-                       _updateSeekerPref('notif_browser', v);
-                    },
+                    label: l10n.allowNotifications,
+                    subtitle: l10n.allowNotificationsSubtitle,
+                    value: _allowNotifications,
+                    showBorder: false,
+                    onChanged: (v) => setState(() => _allowNotifications = v),
                   ),
                 ],
-                */
-                _ToggleTile(
-                  label: l10n.allowNotifications,
-                  subtitle: l10n.allowNotificationsSubtitle,
-                  value: _allowNotifications,
-                  onChanged: (v) => setState(() => _allowNotifications = v),
-                  showBorder: false,
-                ),
-              ],
-            ),
+              ),
+            ] else ...[
+              _SectionTitle('NOTIFICATIONS'),
+              _SectionContainer(
+                children: [
+                  _ToggleTile(
+                    label: l10n.allowNotifications,
+                    subtitle: l10n.allowNotificationsSubtitle,
+                    value: _allowNotifications,
+                    onChanged: (v) => setState(() => _allowNotifications = v),
+                    showBorder: false,
+                  ),
+                ],
+              ),
+            ],
 
             SizedBox(height: 24.h),
 
@@ -712,6 +543,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   // --- Helpers ---
 
+  Future<void> _updateEmployerPref(String key, bool value) async {
+    try {
+      await ref.read(employerSettingsServiceProvider).updatePreferences({key: value});
+    } catch (_) {
+      if (mounted) UJobToast.error(context, 'Failed to save', sub: 'Could not update preference.');
+    }
+  }
+
   Future<void> _showChangePasswordSheet(BuildContext context) async {
     final l10n = context.l10n;
     final isEmployer = ref.read(activeRoleProvider) == 'employer';
@@ -878,13 +717,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final isPhone = type == TextInputType.phone;
     final isEmployer = ref.read(activeRoleProvider) == 'employer';
     final currentUser = ref.read(authProvider).valueOrNull;
-    final currentEmail =
-        currentUser?.email ??
-        (kDebugMode
-            ? (isEmployer
-                ? 'nexoviasolutions@gmail.com'
-                : 'mdazadhossain95@gmail.com')
-            : '');
+    final currentEmail = currentUser?.email ?? '';
     final fieldKey = isEmail ? 'email' : 'phone';
     final successMessage = isEmail
         ? l10n.verificationCodeSent
@@ -1220,35 +1053,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _signOutAllDevices(BuildContext context) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      final isEmployer = ref.read(activeRoleProvider) == 'employer';
-      
-      if (isEmployer) {
-        // Employer specific logic if any. 
-      } else {
-        await ref.read(dioClientProvider).dio.post(Ep.seekSignOutAll);
-      }
-
-      if (!context.mounted) return;
-      
-      Navigator.pop(context);
-      ref.read(authProvider.notifier).logout(localOnly: true);
-      context.go('/');
-
-    } catch (e) {
-      if (!context.mounted) return;
-      Navigator.pop(context);
-      UJobToast.error(context, 'Error', sub: 'Failed to sign out all devices. Please try again.');
-    }
-  }
-
   void _showSignOutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -1279,58 +1083,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     context.go('/role-picker');
   }
 
-  void _showSignOutAllDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => UJobAlertDialog(
-        icon: HugeIcon(
-          icon: HugeIcons.strokeRoundedLogout01,
-          color: AppColors.error,
-          size: 32.r,
-        ),
-        iconBgColor: AppColors.error,
-        title: 'Sign Out All Devices',
-        description: 'This will revoke all active sessions across all devices. You will be logged out of this device immediately.',
-        confirmText: 'Sign Out All',
-        confirmColor: AppColors.error,
-        cancelText: context.l10n.cancel,
-        onConfirm: () {
-          Navigator.pop(ctx);
-          _signOutAll(context);
-        },
-      ),
-    );
-  }
-
-  Future<void> _signOutAll(BuildContext context) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      final isEmployer = ref.read(activeRoleProvider) == 'employer';
-      await ref.read(dioClientProvider).dio.post(isEmployer ? '/employer/settings/sign-out-all' : Ep.seekSignOutAll);
-
-      if (!context.mounted) return;
-      
-      Navigator.pop(context); // Pop the loading overlay
-      
-      // Local wipe only, since the remote session is already dead!
-      ref.read(authProvider.notifier).logout(localOnly: true);
-      context.go('/');
-
-    } catch (e) {
-      if (!context.mounted) return;
-      Navigator.pop(context); // Pop the loading overlay
-      UJobToast.error(
-        context, 
-        'Failed to sign out all devices', 
-        sub: 'Please check your connection and try again.'
-      );
-    }
-  }
 }
 
 class _SettingsSheet extends StatelessWidget {
@@ -1456,49 +1208,6 @@ class _SectionContainer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: children,
-      ),
-    );
-  }
-}
-
-class _ValueTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-  final bool showBorder;
-
-  const _ValueTile({
-    required this.label,
-    required this.value,
-    required this.onTap,
-    this.showBorder = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.fromLTRB(20.w, 16.h, 16.w, 16.h),
-        decoration: BoxDecoration(
-          border: showBorder
-              ? Border(bottom: BorderSide(color: AppColors.borderLight))
-              : null,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: AppText.bodyBold.copyWith(color: AppColors.text),
-              ),
-            ),
-            Text(
-              value,
-              style: AppText.body.copyWith(color: AppColors.muted),
-            ),
-          ],
-        ),
       ),
     );
   }
