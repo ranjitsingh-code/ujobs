@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/job.dart';
-import '../../../core/api/dio_client.dart';
 import 'seeker_job_service.dart';
-import '../../employer/jobs/employer_job_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/providers/categories_provider.dart';
@@ -175,7 +173,7 @@ final seekerJobsProvider = FutureProvider<List<Job>>((ref) async {
   );
 });
 
-final seekerJobDetailProvider = FutureProvider.family<Job, int>((
+final seekerJobDetailProvider = FutureProvider.autoDispose.family<Job, int>((
   ref,
   id,
 ) async {

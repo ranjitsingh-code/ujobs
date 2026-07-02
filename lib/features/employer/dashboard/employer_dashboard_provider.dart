@@ -1,10 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/job.dart';
 import '../../../core/models/company_profile.dart';
-import '../../../core/api/dio_client.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../jobs/employer_job_provider.dart';
 
 final companyProfileProvider = StateProvider<CompanyProfile>((ref) {
   return const CompanyProfile(
@@ -69,7 +68,7 @@ class EmployerDashboardData {
   });
 }
 
-final employerDashboardProvider = FutureProvider<EmployerDashboardData>((ref) async {
+final employerDashboardProvider = FutureProvider.autoDispose<EmployerDashboardData>((ref) async {
   final client = ref.watch(dioClientProvider);
   
   // Fetch sequentially to avoid Future.wait generic inference issues
@@ -105,6 +104,8 @@ final employerDashboardProvider = FutureProvider<EmployerDashboardData>((ref) as
     ].where((e) => e != null).fold(0, (max, e) => e! > max ? e : max),
   );
   
-  print('--- DASHBOARD PROVIDER PARSED PROFILE COMPLETED: ${dash.profileCompleted} ---');
+  debugPrint(
+    '--- DASHBOARD PROVIDER PARSED PROFILE COMPLETED: ${dash.profileCompleted} ---',
+  );
   return dash;
 });

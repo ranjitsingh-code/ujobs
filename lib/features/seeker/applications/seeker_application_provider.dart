@@ -93,7 +93,7 @@ class SeekerApplicationsNotifier
 }
 
 final seekerApplicationsProvider =
-    StateNotifierProvider.family<
+    StateNotifierProvider.autoDispose.family<
       SeekerApplicationsNotifier,
       AsyncValue<List<Application>>,
       String?

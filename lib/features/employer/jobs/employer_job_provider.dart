@@ -1,8 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/job.dart';
 import '../../../core/models/company.dart';
-import '../../../core/api/dio_client.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'employer_job_service.dart';
 
@@ -302,20 +302,20 @@ class DemoEmployerJobsNotifier extends StateNotifier<List<Job>> {
   }
 }
 
-final employerJobsProvider = FutureProvider.family<List<Job>, String?>((
+final employerJobsProvider = FutureProvider.autoDispose.family<List<Job>, String?>((
   ref,
   status,
 ) async {
   try {
     return await ref.read(employerJobServiceProvider).getMyJobs(status: status);
   } catch (e, stackTrace) {
-    print('Error loading jobs: $e');
-    print(stackTrace);
+    debugPrint('Error loading jobs: $e');
+    debugPrint('$stackTrace');
     rethrow;
   }
 });
 
-final employerJobDetailProvider = FutureProvider.family<Job, int>((
+final employerJobDetailProvider = FutureProvider.autoDispose.family<Job, int>((
   ref,
   id,
 ) async {

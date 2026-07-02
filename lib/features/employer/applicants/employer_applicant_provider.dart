@@ -2,9 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/applicant.dart';
 import 'employer_applicant_service.dart';
 
-final jobApplicantsProvider = AsyncNotifierProvider.family<JobApplicantsNotifier, List<Applicant>, int>(JobApplicantsNotifier.new);
+final jobApplicantsProvider = AsyncNotifierProvider.autoDispose.family<JobApplicantsNotifier, List<Applicant>, int>(JobApplicantsNotifier.new);
 
-class JobApplicantsNotifier extends FamilyAsyncNotifier<List<Applicant>, int> {
+class JobApplicantsNotifier extends AutoDisposeFamilyAsyncNotifier<List<Applicant>, int> {
   @override
   Future<List<Applicant>> build(int arg) async {
     final service = ref.watch(employerApplicantServiceProvider);
@@ -25,11 +25,11 @@ class JobApplicantsNotifier extends FamilyAsyncNotifier<List<Applicant>, int> {
 }
 
 final employerApplicantsProvider =
-    AsyncNotifierProvider<EmployerApplicantsNotifier, List<Applicant>>(() {
+    AsyncNotifierProvider.autoDispose<EmployerApplicantsNotifier, List<Applicant>>(() {
       return EmployerApplicantsNotifier();
     });
 
-class EmployerApplicantsNotifier extends AsyncNotifier<List<Applicant>> {
+class EmployerApplicantsNotifier extends AutoDisposeAsyncNotifier<List<Applicant>> {
   @override
   Future<List<Applicant>> build() async {
     final service = ref.watch(employerApplicantServiceProvider);
@@ -88,7 +88,7 @@ class EmployerApplicantsNotifier extends AsyncNotifier<List<Applicant>> {
   }
 }
 
-final singleApplicantProvider = FutureProvider.family<Applicant, Applicant>((ref, applicant) async {
+final singleApplicantProvider = FutureProvider.autoDispose.family<Applicant, Applicant>((ref, applicant) async {
   final service = ref.watch(employerApplicantServiceProvider);
   try {
     // applicant.jobId must be an integer, but it's a string, so parse it
