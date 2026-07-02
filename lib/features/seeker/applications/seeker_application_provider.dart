@@ -55,9 +55,7 @@ class SeekerApplicationsNotifier
   }
 
   Future<void> toggleSave(Job job) async {
-    if (state.value == null) return;
-
-    final currentList = List<Application>.from(state.value!);
+    final currentList = List<Application>.from(state.value ?? []);
     final existingIndex = currentList.indexWhere(
       (a) => a.job.id == job.id && a.status == ApplicationStatus.saved,
     );
@@ -81,13 +79,46 @@ class SeekerApplicationsNotifier
 
     try {
       final dio = ref.read(dioClientProvider).dio;
-      if (isSaved) {
-        await dio.delete(Ep.saveJob(job.id.toString()));
-      } else {
-        await dio.post(Ep.saveJob(job.id.toString()));
+      final response = isSaved
+          ? await dio.delete(Ep.saveJob(job.id.toString()))
+          : await dio.post(Ep.saveJob(job.id.toString()));
+
+      final actualSaved = response.data['data']?['saved'] as bool?;
+      if (actualSaved != null && actualSaved == isSaved) {
+        // API returned opposite of what optimistic update applied — correct it
+        final correctedList = List<Application>.from(state.value ?? []);
+        if (actualSaved) {
+          final alreadyIn = correctedList.any((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
+          if (!alreadyIn) {
+            correctedList.add(Application(
+              id: DateTime.now().millisecondsSinceEpoch,
+              job: job,
+              status: ApplicationStatus.saved,
+              createdAt: DateTime.now(),
+            ));
+          }
+        } else {
+          correctedList.removeWhere((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
+        }
+        state = AsyncValue.data(correctedList);
       }
     } catch (e) {
-      // API call failed, ignore for optimistic UI or add revert logic
+      // Revert optimistic update on failure
+      final revertedList = List<Application>.from(state.value ?? []);
+      if (isSaved) {
+        final alreadyIn = revertedList.any((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
+        if (!alreadyIn) {
+          revertedList.add(Application(
+            id: DateTime.now().millisecondsSinceEpoch,
+            job: job,
+            status: ApplicationStatus.saved,
+            createdAt: DateTime.now(),
+          ));
+        }
+      } else {
+        revertedList.removeWhere((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
+      }
+      state = AsyncValue.data(revertedList);
     }
   }
 }
