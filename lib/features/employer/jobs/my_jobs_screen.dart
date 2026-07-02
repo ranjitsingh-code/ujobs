@@ -106,7 +106,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
                 child: const UJobVerificationPendingBanner(),
               ),
-            if (dashboardAsync.valueOrNull != null && dashboardAsync.valueOrNull!.profileCompleted < 100)
+            if (dashboardAsync.valueOrNull != null && !isVerified)
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
                 child: UJobCompanyProfileSetup(
@@ -137,24 +137,10 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
         isProfileComplete: isVerified,
         onTap: () {
           if (!isVerified) {
-            showDialog(
-              context: context,
-              builder: (ctx) => UJobAlertDialog(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedAlert02,
-                  color: AppColors.warning,
-                  size: 32.r,
-                ),
-                iconBgColor: AppColors.warning,
-                title: 'Verification Required',
-                description:
-                    'Your company profile must be 100% complete and verified by an admin before you can post jobs. If you have already completed your profile, please wait for admin approval.',
-                confirmText: 'Okay',
-                confirmColor: AppColors.primary,
-                onConfirm: () {
-                  Navigator.pop(ctx);
-                },
-              ),
+            UJobToast.error(
+              context,
+              'Verification Required',
+              sub: 'Please complete your company profile and get verified before you can post a job.',
             );
             return;
           }
@@ -309,7 +295,8 @@ class _JobList extends ConsumerWidget {
           return RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () async {
-              ref.refresh(employerJobsProvider(status));
+              ref.invalidate(employerJobsProvider(status));
+              await ref.read(employerJobsProvider(status).future);
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -329,7 +316,8 @@ class _JobList extends ConsumerWidget {
         return RefreshIndicator(
           color: AppColors.primary,
           onRefresh: () async {
-            ref.refresh(employerJobsProvider(status));
+            ref.invalidate(employerJobsProvider(status));
+            await ref.read(employerJobsProvider(status).future);
           },
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),

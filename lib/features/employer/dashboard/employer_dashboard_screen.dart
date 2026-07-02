@@ -11,9 +11,7 @@ import '../../../core/widgets/ujob_verification_banners.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/ujob_avatar.dart';
 import '../../../core/widgets/ujob_notification_button.dart';
-import '../../shared/chat/conversation_provider.dart';
 import 'employer_dashboard_provider.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
@@ -65,11 +63,6 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
         ),
       ),
       data: (dashboard) {
-        final conversations = ref.watch(conversationsProvider).valueOrNull ?? demoConversations;
-        final messagesToReply = dashboard.totalJobs == 0
-            ? const <Conversation>[]
-            : conversations.where((conversation) => conversation.requiresEmployerReply).toList();
-            
         final user = auth.valueOrNull;
         final firstName = user?.firstName.trim();
         final name = firstName?.isNotEmpty == true ? firstName! : 'there';
@@ -107,23 +100,10 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
                   isVerified: dashboard.isVerified,
                   onPostJob: () {
                     if (!dashboard.isVerified) {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => UJobAlertDialog(
-                          icon: HugeIcon(
-                            icon: HugeIcons.strokeRoundedAlert02,
-                            color: AppColors.error,
-                            size: 32.r,
-                          ),
-                          iconBgColor: AppColors.error,
-                          title: 'Verification Required',
-                          description: 'Your company profile must be 100% complete and verified by an admin before you can post jobs. If you have already completed your profile, please wait for admin approval.',
-                          confirmText: 'Okay',
-                          confirmColor: AppColors.primary,
-                          onConfirm: () {
-                            Navigator.pop(ctx);
-                          },
-                        ),
+                      UJobToast.error(
+                        context,
+                        'Verification Required',
+                        sub: 'Please complete your company profile and get verified before you can post a job.',
                       );
                       return;
                     }
@@ -134,7 +114,7 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
                   SizedBox(height: 24.h),
                   const UJobVerificationPendingBanner(),
                 ],
-                if (dashboard.profileCompleted < 100) ...[
+                if (!dashboard.isVerified) ...[
                   SizedBox(height: 24.h),
                   UJobCompanyProfileSetup(
                     onSetup: () {
@@ -163,23 +143,10 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
                     isVerified: dashboard.isVerified,
                     onPostJob: () {
                       if (!dashboard.isVerified) {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => UJobAlertDialog(
-                            icon: HugeIcon(
-                              icon: HugeIcons.strokeRoundedAlert02,
-                              color: AppColors.error,
-                              size: 32.r,
-                            ),
-                            iconBgColor: AppColors.error,
-                            title: 'Verification Required',
-                            description: 'Your company profile must be 100% complete and verified by an admin before you can post jobs. If you have already completed your profile, please wait for admin approval.',
-                            confirmText: 'Okay',
-                            confirmColor: AppColors.primary,
-                            onConfirm: () {
-                              Navigator.pop(ctx);
-                            },
-                          ),
+                        UJobToast.error(
+                          context,
+                          'Verification Required',
+                          sub: 'Please complete your company profile and get verified before you can post a job.',
                         );
                         return;
                       }
@@ -628,144 +595,6 @@ class _QuickActions extends StatelessWidget {
   }
 }
 
-class _MessagesToReply extends StatelessWidget {
-  final List<Conversation> conversations;
-  final VoidCallback onViewAll;
-
-  const _MessagesToReply({
-    required this.conversations,
-    required this.onViewAll,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeader(
-          title: 'Needs Reply',
-          actionLabel: 'View all',
-          onActionTap: onViewAll,
-        ),
-        SizedBox(height: 12.h),
-        SizedBox(
-          height: 78.h,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: conversations.length,
-            separatorBuilder: (_, _) => SizedBox(width: 16.w),
-            itemBuilder: (context, index) {
-              final conversation = conversations[index];
-              return _MessageAvatar(conversation: conversation);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MessageAvatar extends StatelessWidget {
-  final Conversation conversation;
-
-  const _MessageAvatar({required this.conversation});
-
-  @override
-  Widget build(BuildContext context) {
-    final initials =
-        conversation.otherInitials ??
-        (conversation.otherName.isNotEmpty ? conversation.otherName[0] : '?');
-
-    return Semantics(
-      button: true,
-      label: conversation.unreadCount > 0
-          ? '${conversation.otherName}, ${conversation.unreadCount} unread messages'
-          : '${conversation.otherName}, awaiting reply',
-      child: InkWell(
-        onTap: () {
-          if (conversation.id.startsWith('demo-')) {
-            context.go('/employer/messages');
-            return;
-          }
-          context.push(
-            '/conversations/${conversation.id}',
-            extra: {
-              'name': conversation.otherName,
-              'initials': conversation.otherInitials,
-              'avatar': conversation.otherAvatar,
-            },
-          );
-        },
-        borderRadius: AppRadius.sm,
-        child: SizedBox(
-          width: 62.r,
-          child: Column(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  UJobAvatar(
-                    imageUrl: conversation.otherAvatar,
-                    initials: initials,
-                    size: 50.r,
-                  ),
-                  Positioned(
-                    right: -2.r,
-                    top: -3.r,
-                    child: conversation.unreadCount > 0
-                        ? Container(
-                            constraints: BoxConstraints(minWidth: 19.r),
-                            height: 19.r,
-                            padding: EdgeInsets.symmetric(horizontal: 4.w),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: AppColors.error,
-                              borderRadius: AppRadius.pill,
-                              border: Border.all(color: AppColors.bg, width: 2),
-                            ),
-                            child: Text(
-                              conversation.unreadCount > 9
-                                  ? '9+'
-                                  : '${conversation.unreadCount}',
-                              style: AppText.caption.copyWith(
-                                color: AppColors.surface,
-                                fontSize: 9.sp,
-                                fontWeight: FontWeight.w800,
-                                height: 1,
-                              ),
-                            ),
-                          )
-                        : Container(
-                            width: 13.r,
-                            height: 13.r,
-                            decoration: BoxDecoration(
-                              color: AppColors.warning,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.bg, width: 2),
-                            ),
-                          ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 6.h),
-              Text(
-                conversation.otherName.split(' ').first,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.caption.copyWith(
-                  color: AppColors.text2,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _SectionHeader extends StatelessWidget {
   final String title;
   final String? actionLabel;
@@ -864,139 +693,6 @@ class _EmptyJobs extends StatelessWidget {
                 size: 18.r,
               ),
               label: Text('Post a Job', style: AppText.button),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CompanyProfileSetup extends ConsumerWidget {
-  final VoidCallback onSetup;
-
-  const _CompanyProfileSetup({required this.onSetup});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.xl,
-        border: Border.all(color: AppColors.warning),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.warning.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-              color: AppColors.warning.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedBuilding03,
-              color: AppColors.warning,
-              size: 28.r,
-            ),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Complete your company profile',
-                  style: AppText.titleSm.copyWith(color: AppColors.text),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  'A complete profile helps attract better candidates and builds trust.',
-                  style: AppText.small.copyWith(color: AppColors.muted),
-                ),
-                SizedBox(height: 16.h),
-                FilledButton(
-                  onPressed: onSetup,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.warning,
-                    foregroundColor: AppColors.surface,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 24.w,
-                      vertical: 8.h,
-                    ),
-                    shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
-                  ),
-                  child: Text(
-                    'Setup Now',
-                    style: AppText.button.copyWith(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _VerificationPendingBanner extends StatelessWidget {
-  const _VerificationPendingBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.xl,
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.error.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedAlert02,
-              color: AppColors.error,
-              size: 28.r,
-            ),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Profile verification pending',
-                  style: AppText.titleSm.copyWith(color: AppColors.text),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  'Your profile is not verified yet. You have to wait for the verification from the admin.',
-                  style: AppText.small.copyWith(color: AppColors.muted),
-                ),
-              ],
             ),
           ),
         ],
