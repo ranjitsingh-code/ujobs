@@ -19,7 +19,7 @@ class DioClient {
         receiveTimeout: const Duration(seconds: 15),
         contentType: 'application/json',
         headers: {
-          'X-Api-Key': const String.fromEnvironment('API_KEY', defaultValue: 'jp_56a375680eef542027dc87979dee0f8c0e6c79940bdac564d21f48457d904ccc'),
+          'X-Api-Key': const String.fromEnvironment('API_KEY'),
         },
       ),
     );
