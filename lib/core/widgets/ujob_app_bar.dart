@@ -41,18 +41,23 @@ class UJobAppBar extends StatelessWidget implements PreferredSizeWidget {
             height: 56.h,
             color: backgroundColor ?? AppColors.surface,
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            child: Row(
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                if (showBack)
-                  UJobBackButton(onTap: onBack)
-                else
-                  SizedBox(width: 40.r),
-                Expanded(
-                  child:
-                      customTitle ??
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: showBack
+                      ? UJobBackButton(onTap: onBack)
+                      : SizedBox(width: 40.r),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 48.w),
+                  child: customTitle ??
                       Text(
                         title,
                         textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: AppText.bodyBold.copyWith(
                           color: titleColor ?? AppColors.text,
                           fontSize: 18.sp,
@@ -60,9 +65,10 @@ class UJobAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                 ),
                 if (rightWidget != null)
-                  rightWidget!
-                else
-                  SizedBox(width: 40.r),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: rightWidget!,
+                  ),
               ],
             ),
           ),

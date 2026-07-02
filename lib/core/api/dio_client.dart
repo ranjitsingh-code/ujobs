@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'api_endpoints.dart';
+import 'colored_dio_logger.dart';
 import '../providers/role_provider.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,17 +55,10 @@ class DioClient {
     );
 
     if (kDebugMode) {
-      dio.interceptors.add(
-        PrettyDioLogger(
-          requestHeader: true,
-          requestBody: true,
-          responseBody: true,
-          responseHeader: false,
-          error: true,
-          compact: true,
-          maxWidth: 90,
-        ),
-      );
+      dio.interceptors.addAll([
+        timestampInterceptor,
+        ColoredDioLogger(),
+      ]);
     }
   }
 
