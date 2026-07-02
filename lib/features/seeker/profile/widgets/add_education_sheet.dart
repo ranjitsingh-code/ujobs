@@ -67,8 +67,11 @@ class _AddEducationSheetState extends State<AddEducationSheet> {
   }
 
   void _save() {
-    if (_institutionCtrl.text.isEmpty || _degreeCtrl.text.isEmpty || _startDate == null) {
-      UJobToast.error(context, 'Validation Error', sub: 'Please fill out Institution, Degree, and Start Date');
+    if (_institutionCtrl.text.isEmpty || _degreeCtrl.text.isEmpty ||
+        _fieldCtrl.text.isEmpty || _gradeCtrl.text.isEmpty ||
+        _startDate == null || _endDate == null) {
+      UJobToast.error(context, 'Validation Error',
+          sub: 'Please fill out all required fields including Field of Study, Grade, Start Date, and End Date');
       return;
     }
 
@@ -112,19 +115,22 @@ class _AddEducationSheetState extends State<AddEducationSheet> {
             ),
             SizedBox(height: 20.h),
             UJobTextField(
-              label: 'Institution *',
+              label: 'Institution',
+              isRequired: true,
               hint: 'e.g. University of London',
               controller: _institutionCtrl,
             ),
             SizedBox(height: 16.h),
             UJobTextField(
-              label: 'Degree *',
+              label: 'Degree',
+              isRequired: true,
               hint: 'e.g. BSc Computer Science',
               controller: _degreeCtrl,
             ),
             SizedBox(height: 16.h),
             UJobTextField(
               label: 'Field of Study',
+              isRequired: true,
               hint: 'e.g. Computer Science',
               controller: _fieldCtrl,
             ),
@@ -136,7 +142,8 @@ class _AddEducationSheetState extends State<AddEducationSheet> {
                     onTap: () => _pickDate(true),
                     child: IgnorePointer(
                       child: UJobTextField(
-                        label: 'Start Date *',
+                        label: 'Start Date',
+                        isRequired: true,
                         hint: 'MM/DD/YYYY',
                         controller: TextEditingController(
                           text: _startDate != null ? DateFormat('MM/dd/yyyy').format(_startDate!) : '',
@@ -152,6 +159,7 @@ class _AddEducationSheetState extends State<AddEducationSheet> {
                     child: IgnorePointer(
                       child: UJobTextField(
                         label: 'End Date',
+                        isRequired: true,
                         hint: 'MM/DD/YYYY',
                         controller: TextEditingController(
                           text: _endDate != null ? DateFormat('MM/dd/yyyy').format(_endDate!) : '',
@@ -165,6 +173,7 @@ class _AddEducationSheetState extends State<AddEducationSheet> {
             SizedBox(height: 16.h),
             UJobTextField(
               label: 'Grade / Result',
+              isRequired: true,
               hint: 'e.g. First Class, 3.8 GPA',
               controller: _gradeCtrl,
             ),

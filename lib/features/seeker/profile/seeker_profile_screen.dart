@@ -393,14 +393,9 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileData = ref.watch(seekerProfileProvider);
-    final dashboardData = ref.watch(seekerDashboardProvider).valueOrNull;
     final email = profileData?.user.email ?? '';
 
-    final completenessPercentage =
-        profileData?.user.profileCompleted ??
-        dashboardData?.profileCompletion ??
-        0;
-    final completenessFraction = completenessPercentage / 100.0;
+
 
     String fullName = '${_firstNameCtrl.text} ${_lastNameCtrl.text}'.trim();
     if (fullName.isEmpty) fullName = 'User';
@@ -428,7 +423,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                 name: fullName,
                 headline: _headlineCtrl.text,
                 email: email,
-                completeness: completenessFraction,
+                isVerified: profileData?.user.verified == true,
                 onEditImage: () {},
               ),
               Padding(
@@ -449,6 +444,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               Expanded(
                                 child: UJobTextField(
                                   label: 'First Name',
+                                  isRequired: true,
                                   hint: 'John',
                                   controller: _firstNameCtrl,
                                 ),
@@ -457,6 +453,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               Expanded(
                                 child: UJobTextField(
                                   label: 'Last Name',
+                                  isRequired: true,
                                   hint: 'Doe',
                                   controller: _lastNameCtrl,
                                 ),
@@ -473,7 +470,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                                   countriesAsync.valueOrNull ?? [];
                               return UJobPhoneNumberField(
                                 label: "Phone Number",
-                                isRequired: false,
+                                isRequired: true,
                                 countries: countries,
                                 controller: _phoneCtrl,
                                 initialDialCode: _phoneCode,
@@ -502,6 +499,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                             children: [
                               Expanded(
                                 child: UJobCountryDropdown(
+                                  isRequired: true,
                                   value: _country,
                                   onChanged: (v) {
                                     setState(() {
@@ -514,6 +512,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               Expanded(
                                 child: UJobTextField(
                                   label: 'City',
+                                  isRequired: true,
                                   hint: 'London',
                                   controller: _cityCtrl,
                                 ),
@@ -526,6 +525,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               Expanded(
                                 child: UJobTextField(
                                   label: 'Address',
+                                  isRequired: true,
                                   hint: '123 Oxford Street',
                                   controller: _addressCtrl,
                                 ),
@@ -534,6 +534,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               Expanded(
                                 child: UJobTextField(
                                   label: 'Zip / Post Code',
+                                  isRequired: true,
                                   hint: 'W1D 1BS',
                                   controller: _zipCtrl,
                                 ),
@@ -876,6 +877,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                         children: [
                           UJobTextField(
                             label: 'Professional Headline',
+                            isRequired: true,
                             hint:
                                 'e.g. Senior React Developer with 5+ years experience',
                             controller: _headlineCtrl,
@@ -883,6 +885,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                           SizedBox(height: 16.h),
                           UJobTextField(
                             label: "About / Summary",
+                            isRequired: true,
                             hint: 'Tap to open editor',
                             readOnly: true,
                             maxLines: 4,
@@ -913,6 +916,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               Expanded(
                                 child: UJobDropdownField<String>(
                                   label: 'Experience - Years',
+                                  isRequired: true,
                                   value: _expYears,
                                   options: List.generate(
                                     50,
@@ -927,6 +931,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               Expanded(
                                 child: UJobDropdownField<String>(
                                   label: 'Months',
+                                  isRequired: true,
                                   value: _expMonths,
                                   options: List.generate(
                                     12,
@@ -944,6 +949,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               Expanded(
                                 child: UJobTextField(
                                   label: 'Expected Salary',
+                                  isRequired: true,
                                   hint: 'e.g. 65000',
                                   controller: _expectedSalaryCtrl,
                                   keyboardType: TextInputType.number,
@@ -965,6 +971,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
 
                                     return UJobDropdownField<String>(
                                       label: 'Currency',
+                                      isRequired: true,
                                       value: _currency,
                                       options: currencyOptions.isNotEmpty
                                           ? currencyOptions
@@ -984,6 +991,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                           SizedBox(height: 16.h),
                           UJobDropdownField<String>(
                             label: 'Salary Period',
+                            isRequired: true,
                             value: _salaryPeriod,
                             options: const [
                               ('Yearly', 'yearly'),
@@ -995,6 +1003,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                           SizedBox(height: 16.h),
                           UJobDropdownField<String>(
                             label: 'Availability',
+                            isRequired: true,
                             value: _availability,
                             options: const [
                               ('Immediately', 'immediately'),
@@ -1091,6 +1100,8 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                     _SectionCard(
                       title: 'Work Experience',
                       subtitle: "Your work history",
+                      isRequired: true,
+                      hasContent: _experiences.isNotEmpty,
                       icon: HugeIcons.strokeRoundedBriefcase02,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1272,6 +1283,8 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                     _SectionCard(
                       title: 'Education',
                       subtitle: "Your academic background",
+                      isRequired: true,
+                      hasContent: _educations.isNotEmpty,
                       icon: HugeIcons.strokeRoundedBook01,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1481,6 +1494,16 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                       label: "Update Profile",
                       color: AppColors.seekPrimary,
                       onTap: () async {
+                        if (_experiences.isEmpty) {
+                          UJobToast.error(context, 'Work Experience Required',
+                              sub: 'Please add at least 1 work experience entry.');
+                          return;
+                        }
+                        if (_educations.isEmpty) {
+                          UJobToast.error(context, 'Education Required',
+                              sub: 'Please add at least 1 education entry.');
+                          return;
+                        }
                         final service = ref.read(seekerProfileServiceProvider);
                         try {
                           final data = {
@@ -1613,20 +1636,19 @@ class _SeekerProfileHeader extends StatelessWidget {
   final String name;
   final String headline;
   final String email;
-  final double completeness;
+  final bool isVerified;
   final VoidCallback onEditImage;
 
   const _SeekerProfileHeader({
     required this.name,
     required this.headline,
     required this.email,
-    required this.completeness,
+    required this.isVerified,
     required this.onEditImage,
   });
 
   @override
   Widget build(BuildContext context) {
-    int percentCompleted = (completeness * 100).toInt();
 
     return Container(
       width: double.infinity,
@@ -1689,7 +1711,7 @@ class _SeekerProfileHeader extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (completeness == 1.0) ...[
+                        if (isVerified) ...[
                           SizedBox(width: 6.w),
                           HugeIcon(
                             icon: HugeIcons.strokeRoundedCheckmarkBadge01,
@@ -1735,54 +1757,36 @@ class _SeekerProfileHeader extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 24.h),
-          Container(
-            padding: EdgeInsets.all(16.r),
-            decoration: BoxDecoration(
-              color: AppColors.surface.withValues(alpha: 0.15),
-              borderRadius: AppRadius.lg,
-              border: Border.all(
-                color: AppColors.surface.withValues(alpha: 0.2),
+          if (!isVerified) ...[
+            SizedBox(height: 20.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: AppColors.white.withValues(alpha: 0.12),
+                borderRadius: AppRadius.lg,
+                border: Border.all(color: AppColors.white.withValues(alpha: 0.2)),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Profile Completeness',
-                      style: AppText.bodyMd.copyWith(color: AppColors.white),
-                    ),
-                    Text(
-                      '$percentCompleted%',
-                      style: AppText.bodyBold.copyWith(color: AppColors.white),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                ClipRRect(
-                  borderRadius: AppRadius.pill,
-                  child: LinearProgressIndicator(
-                    value: completeness,
-                    backgroundColor: AppColors.surface.withValues(alpha: 0.2),
-                    color: AppColors.surface,
-                    minHeight: 6.h,
+              child: Row(
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                    color: AppColors.white.withValues(alpha: 0.75),
+                    size: 20.r,
                   ),
-                ),
-                if (completeness < 1.0) ...[
-                  SizedBox(height: 12.h),
-                  Text(
-                    'Complete your profile to stand out to employers',
-                    style: AppText.caption.copyWith(
-                      color: AppColors.white.withValues(alpha: 0.8),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      'Fill all required fields to receive a verified badge',
+                      style: AppText.caption.copyWith(
+                        color: AppColors.white.withValues(alpha: 0.85),
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -1794,12 +1798,16 @@ class _SectionCard extends StatefulWidget {
   final String? subtitle;
   final dynamic icon;
   final Widget child;
+  final bool isRequired;
+  final bool? hasContent;
 
   const _SectionCard({
     required this.title,
     this.subtitle,
     required this.icon,
     required this.child,
+    this.isRequired = false,
+    this.hasContent,
   });
 
   @override
@@ -1811,11 +1819,15 @@ class _SectionCardState extends State<_SectionCard> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isEmpty = widget.isRequired && widget.hasContent == false;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.xl,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: isEmpty ? AppColors.error.withValues(alpha: 0.4) : AppColors.border,
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.seekPrimary.withValues(
@@ -1843,12 +1855,14 @@ class _SectionCardState extends State<_SectionCard> {
                   Container(
                     padding: EdgeInsets.all(8.r),
                     decoration: BoxDecoration(
-                      color: AppColors.seekPrimary.withValues(alpha: 0.1),
+                      color: isEmpty
+                          ? AppColors.error.withValues(alpha: 0.08)
+                          : AppColors.seekPrimary.withValues(alpha: 0.1),
                       borderRadius: AppRadius.md,
                     ),
                     child: HugeIcon(
                       icon: widget.icon,
-                      color: AppColors.seekPrimary,
+                      color: isEmpty ? AppColors.error : AppColors.seekPrimary,
                       size: 20.r,
                     ),
                   ),
@@ -1858,15 +1872,35 @@ class _SectionCardState extends State<_SectionCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          widget.title,
-                          style: AppText.bodyBold.copyWith(
-                            color: AppColors.text2,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              widget.title,
+                              style: AppText.bodyBold.copyWith(
+                                color: AppColors.text2,
+                              ),
+                            ),
+                            if (widget.isRequired) ...[
+                              SizedBox(width: 4.w),
+                              Text(
+                                '*',
+                                style: AppText.bodyBold.copyWith(
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                        if (widget.subtitle != null &&
-                            widget.subtitle!.isNotEmpty) ...[
-                          SizedBox(height: 2.h),
+                        SizedBox(height: 2.h),
+                        if (isEmpty)
+                          Text(
+                            'At least 1 required',
+                            style: AppText.caption.copyWith(
+                              color: AppColors.error,
+                            ),
+                          )
+                        else if (widget.subtitle != null &&
+                            widget.subtitle!.isNotEmpty)
                           Text(
                             widget.subtitle!,
                             style: AppText.caption.copyWith(
@@ -1875,7 +1909,6 @@ class _SectionCardState extends State<_SectionCard> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ],
                       ],
                     ),
                   ),

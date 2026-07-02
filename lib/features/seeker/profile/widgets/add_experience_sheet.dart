@@ -69,8 +69,8 @@ class _AddExperienceSheetState extends State<AddExperienceSheet> {
   }
 
   void _save() {
-    if (_titleCtrl.text.isEmpty || _companyCtrl.text.isEmpty || _startDate == null) {
-      UJobToast.error(context, 'Validation Error', sub: 'Please fill out Title, Company, and Start Date');
+    if (_titleCtrl.text.isEmpty || _companyCtrl.text.isEmpty || _locationCtrl.text.isEmpty || _startDate == null) {
+      UJobToast.error(context, 'Validation Error', sub: 'Please fill out Job Title, Company, Location, and Start Date');
       return;
     }
 
@@ -115,19 +115,22 @@ class _AddExperienceSheetState extends State<AddExperienceSheet> {
             ),
             SizedBox(height: 20.h),
             UJobTextField(
-              label: 'Job Title *',
+              label: 'Job Title',
+              isRequired: true,
               hint: 'e.g. Flutter Developer',
               controller: _titleCtrl,
             ),
             SizedBox(height: 16.h),
             UJobTextField(
-              label: 'Company Name *',
+              label: 'Company Name',
+              isRequired: true,
               hint: 'e.g. Google',
               controller: _companyCtrl,
             ),
             SizedBox(height: 16.h),
             UJobTextField(
               label: 'Location',
+              isRequired: true,
               hint: 'e.g. London',
               controller: _locationCtrl,
             ),
@@ -139,7 +142,8 @@ class _AddExperienceSheetState extends State<AddExperienceSheet> {
                     onTap: () => _pickDate(true),
                     child: IgnorePointer(
                       child: UJobTextField(
-                        label: 'Start Date *',
+                        label: 'Start Date',
+                        isRequired: true,
                         hint: 'MM/DD/YYYY',
                         controller: TextEditingController(
                           text: _startDate != null ? DateFormat('MM/dd/yyyy').format(_startDate!) : '',
