@@ -69,12 +69,10 @@ class Step4Application extends ConsumerWidget {
               value: method.value,
               groupValue: currentApplyVia,
               onChanged: (val) {
-                if (val != null) {
-                  notifier.updateField(state.copyWith(applyVia: val));
-                }
+                notifier.updateField(state.copyWith(applyVia: val));
               },
             );
-          }).toList(),
+          }),
           if (currentApplyVia == 'email') ...[
             SizedBox(height: 12.h),
             UJobTextField(
@@ -116,12 +114,10 @@ class Step4Application extends ConsumerWidget {
               value: req.value,
               groupValue: currentResume,
               onChanged: (val) {
-                if (val != null) {
-                  notifier.updateField(state.copyWith(resumeRequirement: val));
-                }
+                notifier.updateField(state.copyWith(resumeRequirement: val));
               },
             );
-          }).toList(),
+          }),
           SizedBox(height: 24.h),
 
           Text(
@@ -141,12 +137,10 @@ class Step4Application extends ConsumerWidget {
               value: policy.value,
               groupValue: currentCoverLetter,
               onChanged: (val) {
-                if (val != null) {
-                  notifier.updateField(state.copyWith(coverLetterRequirement: val));
-                }
+                notifier.updateField(state.copyWith(coverLetterRequirement: val));
               },
             );
-          }).toList(),
+          }),
           SizedBox(height: 24.h),
 
           UJobDatePickerField(

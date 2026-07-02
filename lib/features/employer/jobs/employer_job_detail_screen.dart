@@ -11,7 +11,6 @@ import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
-import '../../../core/widgets/ujob_rich_text_editor.dart';
 import '../../../core/widgets/ujob_rich_text_display.dart';
 import '../../../core/utils/job_action_helpers.dart';
 import '../../../core/models/job.dart';

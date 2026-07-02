@@ -149,7 +149,7 @@ class _WalletTabState extends ConsumerState<_WalletTab> {
             child: asyncWallet.when(
               data: (wallet) => _BalanceCard(balance: wallet.balance),
               loading: () => const SizedBox(),
-              error: (_, __) => const SizedBox(),
+              error: (_, _) => const SizedBox(),
             ),
           ),
           SliverPadding(
@@ -411,7 +411,7 @@ class _PaymentsTabState extends ConsumerState<_PaymentsTab> {
             controller: _scrollController,
             padding: EdgeInsets.all(20.w),
             itemCount: _payments.length + (_hasMore ? 1 : 0),
-            separatorBuilder: (_, __) => SizedBox(height: 12.h),
+            separatorBuilder: (_, _) => SizedBox(height: 12.h),
             itemBuilder: (context, index) {
               if (index == _payments.length) {
                 return Center(

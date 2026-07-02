@@ -1,6 +1,7 @@
 import '../../../core/providers/job_form_options_provider.dart';
 import '../../../core/providers/categories_provider.dart';
 import '../../../core/providers/countries_provider.dart';
+import '../../../core/providers/feature_flags_provider.dart';
 import 'dart:convert';
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
 
@@ -15,11 +16,13 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/models/job.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/api_error_parser.dart';
 import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_wizard_stepper.dart';
 import '../../../core/widgets/ujob_toast.dart';
+import '../../../core/widgets/ujob_rich_text_editor.dart';
 import 'post_job_wizard_provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import 'employer_job_provider.dart';
@@ -80,12 +83,23 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                 benefits: job.benefits ?? [],
                 applyVia: job.applyVia ?? 'internal',
                 resumeRequirement: job.resumeRequirement ?? 'required',
-                coverLetterRequirement: job.coverLetterRequirement ?? 'optional',
-                deadline: job.closesAt != null ? job.closesAt!.toIso8601String().split('T').first : '',
-                screeningQuestions: (job.screeningQuestions ?? []).map((q) => ScreeningQuestion(
-                  text: q['question_text'] ?? q['text'] ?? q['question'] ?? '',
-                  isRequired: q['is_required'] ?? true,
-                )).toList(),
+                coverLetterRequirement:
+                    job.coverLetterRequirement ?? 'optional',
+                deadline: job.closesAt != null
+                    ? job.closesAt!.toIso8601String().split('T').first
+                    : '',
+                screeningQuestions: (job.screeningQuestions ?? [])
+                    .map(
+                      (q) => ScreeningQuestion(
+                        text:
+                            q['question_text'] ??
+                            q['text'] ??
+                            q['question'] ??
+                            '',
+                        isRequired: q['is_required'] ?? true,
+                      ),
+                    )
+                    .toList(),
               ),
             );
       }
@@ -99,6 +113,10 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   }
 
   void _nextStep() {
+    if (_currentStep == 0 && !_validateStepOne()) {
+      return;
+    }
+
     if (_currentStep < _totalSteps - 1) {
       setState(() => _currentStep++);
       _pageController.animateToPage(
@@ -109,6 +127,32 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
     } else {
       // Final Submit happens in Step 6
     }
+  }
+
+  bool _validateStepOne() {
+    final state = ref.read(postJobWizardProvider);
+    final title = state.title.trim();
+    final description = getPlainTextFromQuillJson(state.description).trim();
+
+    if (title.isEmpty) {
+      UJobToast.error(
+        context,
+        'Validation Error',
+        sub: 'Job Title is required',
+      );
+      return false;
+    }
+
+    if (description.length < 20) {
+      UJobToast.error(
+        context,
+        'Validation Error',
+        sub: 'Description is required (min 20 chars)',
+      );
+      return false;
+    }
+
+    return true;
   }
 
   void _prevStep() {
@@ -129,7 +173,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
     try {
       final List<dynamic> ops = jsonDecode(deltaJson);
       final converter = QuillDeltaToHtmlConverter(
-        List.castFrom(ops).map((op) => Map<String, dynamic>.from(op)).toList()
+        List.castFrom(ops).map((op) => Map<String, dynamic>.from(op)).toList(),
       );
       return converter.convert();
     } catch (e) {
@@ -140,90 +184,160 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   Future<void> _submitJob(String targetStatus) async {
     final state = ref.read(postJobWizardProvider);
     final dio = ref.read(dioClientProvider).dio;
-    
+
     final options = ref.read(jobFormOptionsProvider).valueOrNull;
     final categories = ref.read(categoriesProvider).valueOrNull;
     final countries = ref.read(countriesProvider).valueOrNull;
-    
-    final fallbackApplyVia = options?.applicationMethods.isNotEmpty == true ? options!.applicationMethods.first.value : 'internal';
-    final fallbackResume = options?.resumeRequirements.isNotEmpty == true ? options!.resumeRequirements.first.value : 'required';
-    final fallbackCover = options?.coverLetterPolicies.isNotEmpty == true ? options!.coverLetterPolicies.first.value : 'optional';
-    final fallbackCategory = categories?.isNotEmpty == true ? categories!.first.id : '1';
-    final fallbackEmpType = options?.employmentTypes.isNotEmpty == true ? options!.employmentTypes.first.value : 'full_time';
-    final fallbackWorkplace = options?.workplaceTypes.isNotEmpty == true ? options!.workplaceTypes.first.value : 'on_site';
-    final fallbackCurrency = options?.currencies.isNotEmpty == true ? options!.currencies.first.value : 'GBP';
-    final fallbackSalaryPeriod = options?.salaryPeriods.isNotEmpty == true ? options!.salaryPeriods.first.value : 'monthly';
-    final fallbackEducation = options?.minimumEducationLevels.isNotEmpty == true ? options!.minimumEducationLevels.first.value : 'High School';
-    
+
+    final fallbackApplyVia = options?.applicationMethods.isNotEmpty == true
+        ? options!.applicationMethods.first.value
+        : 'internal';
+    final fallbackResume = options?.resumeRequirements.isNotEmpty == true
+        ? options!.resumeRequirements.first.value
+        : 'required';
+    final fallbackCover = options?.coverLetterPolicies.isNotEmpty == true
+        ? options!.coverLetterPolicies.first.value
+        : 'optional';
+    final fallbackCategory = categories?.isNotEmpty == true
+        ? categories!.first.id
+        : '1';
+    final fallbackEmpType = options?.employmentTypes.isNotEmpty == true
+        ? options!.employmentTypes.first.value
+        : 'full_time';
+    final fallbackWorkplace = options?.workplaceTypes.isNotEmpty == true
+        ? options!.workplaceTypes.first.value
+        : 'on_site';
+    final fallbackCurrency = options?.currencies.isNotEmpty == true
+        ? options!.currencies.first.value
+        : 'GBP';
+    final fallbackSalaryPeriod = options?.salaryPeriods.isNotEmpty == true
+        ? options!.salaryPeriods.first.value
+        : 'monthly';
+    final fallbackEducation = options?.minimumEducationLevels.isNotEmpty == true
+        ? options!.minimumEducationLevels.first.value
+        : 'High School';
+
     // Minimal validation
-    if (state.title.isEmpty || state.description.isEmpty) {
-      UJobToast.error(context, 'Validation Error', sub: 'Title and Description are required.');
+    if (!_validateStepOne()) {
       return;
     }
-    
+
     EasyLoading.show(status: 'Saving...');
-    
+
     try {
       final payload = {
         'title': state.title,
-        'employment_type': state.employmentType.isNotEmpty ? state.employmentType : fallbackEmpType,
-        'workplace_type': state.workplaceType.isNotEmpty ? state.workplaceType : fallbackWorkplace,
-        'category_id': state.category.isNotEmpty ? state.category : fallbackCategory,
+        'employment_type': state.employmentType.isNotEmpty
+            ? state.employmentType
+            : fallbackEmpType,
+        'workplace_type': state.workplaceType.isNotEmpty
+            ? state.workplaceType
+            : fallbackWorkplace,
+        'category_id': state.category.isNotEmpty
+            ? state.category
+            : fallbackCategory,
         'city': state.city,
-        'country': countries?.firstWhere((c) => c.name == state.country, orElse: () => countries.first).iso2 ?? 'GB',
+        'country':
+            countries
+                ?.firstWhere(
+                  (c) => c.name == state.country,
+                  orElse: () => countries.first,
+                )
+                .iso2 ??
+            'GB',
         'vacancies': int.tryParse(state.openings) ?? 1,
         if (state.deadline.isNotEmpty) 'application_deadline': state.deadline,
-        if (state.salaryMin.isNotEmpty) 'salary_min': int.tryParse(state.salaryMin),
-        if (state.salaryMax.isNotEmpty) 'salary_max': int.tryParse(state.salaryMax),
-        'salary_currency': state.currency.isNotEmpty ? state.currency : fallbackCurrency,
-        'salary_period': state.salaryPeriod.isNotEmpty ? state.salaryPeriod : fallbackSalaryPeriod,
+        if (state.salaryMin.isNotEmpty)
+          'salary_min': int.tryParse(state.salaryMin),
+        if (state.salaryMax.isNotEmpty)
+          'salary_max': int.tryParse(state.salaryMax),
+        'salary_currency': state.currency.isNotEmpty
+            ? state.currency
+            : fallbackCurrency,
+        'salary_period': state.salaryPeriod.isNotEmpty
+            ? state.salaryPeriod
+            : fallbackSalaryPeriod,
         'description': _deltaToHtml(state.description),
         'responsibilities': _deltaToHtml(state.responsibilities),
         'requirements': _deltaToHtml(state.requirements),
-        if (state.experience.isNotEmpty) 'experience_min_years': int.tryParse(state.experience),
-        'min_education': state.education.isNotEmpty ? state.education : fallbackEducation,
-        'preferred_skills': state.preferredSkills.where((e) => e.trim().isNotEmpty).map((e) => e.trim()).join(', '),
-        'languages_required': state.languages.where((e) => e.trim().isNotEmpty).map((e) => e.trim()).join(', '),
-        'certifications_required': state.certifications.where((e) => e.trim().isNotEmpty).map((e) => e.trim()).join(', '),
+        if (state.experience.isNotEmpty)
+          'experience_min_years': int.tryParse(state.experience),
+        'min_education': state.education.isNotEmpty
+            ? state.education
+            : fallbackEducation,
+        'preferred_skills': state.preferredSkills
+            .where((e) => e.trim().isNotEmpty)
+            .map((e) => e.trim())
+            .join(', '),
+        'languages_required': state.languages
+            .where((e) => e.trim().isNotEmpty)
+            .map((e) => e.trim())
+            .join(', '),
+        'certifications_required': state.certifications
+            .where((e) => e.trim().isNotEmpty)
+            .map((e) => e.trim())
+            .join(', '),
         if (state.ageMin.isNotEmpty) 'age_min': int.tryParse(state.ageMin),
         if (state.ageMax.isNotEmpty) 'age_max': int.tryParse(state.ageMax),
         'benefits': '[${state.benefits.map((b) => '"$b"').join(',')}]',
-        'application_method': state.applyVia.isNotEmpty ? state.applyVia : fallbackApplyVia,
-        if (state.applyVia == 'email' && state.applicationEmail.isNotEmpty) 'application_email': state.applicationEmail,
-        if (state.applyVia == 'external' && state.applicationUrl.isNotEmpty) 'application_url': state.applicationUrl,
-        'resume_required': state.resumeRequirement.isNotEmpty ? state.resumeRequirement : fallbackResume,
-        'cover_letter_policy': state.coverLetterRequirement.isNotEmpty ? state.coverLetterRequirement : fallbackCover,
+        'application_method': state.applyVia.isNotEmpty
+            ? state.applyVia
+            : fallbackApplyVia,
+        if (state.applyVia == 'email' && state.applicationEmail.isNotEmpty)
+          'application_email': state.applicationEmail,
+        if (state.applyVia == 'external' && state.applicationUrl.isNotEmpty)
+          'application_url': state.applicationUrl,
+        'resume_required': state.resumeRequirement.isNotEmpty
+            ? state.resumeRequirement
+            : fallbackResume,
+        'cover_letter_policy': state.coverLetterRequirement.isNotEmpty
+            ? state.coverLetterRequirement
+            : fallbackCover,
         'screening_questions': state.screeningQuestions
             .asMap()
             .entries
-            .map((e) => {
-                  'question_text': e.value.text,
-                  'is_required': e.value.isRequired,
-                  'order_index': e.key,
-                })
+            .map(
+              (e) => {
+                'question_text': e.value.text,
+                'is_required': e.value.isRequired,
+                'order_index': e.key,
+              },
+            )
             .toList(),
         'status': targetStatus,
       };
 
-      if (_isEditing) {
-        // Assume PUT /employer/jobs/:id
-        await dio.put('${Ep.employerJobs}/${widget.job!.id}', data: payload);
-      } else {
-        await dio.post(Ep.employerJobs, data: payload);
-      }
-      
+      final res = _isEditing
+          ? await dio.put('${Ep.employerJobs}/${widget.job!.id}', data: payload)
+          : await dio.post(Ep.employerJobs, data: payload);
+
       EasyLoading.dismiss();
-      
+
       // Reload Dashboard & Jobs lists
       ref.invalidate(employerDashboardProvider);
       ref.invalidate(employerJobsProvider);
-      if (widget.job != null) ref.invalidate(employerJobDetailProvider(widget.job!.id));
-      
+      if (widget.job != null) {
+        ref.invalidate(employerJobDetailProvider(widget.job!.id));
+      }
+
       // Clear wizard state for next time
       ref.invalidate(postJobWizardProvider);
 
       if (mounted) {
-        UJobToast.success(context, 'Success', sub: targetStatus == 'draft' ? 'Job saved to drafts' : (_isEditing ? 'Job updated successfully' : 'Job posted successfully'));
+        final featureFlags = ref.read(featureFlagsProvider).valueOrNull;
+        final jobApprovalRequired = featureFlags?.jobApprovalRequired ?? false;
+        final successSub = targetStatus == 'draft'
+            ? 'Job saved to drafts'
+            : (_isEditing
+                  ? 'Job updated successfully'
+                  : (jobApprovalRequired
+                        ? 'Job submitted for review'
+                        : 'Job published successfully'));
+        UJobToast.success(
+          context,
+          'Success',
+          sub: extractApiMessage(res.data) ?? successSub,
+        );
         context.pop();
       }
     } catch (e) {
@@ -235,7 +349,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
           errorMsg = data['message'];
         }
       }
-      print('Post Job Error: $e');
+      debugPrint('Post Job Error: $e');
       if (mounted) UJobToast.error(context, 'Error', sub: errorMsg);
     }
   }
@@ -243,6 +357,12 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final featureFlags = ref.watch(featureFlagsProvider).valueOrNull;
+    final jobApprovalRequired = featureFlags?.jobApprovalRequired ?? false;
+    final publishStatus = jobApprovalRequired ? 'pending' : 'active';
+    final publishLabel = _isEditing
+        ? 'Update Job'
+        : (jobApprovalRequired ? 'Send for Review' : 'Publish Job');
 
     // Create translation labels manually if they don't exist yet,
     // to avoid breaking build before arb update.
@@ -295,7 +415,6 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                   Step5Screening(),
                   Step6Review(
                     onPublish: () {
-                      // TODO: call API
                       context.pop();
                     },
                   ),
@@ -332,9 +451,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                             Expanded(
                               flex: 1,
                               child: UJobButton(
-                                label: _isEditing
-                                    ? 'Update Job'
-                                    : 'Publish Job',
+                                label: publishLabel,
                                 icon: HugeIcon(
                                   icon: _isEditing
                                       ? HugeIcons.strokeRoundedRefresh
@@ -342,7 +459,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                                   color: AppColors.surface,
                                   size: 20.r,
                                 ),
-                                onTap: () => _submitJob('pending'),
+                                onTap: () => _submitJob(publishStatus),
                               ),
                             ),
                           ],

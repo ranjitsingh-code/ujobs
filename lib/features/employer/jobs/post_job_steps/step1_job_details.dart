@@ -40,6 +40,7 @@ class Step1JobDetails extends ConsumerWidget {
         children: [
           UJobTextField(
             label: context.l10n.jobTitle,
+            isRequired: true,
             hint: context.l10n.egSeniorUxDesigner,
             controller: TextEditingController(text: state.title)
               ..selection = TextSelection.collapsed(offset: state.title.length),
@@ -136,8 +137,9 @@ class Step1JobDetails extends ConsumerWidget {
           UJobCountryDropdown(
             value: state.country.isEmpty ? 'United Kingdom' : state.country,
             onChanged: (val) {
-              if (val != null)
+              if (val != null) {
                 notifier.updateField(state.copyWith(country: val));
+              }
             },
           ),
           SizedBox(height: 16.h),
@@ -164,8 +166,9 @@ class Step1JobDetails extends ConsumerWidget {
                         value: state.currency.isEmpty && options.currencies.isNotEmpty ? options.currencies.first.value : state.currency,
                         options: options.currencies.map((c) => (c.label, c.value)).toList(),
                         onChanged: (val) {
-                          if (val != null)
+                          if (val != null) {
                             notifier.updateField(state.copyWith(currency: val));
+                          }
                         },
                       ),
                     ),
@@ -178,10 +181,11 @@ class Step1JobDetails extends ConsumerWidget {
                             : state.salaryPeriod,
                         options: options.salaryPeriods.map((p) => (p.label, p.value)).toList(),
                         onChanged: (val) {
-                          if (val != null)
+                          if (val != null) {
                             notifier.updateField(
                               state.copyWith(salaryPeriod: val),
                             );
+                          }
                         },
                       ),
                     ),
@@ -237,6 +241,7 @@ class Step1JobDetails extends ConsumerWidget {
             ),
             child: UJobTextField(
               label: context.l10n.jobDescription1,
+              isRequired: true,
               hint: context.l10n.tapToOpenEditor,
               minLines: 5,
               maxLines: 10,

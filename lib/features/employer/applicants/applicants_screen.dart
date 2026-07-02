@@ -10,13 +10,11 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_applicant_card.dart';
 import '../../../core/widgets/ujob_pill_tab_bar.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_dropdown_field.dart';
 import 'employer_applicant_provider.dart';
-import 'applicant_detail_screen.dart';
 
 class ApplicantsScreen extends ConsumerStatefulWidget {
   final int initialIndex;

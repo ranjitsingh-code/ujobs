@@ -160,12 +160,34 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
 
   Future<void> _updateProfile() async {
     // 1. Validate required fields
-    if (_nameController.text.trim().isEmpty ||
-        _selectedIndustryId == null ||
-        _contactNameController.text.trim().isEmpty ||
-        _contactEmailController.text.trim().isEmpty ||
-        _contactPhoneController.text.trim().isEmpty) {
-      UJobToast.error(context, 'Validation Error', sub: 'Please fill all required fields marked with *');
+    final String? fieldError = _nameController.text.trim().isEmpty
+        ? 'Company name is required.'
+        : _selectedIndustryId == null
+        ? 'Industry is required.'
+        : _aboutController.text.trim().isEmpty
+        ? 'About Company is required.'
+        : _contactNameController.text.trim().isEmpty
+        ? 'Contact name is required.'
+        : _contactEmailController.text.trim().isEmpty
+        ? 'Contact email is required.'
+        : _contactPhoneController.text.trim().isEmpty
+        ? 'Contact phone is required.'
+        : _addressController.text.trim().isEmpty
+        ? 'Address is required.'
+        : _cityController.text.trim().isEmpty
+        ? 'City is required.'
+        : _postcodeController.text.trim().isEmpty
+        ? 'Postcode is required.'
+        : _selectedCountry == null
+        ? 'Country is required.'
+        : _selectedSize == null
+        ? 'Company size is required.'
+        : _selectedWorkType == null
+        ? 'Work type is required.'
+        : null;
+
+    if (fieldError != null) {
+      UJobToast.error(context, 'Required Field', sub: fieldError);
       return;
     }
 
@@ -694,7 +716,7 @@ class _SectionCardState extends State<_SectionCard> {
           AnimatedCrossFade(
             firstChild: const SizedBox(width: double.infinity, height: 0),
             secondChild: Padding(
-              padding: EdgeInsets.fromLTRB(20.r, 0, 20.r, 20.r),
+              padding: EdgeInsets.fromLTRB(20.r, 16.r, 20.r, 20.r),
               child: widget.child,
             ),
             crossFadeState: _isExpanded

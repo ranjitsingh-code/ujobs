@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/l10n_extensions.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/widgets/ujob_text_field.dart';
@@ -10,19 +11,117 @@ import '../../../../core/widgets/ujob_rich_text_editor.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/models/skill.dart';
 import '../../../../core/providers/job_form_options_provider.dart';
+import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/providers/skills_provider.dart';
+import '../../../../core/utils/api_error_parser.dart';
+import '../../../../core/widgets/ujob_toast.dart';
 import '../post_job_wizard_provider.dart';
 
-class Step2Requirements extends ConsumerWidget {
+class Step2Requirements extends ConsumerStatefulWidget {
   const Step2Requirements({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<Step2Requirements> createState() => _Step2RequirementsState();
+}
+
+class _Step2RequirementsState extends ConsumerState<Step2Requirements> {
+  List<Skill> _availableSkills = [];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final initialSkills = ref.read(publicSkillsProvider).valueOrNull;
+      if (initialSkills != null && mounted) {
+        setState(() {
+          _availableSkills = initialSkills;
+        });
+      }
+    });
+  }
+
+  Future<String?> _createEmployerSkill(
+    BuildContext context,
+    WidgetRef ref,
+    String value,
+  ) async {
+    final text = value.trim();
+    if (text.length < 2) {
+      UJobToast.error(context, 'Skill name is too short');
+      return null;
+    }
+
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final response = await dio.post(
+        Ep.employerSkills,
+        data: {'name': text},
+      );
+      final createdSkill = Skill.fromJson(
+        response.data['data'] as Map<String, dynamic>,
+      );
+      if (mounted &&
+          !_availableSkills.any((skill) => skill.id == createdSkill.id)) {
+        setState(() {
+          _availableSkills = [..._availableSkills, createdSkill];
+        });
+      }
+      return createdSkill.name;
+    } on DioException catch (e) {
+      if (context.mounted) {
+        final apiError = parseApiErrorDetail(e);
+        final statusCode = e.response?.statusCode;
+        String message = 'Please try again.';
+
+        if (statusCode == 404) {
+          message = 'Skill add service is not available right now.';
+        } else if (statusCode == 422 || apiError.code == 'CONTENT_VIOLATION') {
+          message = apiError.message;
+        } else if (statusCode == 400) {
+          message = apiError.message;
+        } else if (apiError.message.isNotEmpty &&
+            apiError.message != 'A network error occurred.') {
+          message = apiError.message;
+        }
+
+        UJobToast.error(
+          context,
+          'Could not add skill',
+          sub: message,
+        );
+      }
+      return null;
+    } catch (e) {
+      if (context.mounted) {
+        UJobToast.error(
+          context,
+          'Could not add skill',
+          sub: 'Please try again.',
+        );
+      }
+      return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(postJobWizardProvider);
     final notifier = ref.read(postJobWizardProvider.notifier);
     
     final optionsAsync = ref.watch(jobFormOptionsProvider);
     final options = optionsAsync.valueOrNull;
+    final publicSkills = ref.watch(publicSkillsProvider).valueOrNull ?? [];
+    if (_availableSkills.isEmpty && publicSkills.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _availableSkills = publicSkills;
+        });
+      });
+    }
     
     if (options == null) {
       return UJobLoading(count: 3);
@@ -39,8 +138,9 @@ class Step2Requirements extends ConsumerWidget {
             value: state.education.isEmpty && options.minimumEducationLevels.isNotEmpty ? options.minimumEducationLevels.first.value : state.education,
             options: options.minimumEducationLevels.map((e) => (e.label, e.value)).toList(),
             onChanged: (val) {
-              if (val != null)
+              if (val != null) {
                 notifier.updateField(state.copyWith(education: val));
+              }
             },
           ),
           SizedBox(height: 20.h),
@@ -95,13 +195,14 @@ class Step2Requirements extends ConsumerWidget {
             label: context.l10n.preferredSkills,
             hint: context.l10n.typeToSearchOrAddASkill,
             tags: state.preferredSkills,
-            suggestions: options.preferredSkillsList.map((s) => s.name).toList(),
+            suggestions: _availableSkills.map((s) => s.name).toList(),
+            onCreateTag: (value) => _createEmployerSkill(context, ref, value),
             onChanged: (tags) =>
                 notifier.updateField(state.copyWith(preferredSkills: tags)),
           ),
           SizedBox(height: 8.h),
           Text(
-            'Select from the list or type a custom skill and tap done.',
+            'Select from the list. If not found, add a new skill.',
             style: AppText.small.copyWith(color: AppColors.muted),
           ),
           SizedBox(height: 2.h),

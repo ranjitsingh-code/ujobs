@@ -6,6 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/ujob_rich_text_display.dart';
 import '../../../../core/providers/job_form_options_provider.dart';
 import '../../../../core/providers/categories_provider.dart';
+import '../../../../core/providers/feature_flags_provider.dart';
 import '../post_job_wizard_provider.dart';
 
 class Step6Review extends ConsumerWidget {
@@ -47,9 +48,12 @@ class Step6Review extends ConsumerWidget {
     final state = ref.watch(postJobWizardProvider);
     final optionsAsync = ref.watch(jobFormOptionsProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
+    final featureFlagsAsync = ref.watch(featureFlagsProvider);
     final options = optionsAsync.valueOrNull;
     final categories = categoriesAsync.valueOrNull;
-    
+    final jobApprovalRequired =
+        featureFlagsAsync.valueOrNull?.jobApprovalRequired ?? false;
+
     if (options == null || categories == null) return const SizedBox();
 
     String getLabel(List list, String value) {
@@ -59,10 +63,6 @@ class Step6Review extends ConsumerWidget {
         return value;
       }
     }
-    
-    final categoryName = state.category == 'Other' ? state.customCategory : 
-        (categories.where((c) => c.id.toString() == state.category).firstOrNull?.name ?? state.category);
-
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
@@ -92,8 +92,14 @@ class Step6Review extends ConsumerWidget {
                   'Location',
                   '${state.city}${state.city.isNotEmpty && state.country.isNotEmpty ? ', ' : ''}${state.country}',
                 ),
-                _buildSummaryRow('Employment Type', state.employmentType),
-                _buildSummaryRow('Workplace', getLabel(options.workplaceTypes, state.workplaceType)),
+                _buildSummaryRow(
+                  'Employment Type',
+                  getLabel(options.employmentTypes, state.employmentType),
+                ),
+                _buildSummaryRow(
+                  'Workplace',
+                  getLabel(options.workplaceTypes, state.workplaceType),
+                ),
                 _buildSummaryRow('Vacancies', state.openings),
                 _buildSummaryRow(
                   'Salary',
@@ -101,15 +107,27 @@ class Step6Review extends ConsumerWidget {
                       ? '${state.currency} ${state.salaryMin} - ${state.salaryMax}'
                       : 'Not specified',
                 ),
-                _buildSummaryRow('Min Education', getLabel(options.minimumEducationLevels, state.education)),
+                _buildSummaryRow(
+                  'Min Education',
+                  getLabel(options.minimumEducationLevels, state.education),
+                ),
                 if (state.experience.isNotEmpty)
                   _buildSummaryRow('Experience', '${state.experience} years'),
                 if (state.languages.isNotEmpty)
-                  _buildSummaryRow('Languages', state.languages.where((e) => e.trim().isNotEmpty).map((e) => e.trim()).join(', ')),
+                  _buildSummaryRow(
+                    'Languages',
+                    state.languages
+                        .where((e) => e.trim().isNotEmpty)
+                        .map((e) => e.trim())
+                        .join(', '),
+                  ),
                 if (state.certifications.isNotEmpty)
                   _buildSummaryRow(
                     'Certifications',
-                    state.certifications.where((e) => e.trim().isNotEmpty).map((e) => e.trim()).join(', '),
+                    state.certifications
+                        .where((e) => e.trim().isNotEmpty)
+                        .map((e) => e.trim())
+                        .join(', '),
                   ),
                 if (state.ageMin.isNotEmpty || state.ageMax.isNotEmpty)
                   _buildSummaryRow(
@@ -119,13 +137,30 @@ class Step6Review extends ConsumerWidget {
                 if (state.preferredSkills.isNotEmpty)
                   _buildSummaryRow(
                     'Preferred Skills',
-                    state.preferredSkills.where((e) => e.trim().isNotEmpty).map((e) => e.trim()).join(', '),
+                    state.preferredSkills
+                        .where((e) => e.trim().isNotEmpty)
+                        .map((e) => e.trim())
+                        .join(', '),
                   ),
-                _buildSummaryRow('Apply Via', getLabel(options.applicationMethods, state.applyVia)),
-                if (state.applyVia == 'email') _buildSummaryRow('Email', state.applicationEmail),
-                if (state.applyVia == 'external') _buildSummaryRow('URL', state.applicationUrl),
-                _buildSummaryRow('Resume', getLabel(options.resumeRequirements, state.resumeRequirement)),
-                _buildSummaryRow('Cover Letter', getLabel(options.coverLetterPolicies, state.coverLetterRequirement)),
+                _buildSummaryRow(
+                  'Apply Via',
+                  getLabel(options.applicationMethods, state.applyVia),
+                ),
+                if (state.applyVia == 'email')
+                  _buildSummaryRow('Email', state.applicationEmail),
+                if (state.applyVia == 'external')
+                  _buildSummaryRow('URL', state.applicationUrl),
+                _buildSummaryRow(
+                  'Resume',
+                  getLabel(options.resumeRequirements, state.resumeRequirement),
+                ),
+                _buildSummaryRow(
+                  'Cover Letter',
+                  getLabel(
+                    options.coverLetterPolicies,
+                    state.coverLetterRequirement,
+                  ),
+                ),
                 _buildSummaryRow('Deadline', state.deadline),
               ],
             ),
@@ -272,7 +307,7 @@ class Step6Review extends ConsumerWidget {
             SizedBox(height: 24.h),
           ],
 
-          // Ready to publish
+          // Ready to publish / review
           Container(
             width: double.infinity,
             padding: EdgeInsets.all(16.r),
@@ -286,10 +321,17 @@ class Step6Review extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Ready to publish?', style: AppText.heading3),
+                Text(
+                  jobApprovalRequired
+                      ? 'Ready to send for review?'
+                      : 'Ready to publish?',
+                  style: AppText.heading3,
+                ),
                 SizedBox(height: 6.h),
                 Text(
-                  'Saving will update the job listing immediately.',
+                  jobApprovalRequired
+                      ? 'Submitting will send the job to admin review before it goes live.'
+                      : 'Publishing will make the job listing live immediately.',
                   style: AppText.bodyMedium.copyWith(color: AppColors.muted),
                 ),
               ],

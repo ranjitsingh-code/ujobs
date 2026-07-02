@@ -85,7 +85,9 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
   @override
   Widget build(BuildContext context) {
     final dashboardAsync = ref.watch(employerDashboardProvider);
-    final isVerified = dashboardAsync.valueOrNull?.isVerified ?? false;
+    final dashboard = dashboardAsync.valueOrNull;
+    final canPostJob = dashboard?.canPostJob ?? false;
+    final isVerified = dashboard?.isVerified ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -101,20 +103,25 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
               searchCtrl: _searchCtrl,
               onSearchChanged: (v) => setState(() => _query = v),
             ),
-            if (dashboardAsync.valueOrNull != null && dashboardAsync.valueOrNull!.verificationStatus == 'unverified')
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-                child: const UJobVerificationPendingBanner(),
-              ),
-            if (dashboardAsync.valueOrNull != null && !isVerified)
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-                child: UJobCompanyProfileSetup(
-                  onSetup: () {
-                    context.push('/employer/profile');
-                  },
+            if (dashboard != null) ...[
+              if (!dashboard.isAccountActive)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                  child: UJobAccountStatusBanner(status: dashboard.userStatus),
+                )
+              else if (dashboard.verificationStatus == 'pending')
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                  child: const UJobVerificationPendingBanner(),
+                )
+              else if (!dashboard.isVerified)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                  child: UJobCompanyProfileSetup(
+                    onSetup: () => context.push('/employer/profile'),
+                  ),
                 ),
-              ),
+            ],
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -134,8 +141,16 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
         ),
       ),
       floatingActionButton: _CompactPostJobButton(
-        isProfileComplete: isVerified,
+        isProfileComplete: canPostJob,
         onTap: () {
+          if (dashboard != null && !dashboard.isAccountActive) {
+            UJobToast.error(
+              context,
+              'Account Not Active',
+              sub: 'Your account status is "${dashboard.userStatus}". Please contact support.',
+            );
+            return;
+          }
           if (!isVerified) {
             UJobToast.error(
               context,

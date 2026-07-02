@@ -14,7 +14,6 @@ import '../../../core/widgets/ujob_pill_tab_bar.dart';
 import '../../../core/widgets/ujob_applicant_card.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import 'employer_applicant_provider.dart';
-import 'applicant_detail_screen.dart';
 
 class JobApplicantsScreen extends ConsumerStatefulWidget {
   final Job job;

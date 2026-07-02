@@ -6,7 +6,6 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/animated_page_wrapper.dart';
-import '../../core/providers/feature_flags_provider.dart';
 
 class EmployerShell extends ConsumerWidget {
   final Widget child;
@@ -15,8 +14,6 @@ class EmployerShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).matchedLocation;
-    final featureFlagsState = ref.watch(featureFlagsProvider);
-    final featureFlags = featureFlagsState.valueOrNull ?? const FeatureFlags();
 
     final tabs = [
       ('/employer', HugeIcons.strokeRoundedHome01, context.l10n.dashboard),

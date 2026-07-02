@@ -63,11 +63,21 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
         ),
       ),
       data: (dashboard) {
+        if (dashboard.userStatus.toLowerCase() == 'suspended') {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.go('/suspended');
+          });
+          return const Scaffold(
+            backgroundColor: AppColors.bg,
+            body: UJobSpinner(),
+          );
+        }
+
         final user = auth.valueOrNull;
         final firstName = user?.firstName.trim();
         final name = firstName?.isNotEmpty == true ? firstName! : 'there';
         final hour = DateTime.now().hour;
-        final greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+        final greeting = hour < 12 ? context.l10n.goodMorning : hour < 18 ? context.l10n.goodAfternoon : context.l10n.goodEvening;
 
         return Scaffold(
       backgroundColor: AppColors.bg,
@@ -99,6 +109,14 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
                 _QuickActions(
                   isVerified: dashboard.isVerified,
                   onPostJob: () {
+                    if (!dashboard.isAccountActive) {
+                      UJobToast.error(
+                        context,
+                        'Account Not Active',
+                        sub: 'Your account status is "${dashboard.userStatus}". Please contact support.',
+                      );
+                      return;
+                    }
                     if (!dashboard.isVerified) {
                       UJobToast.error(
                         context,
@@ -110,16 +128,16 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
                     context.push('/employer/post-job');
                   },
                 ),
-                if (dashboard.verificationStatus == 'unverified') ...[
+                if (!dashboard.isAccountActive) ...[
+                  SizedBox(height: 24.h),
+                  UJobAccountStatusBanner(status: dashboard.userStatus),
+                ] else if (dashboard.verificationStatus == 'pending') ...[
                   SizedBox(height: 24.h),
                   const UJobVerificationPendingBanner(),
-                ],
-                if (!dashboard.isVerified) ...[
+                ] else if (!dashboard.isVerified) ...[
                   SizedBox(height: 24.h),
                   UJobCompanyProfileSetup(
-                    onSetup: () {
-                      context.push('/employer/profile');
-                    },
+                    onSetup: () => context.push('/employer/profile'),
                   ),
                 ],
                 // if (messagesToReply.isNotEmpty) ...[
@@ -131,8 +149,8 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
                 // ],
                 SizedBox(height: 24.h),
                 _SectionHeader(
-                  title: 'My Job Listings',
-                  actionLabel: dashboard.recentJobs.isEmpty ? null : 'See all',
+                  title: context.l10n.myJobListings,
+                  actionLabel: dashboard.recentJobs.isEmpty ? null : context.l10n.seeAll,
                   onActionTap: dashboard.recentJobs.isEmpty
                       ? null
                       : () => context.go('/employer/jobs'),
@@ -142,6 +160,14 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
                   _EmptyJobs(
                     isVerified: dashboard.isVerified,
                     onPostJob: () {
+                      if (!dashboard.isAccountActive) {
+                        UJobToast.error(
+                          context,
+                          'Account Not Active',
+                          sub: 'Your account status is "${dashboard.userStatus}". Please contact support.',
+                        );
+                        return;
+                      }
                       if (!dashboard.isVerified) {
                         UJobToast.error(
                           context,
@@ -390,7 +416,7 @@ class _DashboardHeader extends StatelessWidget {
                     child: _StatTile(
                       value: '${dashboard.totalJobs}',
                       label: context.l10n.totalJobs,
-                      icon: Icons.work_outline_rounded,
+                      icon: HugeIcons.strokeRoundedBriefcase01,
                       onTap: onTotalJobsTap,
                     ),
                   ),
@@ -399,7 +425,7 @@ class _DashboardHeader extends StatelessWidget {
                     child: _StatTile(
                       value: '${dashboard.activeJobs}',
                       label: context.l10n.activeJobs,
-                      icon: Icons.work_history_outlined,
+                      icon: HugeIcons.strokeRoundedJobSearch,
                       onTap: onActiveJobsTap,
                     ),
                   ),
@@ -412,7 +438,7 @@ class _DashboardHeader extends StatelessWidget {
                     child: _StatTile(
                       value: '${dashboard.totalApplicants}',
                       label: context.l10n.totalApplicants,
-                      icon: Icons.groups_outlined,
+                      icon: HugeIcons.strokeRoundedUserGroup,
                       onTap: onTotalApplicantsTap,
                     ),
                   ),
@@ -421,7 +447,7 @@ class _DashboardHeader extends StatelessWidget {
                     child: _StatTile(
                       value: '${dashboard.shortlisted}',
                       label: context.l10n.statusShortlisted,
-                      icon: Icons.bookmark_added_outlined,
+                      icon: HugeIcons.strokeRoundedBookmark02,
                       onTap: onShortlistedTap,
                     ),
                   ),
@@ -439,7 +465,7 @@ class _DashboardHeader extends StatelessWidget {
 class _StatTile extends StatelessWidget {
   final String value;
   final String label;
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final VoidCallback onTap;
 
   const _StatTile({
@@ -474,7 +500,7 @@ class _StatTile extends StatelessWidget {
                   color: AppColors.surface.withValues(alpha: 0.12),
                   borderRadius: AppRadius.sm,
                 ),
-                child: Icon(icon, color: AppColors.surface, size: 19.r),
+                child: HugeIcon(icon: icon, color: AppColors.surface, size: 19.r),
               ),
               SizedBox(width: 10.w),
               Expanded(
@@ -563,7 +589,7 @@ class _QuickActions extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Post a Job',
+                          context.l10n.postJob,
                           style: AppText.titleSm.copyWith(
                             color: AppColors.surface,
                             fontWeight: FontWeight.w800,
@@ -572,7 +598,7 @@ class _QuickActions extends StatelessWidget {
                         ),
                         SizedBox(height: 2.h),
                         Text(
-                          'Create a new job listing',
+                          context.l10n.postJobSub,
                           style: AppText.caption.copyWith(
                             color: AppColors.surface.withValues(alpha: 0.72),
                           ),
@@ -580,8 +606,8 @@ class _QuickActions extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward_rounded,
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowRight01,
                     color: AppColors.surface.withValues(alpha: 0.86),
                     size: 21.r,
                   ),
@@ -666,34 +692,31 @@ class _EmptyJobs extends StatelessWidget {
           ),
           SizedBox(height: 10.h),
           Text(
-            'You have no listed jobs yet',
+            context.l10n.emptyJobsTitle,
             textAlign: TextAlign.center,
             style: AppText.titleMd.copyWith(color: AppColors.text2),
           ),
           SizedBox(height: 6.h),
           Text(
-            'Create your first listing to start receiving applicants.',
+            context.l10n.emptyJobsDesc,
             textAlign: TextAlign.center,
             style: AppText.small.copyWith(color: AppColors.muted),
           ),
           SizedBox(height: 18.h),
-          Opacity(
-            opacity: 1.0,
-            child: FilledButton.icon(
-              onPressed: onPostJob,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.surface,
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
-              ),
-              icon: HugeIcon(
-                icon: HugeIcons.strokeRoundedPlusSign,
-                color: AppColors.surface,
-                size: 18.r,
-              ),
-              label: Text('Post a Job', style: AppText.button),
+          FilledButton.icon(
+            onPressed: onPostJob,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.surface,
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+              shape: RoundedRectangleBorder(borderRadius: AppRadius.md),
             ),
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedPlusSign,
+              color: AppColors.surface,
+              size: 18.r,
+            ),
+            label: Text(context.l10n.postJob, style: AppText.button),
           ),
         ],
       ),

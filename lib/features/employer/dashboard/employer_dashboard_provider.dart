@@ -53,6 +53,7 @@ class EmployerDashboardData {
   final List<Job> recentJobs;
   final bool isVerified;
   final String verificationStatus;
+  final String userStatus;
   final int profileCompleted;
 
   EmployerDashboardData({
@@ -64,8 +65,12 @@ class EmployerDashboardData {
     required this.recentJobs,
     required this.isVerified,
     required this.verificationStatus,
+    required this.userStatus,
     required this.profileCompleted,
   });
+
+  bool get isAccountActive => userStatus.toLowerCase() == 'active';
+  bool get canPostJob => isAccountActive && isVerified;
 }
 
 final employerDashboardProvider = FutureProvider.autoDispose<EmployerDashboardData>((ref) async {
@@ -95,8 +100,9 @@ final employerDashboardProvider = FutureProvider.autoDispose<EmployerDashboardDa
     totalApplicants: dashData['total_applicants'] ?? 0,
     shortlisted: dashData['shortlisted_count'] ?? 0,
     recentJobs: recentJobsList.map((j) => Job.fromJson(j)).toList(),
-    isVerified: companyData['verification_status'] == 'verified' || profileData['verification_status'] == 'verified',
-    verificationStatus: companyData['verification_status']?.toString() ?? profileData['verification_status']?.toString() ?? 'unverified',
+    isVerified: companyData['verification_status'] == 'verified',
+    verificationStatus: companyData['verification_status']?.toString() ?? 'unverified',
+    userStatus: profileData['status']?.toString() ?? 'pending',
     profileCompleted: [
       int.tryParse(profileData['profile_completed']?.toString() ?? ''),
       int.tryParse(companyData['profile_completed']?.toString() ?? ''),

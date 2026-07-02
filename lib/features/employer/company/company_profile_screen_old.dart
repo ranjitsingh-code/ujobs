@@ -814,7 +814,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             ),
                             Switch(
                               value: showContact,
-                              activeColor: AppColors.primary,
+                              activeThumbColor: AppColors.primary,
                               onChanged: (val) =>
                                   setState(() => showContact = val),
                             ),
@@ -1029,10 +1029,12 @@ class CompanyProfileHeader extends StatelessWidget {
 
     // Construct the subtitle (Industry · Size)
     List<String> subtitleParts = [];
-    if (company.industry != null && company.industry!.isNotEmpty)
+    if (company.industry != null && company.industry!.isNotEmpty) {
       subtitleParts.add(company.industry!);
-    if (company.size != null && company.size!.isNotEmpty)
+    }
+    if (company.size != null && company.size!.isNotEmpty) {
       subtitleParts.add(company.size!);
+    }
     final subtitle = subtitleParts.join(' · ');
 
     // Construct location
@@ -1199,7 +1201,7 @@ class CompanyProfileHeader extends StatelessWidget {
                       style: AppText.bodyMd.copyWith(color: AppColors.white),
                     ),
                     Text(
-                      '${percentCompleted}%',
+                      '$percentCompleted%',
                       style: AppText.bodyBold.copyWith(color: AppColors.white),
                     ),
                   ],
