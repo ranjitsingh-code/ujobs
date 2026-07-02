@@ -199,9 +199,7 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
         UJobToast.error(
           context,
           'Registration Failed',
-          sub:
-              rawData['error']?['message']?.toString() ??
-              'Registration failed.',
+          sub: extractApiMessage(rawData) ?? 'Registration failed.',
         );
         return;
       }
@@ -214,7 +212,11 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
           data['user']?['id']?.toString() ??
           '';
 
-      UJobToast.success(context, 'Success', sub: 'Registration Successful!');
+      UJobToast.success(
+        context,
+        'Success',
+        sub: extractApiMessage(rawData) ?? 'Registration Successful!',
+      );
 
       setState(() => _loading = false);
       if (data['requires_otp'] == true) {

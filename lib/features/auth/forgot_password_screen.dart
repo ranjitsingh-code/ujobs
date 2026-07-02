@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,7 +13,6 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/ujob_auth_header.dart';
 import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_text_field.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../core/widgets/ujob_toast.dart';
 
 import '../../core/utils/l10n_extensions.dart';
@@ -89,17 +90,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
     try {
       final dio = ref.read(dioClientProvider).dio;
-      await dio.post(
+      final res = await dio.post(
         Ep.forgotPasswordRequest,
         data: {'email': email},
       );
-      
+
       if (mounted) {
         setState(() {
           _loading = false;
           _sent = true;
         });
-        UJobToast.success(context, 'Success', sub: 'OTP has been sent to your email.');
+        UJobToast.success(
+          context,
+          'Success',
+          sub:
+              extractApiMessage(res.data) ?? 'OTP has been sent to your email.',
+        );
         _successCtrl.forward();
       }
     } on DioException catch (e) {
@@ -136,27 +142,31 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.post(
         Ep.forgotPasswordReset,
-        data: {
-          'email': email,
-          'code': code,
-          'new_password': newPass,
-        },
+        data: {'email': email, 'code': code, 'new_password': newPass},
       );
 
       final rawData = res.data as Map<String, dynamic>;
       if (rawData['success'] == false) {
         if (mounted) setState(() => _loading = false);
-        UJobToast.error(context, 'Reset Failed', sub: rawData['error']?['message']?.toString() ?? 'Failed to reset password.');
+        UJobToast.error(
+          context,
+          'Reset Failed',
+          sub: extractApiMessage(rawData) ?? 'Failed to reset password.',
+        );
         return;
       }
 
       if (mounted) setState(() => _loading = false);
-      UJobToast.success(context, 'Success', sub: 'Password reset successfully!');
+      UJobToast.success(
+        context,
+        'Success',
+        sub: extractApiMessage(rawData) ?? 'Password reset successfully!',
+      );
       if (mounted) {
         context.go('/login');
       }
     } on DioException catch (e) {
-      final msg = parseApiError(e); 
+      final msg = parseApiError(e);
       if (mounted) setState(() => _loading = false);
       UJobToast.error(context, 'Error', sub: msg);
     } catch (e) {
@@ -246,11 +256,7 @@ class _FormView extends StatelessWidget {
           isEmail: true,
         ),
         SizedBox(height: 12.h),
-        UJobButton(
-          label: l10n.sendOtpBtn,
-          onTap: onSubmit,
-          isLoading: loading,
-        ),
+        UJobButton(label: l10n.sendOtpBtn, onTap: onSubmit, isLoading: loading),
         SizedBox(height: 24.h),
       ],
     );
@@ -287,7 +293,10 @@ class _ResetView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 8.h),
-          UJobAuthHeader(icon: HugeIcons.strokeRoundedMailOpen01, onBack: onBack),
+          UJobAuthHeader(
+            icon: HugeIcons.strokeRoundedMailOpen01,
+            onBack: onBack,
+          ),
           SizedBox(height: 20.h),
           Text('Enter Reset Code', style: AppText.heading2),
           SizedBox(height: 6.h),
@@ -325,8 +334,8 @@ class _ResetView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 HugeIcon(
-                  icon: HugeIcons.strokeRoundedInformationCircle, 
-                  color: AppColors.info, 
+                  icon: HugeIcons.strokeRoundedInformationCircle,
+                  color: AppColors.info,
                   size: 20.r,
                 ),
                 SizedBox(width: 10.w),
@@ -344,7 +353,7 @@ class _ResetView extends StatelessWidget {
           ),
           SizedBox(height: 24.h),
           UJobButton(
-            label: l10n.resetPasswordTitle, 
+            label: l10n.resetPasswordTitle,
             onTap: onSubmit,
             isLoading: loading,
           ),

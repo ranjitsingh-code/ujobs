@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -16,9 +15,6 @@ class AccountSuspendedScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Generate a fixed date for the demo
-    final dateStr = DateFormat('MMMM d, yyyy').format(DateTime(2026, 6, 16));
-
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
@@ -99,58 +95,7 @@ class AccountSuspendedScreen extends ConsumerWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    SizedBox(height: 32.h),
-
-                    // Date Pill
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 16.h,
-                        horizontal: 24.w,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(
-                          color: AppColors.error.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          context.l10n.suspendedOnDate(dateStr),
-                          style: AppText.body.copyWith(
-                            color: AppColors.error,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-
                     SizedBox(height: 48.h),
-
-                    // Contact Support Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: UJobButton(
-                        label: context.l10n.contactSupportBtn,
-                        color: AppColors.error,
-                        gradient: const LinearGradient(
-                          colors: [AppColors.error, AppColors.error],
-                        ),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                context
-                                    .l10n
-                                    .supportFeaturesAreNotAvailableInTheDemo,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    SizedBox(height: 16.h),
 
                     // Sign Out Button
                     SizedBox(

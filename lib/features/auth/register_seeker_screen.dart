@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,11 +11,9 @@ import '../../core/widgets/ujob_button.dart';
 import '../../core/widgets/ujob_terms_agreement.dart';
 import '../../core/widgets/ujob_text_field.dart';
 
-
 import 'package:dio/dio.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/providers/auth_provider.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../core/utils/l10n_extensions.dart';
 import '../../core/utils/api_error_parser.dart';
 import '../../core/widgets/ujob_auth_links.dart';
@@ -103,14 +103,26 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
         if (mounted) {
           setState(() => _loading = false);
         }
-        UJobToast.error(context, 'Registration Failed', sub: rawData['error']?['message']?.toString() ?? 'Registration failed.');
+        UJobToast.error(
+          context,
+          'Registration Failed',
+          sub: extractApiMessage(rawData) ?? 'Registration failed.',
+        );
         return;
       }
 
       final data = (rawData['data'] ?? rawData) as Map<String, dynamic>;
-      final userId = data['user_id']?.toString() ?? data['id']?.toString() ?? data['user']?['id']?.toString() ?? '';
+      final userId =
+          data['user_id']?.toString() ??
+          data['id']?.toString() ??
+          data['user']?['id']?.toString() ??
+          '';
 
-      UJobToast.success(context, 'Success', sub: 'Registration Successful!');
+      UJobToast.success(
+        context,
+        'Success',
+        sub: extractApiMessage(rawData) ?? 'Registration Successful!',
+      );
 
       if (mounted) {
         setState(() => _loading = false);
