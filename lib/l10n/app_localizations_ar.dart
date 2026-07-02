@@ -2185,4 +2185,35 @@ class AppLocalizationsAr extends AppLocalizations {
   String addSkillOption(String skillName) {
     return 'أضف \"$skillName\"';
   }
+
+  @override
+  String get goodMorning => 'صباح الخير';
+
+  @override
+  String get goodAfternoon => 'مساء الخير';
+
+  @override
+  String get goodEvening => 'مساء النور';
+
+  @override
+  String get myJobListings => 'قائمة وظائفي';
+
+  @override
+  String get emptyJobsTitle => 'لا توجد وظائف مدرجة بعد';
+
+  @override
+  String get emptyJobsDesc => 'أنشئ قائمتك الأولى لبدء استقبال المتقدمين.';
+
+  @override
+  String get noResumeTitle => 'لا يوجد سيرة ذاتية';
+
+  @override
+  String get noResumeSubtitle => 'لم يقم هذا المتقدم بتحميل سيرة ذاتية.';
+
+  @override
+  String get profileIncompleteTitle => 'الملف الشخصي غير مكتمل';
+
+  @override
+  String get profileIncompleteSubtitle =>
+      'يرجى إكمال جميع حقول الملف الشخصي المطلوبة قبل التقديم.';
 }

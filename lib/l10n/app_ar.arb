@@ -911,5 +911,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "goodMorning": "صباح الخير",
+  "goodAfternoon": "مساء الخير",
+  "goodEvening": "مساء النور",
+  "myJobListings": "قائمة وظائفي",
+  "emptyJobsTitle": "لا توجد وظائف مدرجة بعد",
+  "emptyJobsDesc": "أنشئ قائمتك الأولى لبدء استقبال المتقدمين.",
+  "noResumeTitle": "لا يوجد سيرة ذاتية",
+  "noResumeSubtitle": "لم يقم هذا المتقدم بتحميل سيرة ذاتية.",
+  "profileIncompleteTitle": "الملف الشخصي غير مكتمل",
+  "profileIncompleteSubtitle": "يرجى إكمال جميع حقول الملف الشخصي المطلوبة قبل التقديم."
 }

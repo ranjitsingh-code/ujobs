@@ -1467,5 +1467,25 @@
         "type": "String"
       }
     }
-  }
+  },
+  "goodMorning": "Good morning",
+  "@goodMorning": {},
+  "goodAfternoon": "Good afternoon",
+  "@goodAfternoon": {},
+  "goodEvening": "Good evening",
+  "@goodEvening": {},
+  "myJobListings": "My Job Listings",
+  "@myJobListings": {},
+  "emptyJobsTitle": "You have no listed jobs yet",
+  "@emptyJobsTitle": {},
+  "emptyJobsDesc": "Create your first listing to start receiving applicants.",
+  "@emptyJobsDesc": {},
+  "noResumeTitle": "No Resume",
+  "@noResumeTitle": {},
+  "noResumeSubtitle": "This applicant has not uploaded a resume.",
+  "@noResumeSubtitle": {},
+  "profileIncompleteTitle": "Profile Incomplete",
+  "@profileIncompleteTitle": {},
+  "profileIncompleteSubtitle": "Please complete all required profile fields before applying.",
+  "@profileIncompleteSubtitle": {}
 }

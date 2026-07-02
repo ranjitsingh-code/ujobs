@@ -4237,6 +4237,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add \"{skillName}\"'**
   String addSkillOption(String skillName);
+
+  /// No description provided for @goodMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get goodMorning;
+
+  /// No description provided for @goodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get goodAfternoon;
+
+  /// No description provided for @goodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get goodEvening;
+
+  /// No description provided for @myJobListings.
+  ///
+  /// In en, this message translates to:
+  /// **'My Job Listings'**
+  String get myJobListings;
+
+  /// No description provided for @emptyJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no listed jobs yet'**
+  String get emptyJobsTitle;
+
+  /// No description provided for @emptyJobsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first listing to start receiving applicants.'**
+  String get emptyJobsDesc;
+
+  /// No description provided for @noResumeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Resume'**
+  String get noResumeTitle;
+
+  /// No description provided for @noResumeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This applicant has not uploaded a resume.'**
+  String get noResumeSubtitle;
+
+  /// No description provided for @profileIncompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Incomplete'**
+  String get profileIncompleteTitle;
+
+  /// No description provided for @profileIncompleteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please complete all required profile fields before applying.'**
+  String get profileIncompleteSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -2194,4 +2194,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String addSkillOption(String skillName) {
     return 'Add \"$skillName\"';
   }
+
+  @override
+  String get goodMorning => 'Good morning';
+
+  @override
+  String get goodAfternoon => 'Good afternoon';
+
+  @override
+  String get goodEvening => 'Good evening';
+
+  @override
+  String get myJobListings => 'My Job Listings';
+
+  @override
+  String get emptyJobsTitle => 'You have no listed jobs yet';
+
+  @override
+  String get emptyJobsDesc =>
+      'Create your first listing to start receiving applicants.';
+
+  @override
+  String get noResumeTitle => 'No Resume';
+
+  @override
+  String get noResumeSubtitle => 'This applicant has not uploaded a resume.';
+
+  @override
+  String get profileIncompleteTitle => 'Profile Incomplete';
+
+  @override
+  String get profileIncompleteSubtitle =>
+      'Please complete all required profile fields before applying.';
 }
