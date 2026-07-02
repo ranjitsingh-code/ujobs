@@ -1,26 +1,23 @@
-import 'dart:io';
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import '../../../core/widgets/ujob_rich_text_display.dart';
 import '../../../../core/utils/l10n_extensions.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../../core/models/applicant.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_avatar.dart';
 import '../../../core/widgets/ujob_stage_stepper.dart';
-import '../../../core/widgets/ujob_pdf_viewer_screen.dart';
+import '../../../core/widgets/ujob_document_viewer_screen.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'employer_applicant_provider.dart';
-import '../../../core/providers/feature_flags_provider.dart';
 import '../../../core/widgets/ujob_toast.dart';
 
 class ApplicantDetailScreen extends ConsumerStatefulWidget {
@@ -61,12 +58,6 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    final featureFlags = ref.watch(featureFlagsProvider);
-    final bool isChatEnabled = featureFlags.maybeWhen(
-      data: (flags) => flags.chat,
-      orElse: () => false,
-    );
-
     Applicant initialApplicant;
     if (widget.applicant != null) {
       initialApplicant = widget.applicant!;
@@ -425,12 +416,12 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                   ),
                   onPressed: () {
                     Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UJobPdfViewerScreen(
-                          title: '${applicant.name} - Resume',
-                          pdfUrl: applicant.resumeUrl!,
-                          isAsset: false,
+                        context,
+                        MaterialPageRoute(
+                        builder: (context) => UJobDocumentViewerScreen(
+                          title: 'Resume Details',
+                          fileUrl: applicant.resumeUrl!,
+                          fileName: applicant.resumeUrl!.split('/').last,
                         ),
                       ),
                     );
