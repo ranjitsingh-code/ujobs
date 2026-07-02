@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/models/application.dart';
@@ -18,9 +19,9 @@ class SeekerApplicationService {
       queryParameters: queryParams,
     );
     final data = res.data['data'] as List;
-    print('--- APPLICATIONS DATA ---');
+    debugPrint('--- APPLICATIONS DATA ---');
     if (data.isNotEmpty) {
-      print(data.first);
+      debugPrint('${data.first}');
     }
     return data.map((json) => Application.fromJson(json)).toList();
   }

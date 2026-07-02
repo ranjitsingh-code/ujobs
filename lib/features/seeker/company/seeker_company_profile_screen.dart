@@ -54,7 +54,7 @@ class _SeekerCompanyProfileScreenState
       data: (jobs) =>
           jobs.where((j) => j.company?.id == widget.company.id).length,
       loading: () => 0,
-      error: (_, __) => 0,
+      error: (_, _) => 0,
     );
 
     return Scaffold(
@@ -185,7 +185,7 @@ class _SeekerCompanyProfileScreenState
                                   ),
                                   SizedBox(width: 4.w),
                                   Text(
-                                    '${openPositionsCount} Open Positions',
+                                    '$openPositionsCount Open Positions',
                                     style: AppText.small.copyWith(
                                       color: AppColors.seekPrimary,
                                       fontWeight: FontWeight.w600,
@@ -283,7 +283,7 @@ class _SeekerCompanyProfileScreenState
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 16.h),
                               decoration: BoxDecoration(
-                                color: AppColors.seekPrimary.withOpacity(0.1),
+                                color: AppColors.seekPrimary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(16.r),
                               ),
                               child: Row(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/models/job.dart';
@@ -22,7 +23,7 @@ class SeekerJobService {
   }) async {
     final queryParams = {
       if (search != null && search.isNotEmpty) 'search': search,
-      if (categoryId != null) 'category_id': categoryId,
+      'category_id': ?categoryId,
       if (employmentType != null && employmentType.isNotEmpty) 'employment_type': employmentType,
       if (workplaceType != null && workplaceType.isNotEmpty) 'workplace_type': workplaceType,
       if (experienceLevel != null && experienceLevel.isNotEmpty) 'experience_level': experienceLevel,
@@ -30,14 +31,14 @@ class SeekerJobService {
       if (datePosted != null && datePosted.isNotEmpty) 'date_posted': datePosted,
       if (sort != null && sort.isNotEmpty) 'sort': sort,
       if (location != null && location.isNotEmpty) 'location': location,
-      if (companyId != null) 'company_id': companyId,
+      'company_id': ?companyId,
       'limit': limit,
       'page': page,
     };
 
-    print('--- SEEKER ALL JOBS API QUERY PARAMS ---');
-    print(queryParams);
-    print('----------------------------------------');
+    debugPrint('--- SEEKER ALL JOBS API QUERY PARAMS ---');
+    debugPrint('$queryParams');
+    debugPrint('----------------------------------------');
 
     final res = await _client.dio.get(
       '/seeker/all-jobs',

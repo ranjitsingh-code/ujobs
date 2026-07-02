@@ -6,7 +6,6 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/l10n_extensions.dart';
-import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_job_card.dart';
 import '../../../core/widgets/ujob_boxed_empty_state.dart';
 import '../../../core/widgets/ujob_text_field.dart';
@@ -54,25 +53,25 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
     super.dispose();
   }
 
+  Future<void> _refreshJobs() async {
+    ref.invalidate(seekerMatchingJobsProvider);
+    ref.invalidate(seekerJobsProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
     final jobsAsync = ref.watch(seekerJobsProvider);
     final matchingJobsAsync = ref.watch(seekerMatchingJobsProvider);
     final l10n = context.l10n;
+    final tabs = [l10n.forYouTab, l10n.allJobs];
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: DefaultTabController(
         length: 2,
         initialIndex: _tabIndex,
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(seekerMatchingJobsProvider);
-            ref.invalidate(seekerJobsProvider);
-          },
-          color: AppColors.seekPrimary,
-          child: NestedScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+        child: NestedScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
               SliverAppBar(
@@ -106,7 +105,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                         Expanded(
                           child: UJobTextField(
                             label: '',
-                            hint: 'Search jobs, skills...',
+                            hint: l10n.searchJobsSkills,
                             controller: _searchController,
                             prefix: Padding(
                               padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -180,7 +179,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
                     color: AppColors.surface,
                     padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 16.h),
                     child: UJobPillTabBar(
-                      tabs: const ['For You', 'All Jobs'],
+                      tabs: tabs,
                       selectedIndex: _tabIndex,
                       isExpanded: true,
                       onTabSelected: (index) {
@@ -202,9 +201,7 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
               setState(() => _tabIndex = v);
               if (v == 1) {
                 // Apply the search text to the active filter provider when switching to All Jobs
-                ref
-                    .read(activeJobFilterProvider.notifier)
-                    .state = ref
+                ref.read(activeJobFilterProvider.notifier).state = ref
                     .read(activeJobFilterProvider)
                     .copyWith(search: _searchController.text);
               }
@@ -214,7 +211,6 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
               _buildAllJobsTab(jobsAsync, l10n),
             ],
           ),
-        ),
         ),
       ),
     );
@@ -232,67 +228,87 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
         final filteredJobs = jobs.where((job) {
           if (query.isEmpty) return true;
           return job.title.toLowerCase().contains(query) ||
-                 (job.company?.name.toLowerCase().contains(query) ?? false);
+              (job.company?.name.toLowerCase().contains(query) ?? false);
         }).toList();
 
         if (filteredJobs.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: UJobBoxedEmptyState(
-                title: l10n.noMatchingJobsFound,
-                subtitle: 'Try adjusting your filters or search terms.',
-                icon: HugeIcons.strokeRoundedSearchMinus,
-              ),
+          return RefreshIndicator(
+            onRefresh: _refreshJobs,
+            color: AppColors.seekPrimary,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+              children: [
+                SizedBox(height: 80.h),
+                UJobBoxedEmptyState(
+                  title: l10n.noMatchingJobsFound,
+                  subtitle: l10n.adjustFiltersOrSearchTerms,
+                  icon: HugeIcons.strokeRoundedSearchMinus,
+                ),
+              ],
             ),
           );
         }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 12.h),
-              child: Row(
-                children: [
-                  Text('Recommended', style: AppText.heading3),
-                  const Spacer(),
-                  Text(
-                    '${filteredJobs.length} matches',
-                    style: AppText.bodyMedium.copyWith(
-                      color: AppColors.seekPrimary,
+        return RefreshIndicator(
+          onRefresh: _refreshJobs,
+          color: AppColors.seekPrimary,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 12.h),
+                child: Row(
+                  children: [
+                    Text(l10n.recommendedJobsTitle, style: AppText.heading3),
+                    const Spacer(),
+                    Text(
+                      l10n.matchesCount(filteredJobs.length),
+                      style: AppText.bodyMedium.copyWith(
+                        color: AppColors.seekPrimary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: ListView.separated(
-                padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
-                itemCount: filteredJobs.length,
-                separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                itemBuilder: (context, index) {
-                  final job = filteredJobs[index];
-                  final apps = ref.watch(seekerApplicationsProvider(null)).value ?? [];
-                  final isSaved = apps.any((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
-                  return UJobJobCard(
-                    job: job.copyWith(isSaved: isSaved),
-                    onTap: () => context.push(
-                      '/seeker/jobs/${job.id}',
-                      extra: {'source': 'jobs'},
-                    ),
-                    onSaveTap: () {
-                      ref.read(seekerApplicationsProvider(null).notifier).toggleSave(job);
-                      UJobToast.success(
-                        context, 
-                        isSaved ? 'Job Unsaved' : 'Job Saved', 
-                        sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.'
-                      );
-                    },
-                  );
-                },
+              Expanded(
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                  itemCount: filteredJobs.length,
+                  separatorBuilder: (_, _) => const SizedBox.shrink(),
+                  itemBuilder: (context, index) {
+                    final job = filteredJobs[index];
+                    final apps =
+                        ref.watch(seekerApplicationsProvider(null)).value ?? [];
+                    final isSaved = apps.any(
+                      (a) =>
+                          a.job.id == job.id &&
+                          a.status == ApplicationStatus.saved,
+                    );
+                    return UJobJobCard(
+                      job: job.copyWith(isSaved: isSaved),
+                      onTap: () => context.push(
+                        '/seeker/jobs/${job.id}',
+                        extra: {'source': 'jobs'},
+                      ),
+                      onSaveTap: () {
+                        ref
+                            .read(seekerApplicationsProvider(null).notifier)
+                            .toggleSave(job);
+                        UJobToast.success(
+                          context,
+                          isSaved ? l10n.jobUnsavedTitle : l10n.jobSavedTitle,
+                          sub: isSaved
+                              ? l10n.savedJobRemovedSubtitle
+                              : l10n.savedJobAddedSubtitle,
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -311,110 +327,155 @@ class _FindJobsScreenState extends ConsumerState<FindJobsScreen> {
             ),
             data: (jobs) {
               if (jobs.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: UJobBoxedEmptyState(
-                      title: l10n.noMatchingJobsFound,
-                      subtitle: 'Try adjusting your filters or search terms.',
-                      icon: HugeIcons.strokeRoundedSearchMinus,
+                return RefreshIndicator(
+                  onRefresh: _refreshJobs,
+                  color: AppColors.seekPrimary,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 24.h,
                     ),
+                    children: [
+                      SizedBox(height: 80.h),
+                      UJobBoxedEmptyState(
+                        title: l10n.noMatchingJobsFound,
+                        subtitle: l10n.adjustFiltersOrSearchTerms,
+                        icon: HugeIcons.strokeRoundedSearchMinus,
+                      ),
+                    ],
                   ),
                 );
               }
-              return Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${jobs.length} positions',
-                          style: AppText.bodyBold,
-                        ),
-                        GestureDetector(
-                          onTap: () async {
-                            final val = await showModalBottomSheet<String>(
-                              context: context,
-                              backgroundColor: AppColors.surface,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(24.r),
+              return RefreshIndicator(
+                onRefresh: _refreshJobs,
+                color: AppColors.seekPrimary,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 8.h),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            l10n.positionsCount(jobs.length),
+                            style: AppText.bodyBold,
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              final val = await showModalBottomSheet<String>(
+                                context: context,
+                                backgroundColor: AppColors.surface,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(24.r),
+                                  ),
                                 ),
-                              ),
-                              builder: (ctx) => _SortSheet(
-                                currentValue: _sortBy,
-                                options: ref.read(jobFilterOptionsProvider).valueOrNull?.sortOptions.map((e) => e.value).toList() ?? _sortOptions,
-                                optionLabels: ref.read(jobFilterOptionsProvider).valueOrNull?.sortOptions,
-                              ),
-                            );
-                            if (val != null && mounted) {
-                              setState(() => _sortBy = val);
-                              ref
-                                  .read(activeJobFilterProvider.notifier)
-                                  .state = ref
-                                  .read(activeJobFilterProvider)
-                                  .copyWith(sortBy: val);
-                            }
-                          },
-                          child: Row(
-                            children: [
-                              Text(
-                                () {
-                                  final sortOpts = ref.read(jobFilterOptionsProvider).valueOrNull?.sortOptions;
-                                  if (sortOpts != null) {
-                                    for (final opt in sortOpts) {
-                                      if (opt.value == _sortBy) return opt.label;
+                                builder: (ctx) => _SortSheet(
+                                  currentValue: _sortBy,
+                                  options:
+                                      ref
+                                          .read(jobFilterOptionsProvider)
+                                          .valueOrNull
+                                          ?.sortOptions
+                                          .map((e) => e.value)
+                                          .toList() ??
+                                      _sortOptions,
+                                  optionLabels: ref
+                                      .read(jobFilterOptionsProvider)
+                                      .valueOrNull
+                                      ?.sortOptions,
+                                ),
+                              );
+                              if (val != null && mounted) {
+                                setState(() => _sortBy = val);
+                                ref
+                                    .read(activeJobFilterProvider.notifier)
+                                    .state = ref
+                                    .read(activeJobFilterProvider)
+                                    .copyWith(sortBy: val);
+                              }
+                            },
+                            child: Row(
+                              children: [
+                                Text(
+                                  () {
+                                    final sortOpts = ref
+                                        .read(jobFilterOptionsProvider)
+                                        .valueOrNull
+                                        ?.sortOptions;
+                                    if (sortOpts != null) {
+                                      for (final opt in sortOpts) {
+                                        if (opt.value == _sortBy) {
+                                          return opt.label;
+                                        }
+                                      }
                                     }
-                                  }
-                                  return _sortBy;
-                                }(),
-                                style: AppText.bodyMedium.copyWith(
-                                  color: AppColors.seekPrimaryDark,
+                                    return _sortBy;
+                                  }(),
+                                  style: AppText.bodyMedium.copyWith(
+                                    color: AppColors.seekPrimaryDark,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 4.w),
-                              HugeIcon(
-                                icon: HugeIcons.strokeRoundedArrowDown01,
-                                color: AppColors.seekPrimaryDark,
-                                size: 18.r,
-                              ),
-                            ],
+                                SizedBox(width: 4.w),
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedArrowDown01,
+                                  color: AppColors.seekPrimaryDark,
+                                  size: 18.r,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: ListView.separated(
-                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
-                      itemCount: jobs.length,
-                      separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                      itemBuilder: (context, index) {
-                        final job = jobs[index];
-                        final apps = ref.watch(seekerApplicationsProvider(null)).value ?? [];
-                        final isSaved = apps.any((a) => a.job.id == job.id && a.status == ApplicationStatus.saved);
-                        return UJobJobCard(
-                          job: job.copyWith(isSaved: isSaved),
-                          onTap: () => context.push(
-                            '/seeker/jobs/${job.id}',
-                            extra: {'source': 'jobs'},
-                          ),
-                          onSaveTap: () {
-                            ref.read(seekerApplicationsProvider(null).notifier).toggleSave(job);
-                            UJobToast.success(
-                              context, 
-                              isSaved ? 'Job Unsaved' : 'Job Saved', 
-                              sub: isSaved ? 'This job has been removed from your saved jobs.' : 'This job has been saved to your list.'
-                            );
-                          },
-                        );
-                      },
+                    Expanded(
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
+                        itemCount: jobs.length,
+                        separatorBuilder: (_, _) => const SizedBox.shrink(),
+                        itemBuilder: (context, index) {
+                          final job = jobs[index];
+                          final apps =
+                              ref
+                                  .watch(seekerApplicationsProvider(null))
+                                  .value ??
+                              [];
+                          final isSaved = apps.any(
+                            (a) =>
+                                a.job.id == job.id &&
+                                a.status == ApplicationStatus.saved,
+                          );
+                          return UJobJobCard(
+                            job: job.copyWith(isSaved: isSaved),
+                            onTap: () => context.push(
+                              '/seeker/jobs/${job.id}',
+                              extra: {'source': 'jobs'},
+                            ),
+                            onSaveTap: () {
+                              ref
+                                  .read(
+                                    seekerApplicationsProvider(null).notifier,
+                                  )
+                                  .toggleSave(job);
+                              UJobToast.success(
+                                context,
+                                isSaved
+                                    ? l10n.jobUnsavedTitle
+                                    : l10n.jobSavedTitle,
+                                sub: isSaved
+                                    ? l10n.savedJobRemovedSubtitle
+                                    : l10n.savedJobAddedSubtitle,
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           ),
@@ -462,7 +523,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
     if (value == 'any_level') return 'Any level';
     if (value == 'any_salary') return 'Any salary';
     if (value == 'all_categories') return 'All Categories';
-    
+
     final str = value.replaceAll('_', ' ').replaceAll('-', ' ');
     if (str.isEmpty) return '';
     return str[0].toUpperCase() + str.substring(1).toLowerCase();
@@ -525,10 +586,11 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                       _minSalary = 'any_salary';
                       _category = 'all_categories';
                     });
-                    
+
                     // Trigger the API reset
                     Navigator.pop(context);
-                    ref.read(activeJobFilterProvider.notifier).state = JobFilter();
+                    ref.read(activeJobFilterProvider.notifier).state =
+                        JobFilter();
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: AppColors.borderLight.withValues(
@@ -565,115 +627,207 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
           ),
           // Scrollable Body
           Expanded(
-            child: ref.watch(jobFilterOptionsProvider).when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => Center(child: Text('Failed to load filters: $e')),
-              data: (options) {
-                // Determine dropdown items, ensuring selected values remain valid
-                final datePostedItems = options.datePosted.isNotEmpty ? ['any_time', ...options.datePosted.map((e) => e.value)] : ['any_time', 'last_24_hours', 'past_week', 'past_month'];
-                if (!datePostedItems.contains(_datePosted)) _datePosted = 'any_time';
-                
-                final employmentTypeItems = options.employmentTypes.isNotEmpty ? options.employmentTypes.map((e) => e.value).toList() : ['full_time', 'part_time', 'contract', 'freelance', 'internship', 'temporary'];
-                
-                final workplaceItems = options.workplaceTypes.isNotEmpty ? options.workplaceTypes.map((e) => e.value).toList() : ['on_site', 'remote', 'hybrid'];
-                
-                final experienceLevelItems = options.experienceLevels.isNotEmpty ? ['any_level', ...options.experienceLevels.map((e) => e.value)] : ['any_level', 'entry_level', 'mid_level', 'senior', 'executive'];
-                if (!experienceLevelItems.contains(_experienceLevel)) _experienceLevel = 'any_level';
-                
-                final minSalaryItems = options.salaryRanges.isNotEmpty ? ['any_salary', ...options.salaryRanges.map((e) => e.value)] : ['any_salary', '20000_plus', '30000_plus', '40000_plus', '50000_plus', '70000_plus', '100000_plus'];
-                if (!minSalaryItems.contains(_minSalary)) _minSalary = 'any_salary';
-                
-                final loadedCategories = ref.watch(categoriesProvider).valueOrNull;
-                final categoryItems = loadedCategories != null && loadedCategories.isNotEmpty 
-                    ? ['all_categories', ...loadedCategories.map((c) => c.name)]
-                    : (options.categories.isNotEmpty ? ['all_categories', ...options.categories.map((e) => e.value)] : ['all_categories', 'Technology', 'Software Development', 'Accounting & Auditing', 'Healthcare', 'Logistics & Supply Chain']);
-                if (!categoryItems.contains(_category)) _category = 'all_categories';
+            child: ref
+                .watch(jobFilterOptionsProvider)
+                .when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, st) =>
+                      Center(child: Text('Failed to load filters: $e')),
+                  data: (options) {
+                    // Determine dropdown items, ensuring selected values remain valid
+                    final datePostedItems = options.datePosted.isNotEmpty
+                        ? [
+                            'any_time',
+                            ...options.datePosted.map((e) => e.value),
+                          ]
+                        : [
+                            'any_time',
+                            'last_24_hours',
+                            'past_week',
+                            'past_month',
+                          ];
+                    if (!datePostedItems.contains(_datePosted)) {
+                      _datePosted = 'any_time';
+                    }
 
-                return SingleChildScrollView(
-                  padding: EdgeInsets.all(20.r),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      UJobTextField(
-                        label: 'Keywords',
-                        hint: 'Job title, skills, company...',
-                        controller: _keywordsCtrl,
-                      ),
-                      SizedBox(height: 16.h),
-                      UJobTextField(
-                        label: 'Location',
-                        hint: 'City or region...',
-                        controller: _locationCtrl,
-                      ),
-                      SizedBox(height: 24.h),
+                    final employmentTypeItems =
+                        options.employmentTypes.isNotEmpty
+                        ? options.employmentTypes.map((e) => e.value).toList()
+                        : [
+                            'full_time',
+                            'part_time',
+                            'contract',
+                            'freelance',
+                            'internship',
+                            'temporary',
+                          ];
 
-                      UJobDropdown(
-                        label: 'Date Posted',
-                        value: _datePosted,
-                        items: datePostedItems,
-                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.datePosted),
-                        onChanged: (v) => setState(() => _datePosted = v!),
-                      ),
-                      SizedBox(height: 24.h),
+                    final workplaceItems = options.workplaceTypes.isNotEmpty
+                        ? options.workplaceTypes.map((e) => e.value).toList()
+                        : ['on_site', 'remote', 'hybrid'];
 
-                      Text('Employment Type', style: AppText.bodyBold),
-                      SizedBox(height: 12.h),
-                      UJobMultiChipGroup<String>(
-                        options: employmentTypeItems,
-                        selectedValues: _employmentTypes,
-                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.employmentTypes),
-                        onChanged: (v) => setState(() => _employmentTypes = v),
-                      ),
-                      SizedBox(height: 24.h),
+                    final experienceLevelItems =
+                        options.experienceLevels.isNotEmpty
+                        ? [
+                            'any_level',
+                            ...options.experienceLevels.map((e) => e.value),
+                          ]
+                        : [
+                            'any_level',
+                            'entry_level',
+                            'mid_level',
+                            'senior',
+                            'executive',
+                          ];
+                    if (!experienceLevelItems.contains(_experienceLevel)) {
+                      _experienceLevel = 'any_level';
+                    }
 
-                      Text('Workplace', style: AppText.bodyBold),
-                      SizedBox(height: 12.h),
-                      UJobMultiChipGroup<String>(
-                        options: workplaceItems,
-                        selectedValues: _workplaces,
-                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.workplaceTypes),
-                        onChanged: (v) => setState(() => _workplaces = v),
-                      ),
-                      SizedBox(height: 24.h),
+                    final minSalaryItems = options.salaryRanges.isNotEmpty
+                        ? [
+                            'any_salary',
+                            ...options.salaryRanges.map((e) => e.value),
+                          ]
+                        : [
+                            'any_salary',
+                            '20000_plus',
+                            '30000_plus',
+                            '40000_plus',
+                            '50000_plus',
+                            '70000_plus',
+                            '100000_plus',
+                          ];
+                    if (!minSalaryItems.contains(_minSalary)) {
+                      _minSalary = 'any_salary';
+                    }
 
-                      UJobDropdown(
-                        label: 'Experience Level',
-                        value: _experienceLevel,
-                        items: experienceLevelItems,
-                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.experienceLevels),
-                        onChanged: (v) => setState(() => _experienceLevel = v!),
-                      ),
-                      SizedBox(height: 24.h),
+                    final loadedCategories = ref
+                        .watch(categoriesProvider)
+                        .valueOrNull;
+                    final categoryItems =
+                        loadedCategories != null && loadedCategories.isNotEmpty
+                        ? [
+                            'all_categories',
+                            ...loadedCategories.map((c) => c.name),
+                          ]
+                        : (options.categories.isNotEmpty
+                              ? [
+                                  'all_categories',
+                                  ...options.categories.map((e) => e.value),
+                                ]
+                              : [
+                                  'all_categories',
+                                  'Technology',
+                                  'Software Development',
+                                  'Accounting & Auditing',
+                                  'Healthcare',
+                                  'Logistics & Supply Chain',
+                                ]);
+                    if (!categoryItems.contains(_category)) {
+                      _category = 'all_categories';
+                    }
 
-                      UJobDropdown(
-                        label: 'Minimum Salary',
-                        value: _minSalary,
-                        items: minSalaryItems,
-                        labelBuilder: (v) => _formatLabel(v, apiOptions: options.salaryRanges),
-                        onChanged: (v) => setState(() => _minSalary = v!),
-                      ),
-                      SizedBox(height: 24.h),
+                    return SingleChildScrollView(
+                      padding: EdgeInsets.all(20.r),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          UJobTextField(
+                            label: 'Keywords',
+                            hint: 'Job title, skills, company...',
+                            controller: _keywordsCtrl,
+                          ),
+                          SizedBox(height: 16.h),
+                          UJobTextField(
+                            label: 'Location',
+                            hint: 'City or region...',
+                            controller: _locationCtrl,
+                          ),
+                          SizedBox(height: 24.h),
 
-                      UJobTextField(
-                        label: 'Company',
-                        hint: 'Company name...',
-                        controller: _companyCtrl,
-                      ),
-                      SizedBox(height: 16.h),
+                          UJobDropdown(
+                            label: 'Date Posted',
+                            value: _datePosted,
+                            items: datePostedItems,
+                            labelBuilder: (v) =>
+                                _formatLabel(v, apiOptions: options.datePosted),
+                            onChanged: (v) => setState(() => _datePosted = v!),
+                          ),
+                          SizedBox(height: 24.h),
 
-                      UJobDropdown(
-                        label: 'Category',
-                        value: _category,
-                        items: categoryItems,
-                        labelBuilder: _formatLabel,
-                        onChanged: (v) => setState(() => _category = v!),
+                          Text('Employment Type', style: AppText.bodyBold),
+                          SizedBox(height: 12.h),
+                          UJobMultiChipGroup<String>(
+                            options: employmentTypeItems,
+                            selectedValues: _employmentTypes,
+                            labelBuilder: (v) => _formatLabel(
+                              v,
+                              apiOptions: options.employmentTypes,
+                            ),
+                            onChanged: (v) =>
+                                setState(() => _employmentTypes = v),
+                          ),
+                          SizedBox(height: 24.h),
+
+                          Text('Workplace', style: AppText.bodyBold),
+                          SizedBox(height: 12.h),
+                          UJobMultiChipGroup<String>(
+                            options: workplaceItems,
+                            selectedValues: _workplaces,
+                            labelBuilder: (v) => _formatLabel(
+                              v,
+                              apiOptions: options.workplaceTypes,
+                            ),
+                            onChanged: (v) => setState(() => _workplaces = v),
+                          ),
+                          SizedBox(height: 24.h),
+
+                          UJobDropdown(
+                            label: 'Experience Level',
+                            value: _experienceLevel,
+                            items: experienceLevelItems,
+                            labelBuilder: (v) => _formatLabel(
+                              v,
+                              apiOptions: options.experienceLevels,
+                            ),
+                            onChanged: (v) =>
+                                setState(() => _experienceLevel = v!),
+                          ),
+                          SizedBox(height: 24.h),
+
+                          UJobDropdown(
+                            label: 'Minimum Salary',
+                            value: _minSalary,
+                            items: minSalaryItems,
+                            labelBuilder: (v) => _formatLabel(
+                              v,
+                              apiOptions: options.salaryRanges,
+                            ),
+                            onChanged: (v) => setState(() => _minSalary = v!),
+                          ),
+                          SizedBox(height: 24.h),
+
+                          UJobTextField(
+                            label: 'Company',
+                            hint: 'Company name...',
+                            controller: _companyCtrl,
+                          ),
+                          SizedBox(height: 16.h),
+
+                          UJobDropdown(
+                            label: 'Category',
+                            value: _category,
+                            items: categoryItems,
+                            labelBuilder: _formatLabel,
+                            onChanged: (v) => setState(() => _category = v!),
+                          ),
+                          SizedBox(height: 40.h),
+                        ],
                       ),
-                      SizedBox(height: 40.h),
-                    ],
-                  ),
-                );
-              }
-            ),
+                    );
+                  },
+                ),
           ),
           // Apply Button
           Container(
@@ -730,7 +884,11 @@ class _SortSheet extends ConsumerWidget {
   final List<String> options;
   final List<dynamic>? optionLabels;
 
-  const _SortSheet({required this.currentValue, required this.options, this.optionLabels});
+  const _SortSheet({
+    required this.currentValue,
+    required this.options,
+    this.optionLabels,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -792,31 +950,5 @@ class _SortSheet extends ConsumerWidget {
         ],
       ),
     );
-  }
-}
-
-class _UJobTabsDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-
-  _UJobTabsDelegate({required this.child});
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return child;
-  }
-
-  @override
-  double get maxExtent => 56.0 + 16.0; // UJobPillTabBar height approx + padding
-
-  @override
-  double get minExtent => 56.0 + 16.0;
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
-    return true;
   }
 }
