@@ -26,6 +26,8 @@ class SeekerDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final dashboardAsync = ref.watch(seekerDashboardProvider);
+    final apps = ref.watch(seekerApplicationsProvider(null)).valueOrNull ?? [];
+    final savedCount = apps.where((a) => a.status == ApplicationStatus.saved).length;
     final l10n = context.l10n;
 
     final int hour = DateTime.now().hour;
@@ -74,6 +76,7 @@ class SeekerDashboardScreen extends ConsumerWidget {
                 name: name,
                 initials: initials,
                 dashboard: data,
+                savedCount: savedCount,
                 onNotificationsTap: () => context.push('/seeker/notifications'),
                 onAppliedTap: () => context.go('/seeker/applied', extra: 2),
                 onMatchesTap: () => context.go('/seeker/jobs'),
@@ -136,11 +139,6 @@ class SeekerDashboardScreen extends ConsumerWidget {
                         separatorBuilder: (_, _) => const SizedBox.shrink(),
                         itemBuilder: (context, index) {
                           final job = data.recommendedJobs[index];
-                          final apps =
-                              ref
-                                  .watch(seekerApplicationsProvider(null))
-                                  .value ??
-                              [];
                           final isSaved = apps.any(
                             (a) =>
                                 a.job.id == job.id &&
@@ -185,6 +183,7 @@ class _DashboardHeader extends StatelessWidget {
   final String name;
   final String initials;
   final SeekerDashboardData dashboard;
+  final int savedCount;
   final VoidCallback onNotificationsTap;
   final VoidCallback onAppliedTap;
   final VoidCallback onMatchesTap;
@@ -195,6 +194,7 @@ class _DashboardHeader extends StatelessWidget {
     required this.name,
     required this.initials,
     required this.dashboard,
+    required this.savedCount,
     required this.onNotificationsTap,
     required this.onAppliedTap,
     required this.onMatchesTap,
@@ -273,7 +273,7 @@ class _DashboardHeader extends StatelessWidget {
                       ),
                       SizedBox(width: 12.w),
                       _StatCard(
-                        title: '${dashboard.savedCount}',
+                        title: '$savedCount',
                         subtitle: 'Saved',
                         isSelected: false,
                         onTap: onSavedTap,

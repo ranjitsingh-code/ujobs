@@ -6,14 +6,12 @@ import '../../../core/models/job.dart';
 
 class SeekerDashboardData {
   final int applicationsCount;
-  final int savedCount;
   final int matchesCount;
   final List<Job> recommendedJobs;
   final String status;
 
   SeekerDashboardData({
     required this.applicationsCount,
-    required this.savedCount,
     required this.matchesCount,
     required this.recommendedJobs,
     required this.status,
@@ -35,7 +33,6 @@ final seekerDashboardProvider = FutureProvider.autoDispose<SeekerDashboardData>(
 
     return SeekerDashboardData(
       applicationsCount: statsData['stats']['applied_count'] ?? 0,
-      savedCount: statsData['stats']['saved_count'] ?? 0,
       matchesCount: statsData['stats']['matches_count'] ?? 0,
       recommendedJobs: jobsData,
       status: profileData['status']?.toString() ?? 'pending',
