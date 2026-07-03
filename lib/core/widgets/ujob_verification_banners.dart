@@ -6,8 +6,15 @@ import '../theme/app_text_styles.dart';
 
 class UJobAccountStatusBanner extends StatelessWidget {
   final String status;
+  final String? title;
+  final String? message;
 
-  const UJobAccountStatusBanner({required this.status, super.key});
+  const UJobAccountStatusBanner({
+    required this.status,
+    this.title,
+    this.message,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +25,13 @@ class UJobAccountStatusBanner extends StatelessWidget {
         ? HugeIcons.strokeRoundedCancel01
         : HugeIcons.strokeRoundedClock01;
 
-    final title = switch (s) {
+    final title = this.title ?? switch (s) {
       'suspended' => 'Account Suspended',
       'inactive' => 'Account Inactive',
       _ => 'Account Pending Approval',
     };
 
-    final message = switch (s) {
+    final message = this.message ?? switch (s) {
       'suspended' => 'Your account has been suspended. Please contact support.',
       'inactive' => 'Your account is inactive. Please contact support to reactivate.',
       _ => 'Your account is pending review. You\'ll be able to post jobs once approved.',

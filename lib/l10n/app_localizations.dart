@@ -4297,6 +4297,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please complete all required profile fields before applying.'**
   String get profileIncompleteSubtitle;
+
+  /// No description provided for @accountInactiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Inactive'**
+  String get accountInactiveTitle;
+
+  /// No description provided for @accountInactiveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t apply for jobs right now. Your account is inactive — please contact support to reactivate it.'**
+  String get accountInactiveSubtitle;
+
+  /// No description provided for @accountReviewingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Review'**
+  String get accountReviewingTitle;
+
+  /// No description provided for @accountReviewingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is pending review by our admin team. You\'ll be able to apply for jobs once approved.'**
+  String get accountReviewingSubtitle;
 }
 
 class _AppLocalizationsDelegate

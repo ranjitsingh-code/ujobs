@@ -2226,4 +2226,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get profileIncompleteSubtitle =>
       'Please complete all required profile fields before applying.';
+
+  @override
+  String get accountInactiveTitle => 'Account Inactive';
+
+  @override
+  String get accountInactiveSubtitle =>
+      'You can\'t apply for jobs right now. Your account is inactive — please contact support to reactivate it.';
+
+  @override
+  String get accountReviewingTitle => 'Pending Review';
+
+  @override
+  String get accountReviewingSubtitle =>
+      'Your account is pending review by our admin team. You\'ll be able to apply for jobs once approved.';
 }

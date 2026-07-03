@@ -20,6 +20,7 @@ import '../../../core/widgets/ujob_alert_dialog.dart';
 import '../../../core/widgets/ujob_image.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/widgets/ujob_rich_text_display.dart';
+import '../../../core/widgets/ujob_verification_banners.dart';
 import 'seeker_job_provider.dart';
 import '../applications/seeker_application_provider.dart';
 import '../profile/seeker_profile_provider.dart';
@@ -47,6 +48,11 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && ref.read(seekerProfileProvider) == null) {
+        ref.read(fetchSeekerProfileProvider.future).catchError((_) {});
+      }
+    });
   }
 
   @override
@@ -79,6 +85,7 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
   Widget build(BuildContext context) {
     final jobAsync = ref.watch(seekerJobDetailProvider(widget.jobId));
     final l10n = context.l10n;
+    final profileStatus = ref.watch(seekerProfileProvider)?.status;
 
     final isSaved = jobAsync.valueOrNull?.isSaved ?? false;
     return Scaffold(
@@ -418,6 +425,23 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                 ],
                               ),
                             ),
+
+                            // --- ACCOUNT STATUS BANNER ---
+                            if (profileStatus == 'inactive') ...[
+                              SizedBox(height: 12.h),
+                              UJobAccountStatusBanner(
+                                status: profileStatus!,
+                                title: context.l10n.accountInactiveTitle,
+                                message: context.l10n.accountInactiveSubtitle,
+                              ),
+                            ] else if (profileStatus == 'pending') ...[
+                              SizedBox(height: 12.h),
+                              UJobAccountStatusBanner(
+                                status: profileStatus!,
+                                title: context.l10n.accountReviewingTitle,
+                                message: context.l10n.accountReviewingSubtitle,
+                              ),
+                            ],
 
                             // --- DEADLINE BANNER ---
                             if (job.closesAt != null) ...[
@@ -949,63 +973,12 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
     );
   }
 
-  bool _isProfileComplete(SeekerProfileData data) {
-    final user = data.user;
-    final profile = data.profile;
-
-    // User required fields
-    if (user.firstName.isEmpty) return false;
-    if (user.lastName.isEmpty) return false;
-    if (user.phone == null || user.phone!.isEmpty) return false;
-
-    if (profile == null) return false;
-
-    // Location
-    if (profile.country == null || profile.country!.isEmpty) return false;
-    if (profile.city == null || profile.city!.isEmpty) return false;
-    if (profile.address == null || profile.address!.isEmpty) return false;
-    if (profile.zipCode == null || profile.zipCode!.isEmpty) return false;
-
-    // Professional
-    if (profile.headline == null || profile.headline!.isEmpty) return false;
-    if ((profile.about == null || profile.about!.isEmpty) &&
-        (profile.summary == null || profile.summary!.isEmpty)) {
-      return false;
-    }
-    if (profile.experienceYearsInt == null) return false;
-    if (profile.experienceMonths == null) return false;
-    if (profile.expectedSalary == null) return false;
-    if (profile.salaryCurrency == null || profile.salaryCurrency!.isEmpty) return false;
-    if (profile.salaryPeriod == null || profile.salaryPeriod!.isEmpty) return false;
-    if (profile.availability == null || profile.availability!.isEmpty) return false;
-
-    // At least 1 valid experience
-    final hasExperience = profile.experiences.any((e) =>
-        e.jobTitle.isNotEmpty &&
-        e.companyName.isNotEmpty &&
-        (e.location != null && e.location!.isNotEmpty) &&
-        e.startDate != null);
-    if (!hasExperience) return false;
-
-    // At least 1 valid education
-    final hasEducation = profile.educations.any((e) =>
-        e.institution.isNotEmpty &&
-        e.degree.isNotEmpty &&
-        e.fieldOfStudy.isNotEmpty &&
-        (e.grade != null && e.grade!.isNotEmpty) &&
-        e.startDate != null &&
-        e.endDate != null);
-    if (!hasEducation) return false;
-
-    return true;
-  }
-
   void _apply(BuildContext context, dynamic job) async {
     if (job.closesAt != null && _isDeadlinePassed(job.closesAt!)) {
       return;
     }
 
-    // 0. Check verification → if not verified, fallback to required fields check
+    // 0. Resolve profile + account status
     var profileData = ref.read(seekerProfileProvider);
 
     if (profileData == null) {
@@ -1023,16 +996,38 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
       profileData = ref.read(seekerProfileProvider);
     }
 
-    if (profileData != null && !profileData.isVerified) {
-      if (!_isProfileComplete(profileData)) {
-        UJobToast.error(
-          context,
-          context.l10n.profileIncompleteTitle,
-          sub: context.l10n.profileIncompleteSubtitle,
-        );
-        return;
-      }
-      // Required fields filled but not verified — allow apply
+    final status = profileData?.status ?? 'pending';
+
+    if (status == 'suspended') {
+      context.go('/suspended');
+      return;
+    }
+
+    if (status == 'inactive') {
+      UJobToast.error(
+        context,
+        context.l10n.accountInactiveTitle,
+        sub: context.l10n.accountInactiveSubtitle,
+      );
+      return;
+    }
+
+    if (status == 'pending') {
+      UJobToast.error(
+        context,
+        context.l10n.accountReviewingTitle,
+        sub: context.l10n.accountReviewingSubtitle,
+      );
+      return;
+    }
+
+    if (profileData != null && !profileData.isProfileComplete) {
+      UJobToast.error(
+        context,
+        context.l10n.profileIncompleteTitle,
+        sub: context.l10n.profileIncompleteSubtitle,
+      );
+      return;
     }
 
     // 1. Initial Confirmation

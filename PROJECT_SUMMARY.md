@@ -137,6 +137,51 @@ UJob is a dual-portal mobile application (Flutter) for **Employers** and **Job S
 
 ---
 
+## 3. Implementation Status (Last Updated: 2026-07-03, Session 10)
+
+#### Session 10 Changes (2026-07-03) — Account Status Simplification (supersedes Session 9 verification gating)
+
+Session 9 introduced dual-field gating (`verificationStatus` + `accountStatus`, both had to equal `'verified'`). Replaced with a single `user.status` field (`active`/`suspended`/`inactive`/`pending`) driving all apply-gating and account banners. `verificationStatus`/`accountStatus` were reintroduced afterward but scoped ONLY to the profile-screen verified checkmark badge (`User.isVerifiedBadge`), not to apply-gating.
+
+- `lib/core/models/user.dart` — removed old `verified`/`isVerified` combo getter. `status` now drives account-state gating. Re-added `verificationStatus`/`accountStatus` (raw fields only) + `isVerifiedBadge` getter, used exclusively by the profile header checkmark.
+- `seeker_profile_provider.dart` (`SeekerProfileData`) — replaced `isVerified`/`verificationStatus`/`accountStatus` with `status`, `isProfileComplete` (moved the 15 star-marked required-field check here from job-detail screen so it's reusable), and `canApply` (`status == 'active' && isProfileComplete`).
+- `seeker_dashboard_provider.dart` / `seeker_dashboard_screen.dart` — dropped `verificationBannerState`; banner now keys off plain `status`, reusing `UJobAccountStatusBanner` (previously employer-only widget, now shared).
+- `seeker_job_detail_screen.dart` — `_apply()` gate rewritten as a flat status switch: `suspended` → routes to `/suspended`; `inactive`/`pending` → blocked with toast + inline `UJobAccountStatusBanner` in the job header; `active` + incomplete profile → existing "profile incomplete" toast; `active` + complete → proceeds to apply flow.
+- `seeker_profile_screen.dart` — verified badge condition now `user.isVerifiedBadge` (`verification_status == 'verified' && account_status == 'verified'`). Removed the "Fill all required fields to receive a verified badge" hint text entirely (badge presence has no accompanying copy now). Fixed a layout bug: the header Row had zero spacing between the name+badge column and the settings gear icon — long names stretched the inline Row to fill the `Expanded` box, pinning the badge flush against the gear. Added an explicit `SizedBox(width: 8.w)` between them.
+- `auth_provider.dart` — removed silent session-wipe for `suspended`/`banned`/`inactive` users on app restart (previously dumped them straight to login with no explanation).
+- `app_router.dart` — added redirect: logged-in + `status == 'suspended'/'banned'` + not already on `/suspended` → force `/suspended` (so the existing `AccountSuspendedScreen` is actually reachable outside the one-time login-response path).
+- l10n — added `accountInactiveTitle/Subtitle`; repurposed `accountReviewingTitle/Subtitle` for the `pending` state (en + ar, arb + generated dart).
+- Employer-side company-verification code (`company.dart`, `employer_dashboard_provider.dart`) is a separate domain (company verification, not user account status) — untouched.
+
+#### Session 9 Changes (2026-07-03) — Seeker Verification Gating, Save/Unsave Fix, Resume Button Fix
+
+##### Models Updated:
+- `lib/core/models/user.dart` — added `verificationStatus`, `accountStatus`, `avatarUrl`, `phoneCode`, `emailVerifiedAt`, `createdAt`. Added `isVerified` getter (`verificationStatus == 'verified' && accountStatus == 'verified'`). Removed `profileCompleted`.
+- `lib/core/models/seeker_profile.dart` — added `relocationCities`, `certifications`, `createdAt`, `updatedAt` to match real API.
+- Employer model fields untouched.
+
+##### Seeker Verification Gating:
+- `seeker_profile_provider.dart` — added `isVerified`, `verificationStatus`, `accountStatus` getters to `SeekerProfileData`.
+- `seeker_profile_screen.dart` — verified badge shows/hides based on `isVerified`; phone code auto-selects from API (`user.phoneCode`); profile visibility dropdown removed (always sends `'private'`).
+- `seeker_dashboard_provider.dart` — replaced `profileCompletion` with `isVerified`/`verificationStatus`/`accountStatus`/`canApply`; now fetches `Ep.seekerMe` for verification state.
+- `seeker_dashboard_screen.dart` — replaced profile completion bar with `UJobProfileSetupPrompt` verification nudge banner.
+- `seeker_job_detail_screen.dart` — apply gate: checks `isVerified` first; if not verified, checks 15 required fields (personal info, address, experience, education) before blocking apply.
+
+##### Employer Resume Button Fix:
+- `lib/core/widgets/ujob_applicant_card.dart` — was hardcoded to deleted local PDF. Now reads `applicant.resumeUrl` and opens `UJobPdfViewerScreen`. Shows l10n warning toast if URL is null/empty.
+
+##### Save/Unsave Fix (`seeker_application_provider.dart`):
+- Removed `if (state.value == null) return` guard — save now works before initial data load completes.
+- After API call, reads `response.data['data']['saved']` and corrects state if it diverges from optimistic update.
+- On network error, reverts optimistic update back to original state.
+- POST to save, DELETE to unsave (matches API conventions).
+
+##### L10n:
+- Added `noResumeTitle`, `noResumeSubtitle`, `profileIncompleteTitle`, `profileIncompleteSubtitle` to `app_en.arb` + `app_ar.arb`.
+- Replaced all hardcoded toast strings in applicant card, job detail screen, dashboard screen with `context.l10n.*`.
+
+---
+
 ## 3. Implementation Status (Last Updated: 2026-06-18, Session 6)
 
 #### Session 6 Changes (2026-06-18) — Polish, Constants, Icon System & Reusable Widgets

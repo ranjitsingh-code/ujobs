@@ -9,21 +9,15 @@ class SeekerDashboardData {
   final int savedCount;
   final int matchesCount;
   final List<Job> recommendedJobs;
-  final bool isVerified;
-  final String verificationStatus;
-  final String accountStatus;
+  final String status;
 
   SeekerDashboardData({
     required this.applicationsCount,
     required this.savedCount,
     required this.matchesCount,
     required this.recommendedJobs,
-    required this.isVerified,
-    required this.verificationStatus,
-    required this.accountStatus,
+    required this.status,
   });
-
-  bool get canApply => isVerified;
 }
 
 final seekerDashboardProvider = FutureProvider.autoDispose<SeekerDashboardData>(
@@ -39,17 +33,12 @@ final seekerDashboardProvider = FutureProvider.autoDispose<SeekerDashboardData>(
     final jobsRes = await dio.get(Ep.seekerMatching);
     final jobsData = (jobsRes.data['data'] as List).map((j) => Job.fromJson(j)).toList();
 
-    final verificationStatus = profileData['verification_status']?.toString() ?? 'unverified';
-    final accountStatus = profileData['account_status']?.toString() ?? 'pending';
-
     return SeekerDashboardData(
       applicationsCount: statsData['stats']['applied_count'] ?? 0,
       savedCount: statsData['stats']['saved_count'] ?? 0,
       matchesCount: statsData['stats']['matches_count'] ?? 0,
       recommendedJobs: jobsData,
-      isVerified: verificationStatus == 'verified' && accountStatus == 'verified',
-      verificationStatus: verificationStatus,
-      accountStatus: accountStatus,
+      status: profileData['status']?.toString() ?? 'pending',
     );
   },
 );

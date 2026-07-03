@@ -15,3 +15,13 @@
 # code-quality
 - After making changes, run Dart analysis and fix any issues found. Confidence: 0.70
 
+# git
+- When pushing code, push to both remotes: the original origin AND https://github.com/ranjitsingh-code/ujobs.git. Confidence: 0.85
+
+# flutter
+- Use pin_code_fields package (https://pub.dev/packages/pin_code_fields) for OTP input screens. Confidence: 0.70
+- Use HugeIcons package for iconography (e.g., HugeIcons.strokeRoundedEye for view icon). Confidence: 0.70
+
+# internationalization
+- Multi-language/i18n support is required throughout the entire app. All strings must be dynamic, not static/hardcoded. Confidence: 0.85
+

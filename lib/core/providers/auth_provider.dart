@@ -34,12 +34,6 @@ class AuthNotifier extends AsyncNotifier<User?> {
       final data = (res.data['data'] ?? res.data) as Map<String, dynamic>;
       final user = User.fromJson(data);
 
-      // 🔴 If the admin suspended them while they were away, kick them out immediately!
-      if (user.status == 'suspended' || user.status == 'banned' || user.status == 'inactive') {
-        await storage.clearAll();
-        return null;
-      }
-
       if (savedRole == 'employer' && data['companies'] != null && (data['companies'] as List).isNotEmpty) {
         final companyData = data['companies'][0] as Map<String, dynamic>;
         Future.microtask(() {

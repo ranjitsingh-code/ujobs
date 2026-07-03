@@ -6,16 +6,20 @@ import '../theme/app_text_styles.dart';
 import '../utils/l10n_extensions.dart';
 
 class UJobProfileSetupPrompt extends StatelessWidget {
-  final VoidCallback onSetup;
+  final VoidCallback? onSetup;
   final String? title;
   final String? subtitle;
   final String? buttonLabel;
+  final Color accentColor;
+  final Color backgroundColor;
 
   const UJobProfileSetupPrompt({
-    required this.onSetup,
+    this.onSetup,
     this.title,
     this.subtitle,
     this.buttonLabel,
+    this.accentColor = AppColors.warning,
+    this.backgroundColor = AppColors.warningBg,
     super.key,
   });
 
@@ -27,28 +31,21 @@ class UJobProfileSetupPrompt extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 24.h),
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.text.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: accentColor.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
-              color: AppColors.warning.withValues(alpha: 0.15),
+              color: accentColor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: HugeIcon(
               icon: HugeIcons.strokeRoundedUserAdd01,
-              color: AppColors.warning,
+              color: accentColor,
               size: 28.r,
             ),
           ),
@@ -66,20 +63,22 @@ class UJobProfileSetupPrompt extends StatelessWidget {
                   subtitle ?? l10n.completeProfileHelps,
                   style: AppText.small.copyWith(color: AppColors.muted),
                 ),
-                SizedBox(height: 16.h),
-                FilledButton(
-                  onPressed: onSetup,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.seekPrimary,
-                    foregroundColor: AppColors.surface,
-                    minimumSize: Size(120.w, 36.h),
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.r),
+                if (onSetup != null) ...[
+                  SizedBox(height: 16.h),
+                  FilledButton(
+                    onPressed: onSetup,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: accentColor,
+                      foregroundColor: AppColors.surface,
+                      minimumSize: Size(120.w, 36.h),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
                     ),
+                    child: Text(buttonLabel ?? l10n.setupNow),
                   ),
-                  child: Text(buttonLabel ?? l10n.setupNow),
-                ),
+                ],
               ],
             ),
           ),

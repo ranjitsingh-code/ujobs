@@ -36,6 +36,7 @@ class AppColors {
   static const purple = Color(0xFF8B5CF6);
   static const purpleBg = Color(0xFFF5F3FF);
   static const info = Color(0xFF3B82F6);
+  static const infoBg = Color(0xFFEFF6FF);
 
   // ── Onboarding slide card backgrounds ─────────────────────────────────────
   static const onboardBlueStart = Color(0xFFEFF6FF); // blue-50

@@ -2216,4 +2216,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get profileIncompleteSubtitle =>
       'يرجى إكمال جميع حقول الملف الشخصي المطلوبة قبل التقديم.';
+
+  @override
+  String get accountInactiveTitle => 'الحساب غير نشط';
+
+  @override
+  String get accountInactiveSubtitle =>
+      'لا يمكنك التقديم على الوظائف حالياً. حسابك غير نشط — يرجى التواصل مع الدعم لإعادة تفعيله.';
+
+  @override
+  String get accountReviewingTitle => 'قيد المراجعة';
+
+  @override
+  String get accountReviewingSubtitle =>
+      'حسابك قيد المراجعة من قبل فريق الإدارة. ستتمكن من التقديم على الوظائف بعد الموافقة.';
 }

@@ -921,5 +921,9 @@
   "noResumeTitle": "لا يوجد سيرة ذاتية",
   "noResumeSubtitle": "لم يقم هذا المتقدم بتحميل سيرة ذاتية.",
   "profileIncompleteTitle": "الملف الشخصي غير مكتمل",
-  "profileIncompleteSubtitle": "يرجى إكمال جميع حقول الملف الشخصي المطلوبة قبل التقديم."
+  "profileIncompleteSubtitle": "يرجى إكمال جميع حقول الملف الشخصي المطلوبة قبل التقديم.",
+  "accountInactiveTitle": "الحساب غير نشط",
+  "accountInactiveSubtitle": "لا يمكنك التقديم على الوظائف حالياً. حسابك غير نشط — يرجى التواصل مع الدعم لإعادة تفعيله.",
+  "accountReviewingTitle": "قيد المراجعة",
+  "accountReviewingSubtitle": "حسابك قيد المراجعة من قبل فريق الإدارة. ستتمكن من التقديم على الوظائف بعد الموافقة."
 }

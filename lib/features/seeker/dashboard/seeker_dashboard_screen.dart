@@ -17,7 +17,7 @@ import '../../../core/widgets/ujob_toast.dart';
 import '../../../core/widgets/ujob_notification_button.dart';
 import '../../../core/widgets/ujob_dashboard_section_header.dart';
 import '../../../core/widgets/ujob_boxed_empty_state.dart';
-import '../../../core/widgets/ujob_profile_setup_prompt.dart';
+import '../../../core/widgets/ujob_verification_banners.dart';
 
 class SeekerDashboardScreen extends ConsumerWidget {
   const SeekerDashboardScreen({super.key});
@@ -86,10 +86,19 @@ class SeekerDashboardScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Verification banner
-                    if (!data.isVerified) ...[
-                      UJobProfileSetupPrompt(
-                        onSetup: () => context.go('/seeker/profile'),
+                    // Account status banner
+                    if (data.status == 'inactive') ...[
+                      UJobAccountStatusBanner(
+                        status: data.status,
+                        title: context.l10n.accountInactiveTitle,
+                        message: context.l10n.accountInactiveSubtitle,
+                      ),
+                      SizedBox(height: 24.h),
+                    ] else if (data.status == 'pending') ...[
+                      UJobAccountStatusBanner(
+                        status: data.status,
+                        title: context.l10n.accountReviewingTitle,
+                        message: context.l10n.accountReviewingSubtitle,
                       ),
                       SizedBox(height: 24.h),
                     ],

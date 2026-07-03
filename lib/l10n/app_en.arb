@@ -1487,5 +1487,13 @@
   "profileIncompleteTitle": "Profile Incomplete",
   "@profileIncompleteTitle": {},
   "profileIncompleteSubtitle": "Please complete all required profile fields before applying.",
-  "@profileIncompleteSubtitle": {}
+  "@profileIncompleteSubtitle": {},
+  "accountInactiveTitle": "Account Inactive",
+  "@accountInactiveTitle": {},
+  "accountInactiveSubtitle": "You can't apply for jobs right now. Your account is inactive — please contact support to reactivate it.",
+  "@accountInactiveSubtitle": {},
+  "accountReviewingTitle": "Pending Review",
+  "@accountReviewingTitle": {},
+  "accountReviewingSubtitle": "Your account is pending review by our admin team. You'll be able to apply for jobs once approved.",
+  "@accountReviewingSubtitle": {}
 }

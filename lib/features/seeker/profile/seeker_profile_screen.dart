@@ -423,7 +423,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                 name: fullName,
                 headline: _headlineCtrl.text,
                 email: email,
-                isVerified: profileData?.user.isVerified == true,
+                isActive: profileData?.user.isVerifiedBadge == true,
                 onEditImage: () {},
               ),
               Padding(
@@ -1620,14 +1620,14 @@ class _SeekerProfileHeader extends StatelessWidget {
   final String name;
   final String headline;
   final String email;
-  final bool isVerified;
+  final bool isActive;
   final VoidCallback onEditImage;
 
   const _SeekerProfileHeader({
     required this.name,
     required this.headline,
     required this.email,
-    required this.isVerified,
+    required this.isActive,
     required this.onEditImage,
   });
 
@@ -1695,7 +1695,7 @@ class _SeekerProfileHeader extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (isVerified) ...[
+                        if (isActive) ...[
                           SizedBox(width: 6.w),
                           HugeIcon(
                             icon: HugeIcons.strokeRoundedCheckmarkBadge01,
@@ -1726,6 +1726,7 @@ class _SeekerProfileHeader extends StatelessWidget {
                   ],
                 ),
               ),
+              SizedBox(width: 8.w),
               IconButton(
                 onPressed: () => context.push('/seeker/settings'),
                 tooltip: 'Settings',
@@ -1741,36 +1742,6 @@ class _SeekerProfileHeader extends StatelessWidget {
               ),
             ],
           ),
-          if (!isVerified) ...[
-            SizedBox(height: 20.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.12),
-                borderRadius: AppRadius.lg,
-                border: Border.all(color: AppColors.white.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedCheckmarkBadge01,
-                    color: AppColors.white.withValues(alpha: 0.75),
-                    size: 20.r,
-                  ),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    child: Text(
-                      'Fill all required fields to receive a verified badge',
-                      style: AppText.caption.copyWith(
-                        color: AppColors.white.withValues(alpha: 0.85),
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );

@@ -114,6 +114,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         return hasSeenIntro ? '/role-picker' : '/onboarding';
       }
 
+      final userStatus = auth.valueOrNull?.status;
+      if (isLoggedIn &&
+          (userStatus == 'suspended' || userStatus == 'banned') &&
+          loc != '/suspended') {
+        return '/suspended';
+      }
+
       if (isLoggedIn &&
           (loc == '/' || loc == '/role-picker' || loc == '/onboarding')) {
         return role == 'employer' ? '/employer' : '/seeker';
