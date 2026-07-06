@@ -8,6 +8,7 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../../core/models/job.dart';
 import '../../../core/widgets/ujob_verification_banners.dart';
+import '../../../core/widgets/ujob_profile_setup_prompt.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -107,8 +108,16 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _QuickActions(
-                  isVerified: dashboard.isVerified,
+                  isVerified: dashboard.canPostJob,
                   onPostJob: () {
+                    if (!dashboard.isCompanyProfileComplete) {
+                      UJobToast.error(
+                        context,
+                        context.l10n.employerProfileNotCompletedTitle,
+                        sub: context.l10n.employerProfileNotCompletedSubtitle,
+                      );
+                      return;
+                    }
                     if (!dashboard.isAccountActive) {
                       UJobToast.error(
                         context,
@@ -120,24 +129,30 @@ class _EmployerDashboardScreenState extends ConsumerState<EmployerDashboardScree
                     if (!dashboard.isVerified) {
                       UJobToast.error(
                         context,
-                        'Verification Required',
-                        sub: 'Please complete your company profile and get verified before you can post a job.',
+                        context.l10n.employerAccountUnderReviewTitle,
+                        sub: context.l10n.employerAccountUnderReviewSubtitle,
                       );
                       return;
                     }
                     context.push('/employer/post-job');
                   },
                 ),
-                if (!dashboard.isAccountActive) ...[
+                if (!dashboard.isCompanyProfileComplete) ...[
+                  SizedBox(height: 24.h),
+                  UJobProfileSetupPrompt(
+                    title: context.l10n.employerProfileNotCompletedTitle,
+                    subtitle: context.l10n.employerProfileNotCompletedSubtitle,
+                    icon: HugeIcons.strokeRoundedAlert02,
+                    onSetup: () => context.push('/employer/profile'),
+                  ),
+                ] else if (!dashboard.isAccountActive) ...[
                   SizedBox(height: 24.h),
                   UJobAccountStatusBanner(status: dashboard.userStatus),
-                ] else if (dashboard.verificationStatus == 'pending') ...[
-                  SizedBox(height: 24.h),
-                  const UJobVerificationPendingBanner(),
                 ] else if (!dashboard.isVerified) ...[
                   SizedBox(height: 24.h),
-                  UJobCompanyProfileSetup(
-                    onSetup: () => context.push('/employer/profile'),
+                  UJobVerificationPendingBanner(
+                    title: context.l10n.employerAccountUnderReviewTitle,
+                    message: context.l10n.employerAccountUnderReviewSubtitle,
                   ),
                 ],
                 // if (messagesToReply.isNotEmpty) ...[

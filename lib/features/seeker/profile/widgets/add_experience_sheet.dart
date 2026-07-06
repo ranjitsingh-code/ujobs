@@ -69,8 +69,12 @@ class _AddExperienceSheetState extends State<AddExperienceSheet> {
   }
 
   void _save() {
-    if (_titleCtrl.text.isEmpty || _companyCtrl.text.isEmpty || _locationCtrl.text.isEmpty || _startDate == null) {
-      UJobToast.error(context, 'Validation Error', sub: 'Please fill out Job Title, Company, Location, and Start Date');
+    if (_titleCtrl.text.isEmpty ||
+        _companyCtrl.text.isEmpty ||
+        _locationCtrl.text.isEmpty ||
+        _startDate == null ||
+        _descCtrl.text.isEmpty) {
+      UJobToast.error(context, 'Validation Error', sub: 'Please fill out Job Title, Company, Location, Start Date, and Description');
       return;
     }
 
@@ -196,6 +200,7 @@ class _AddExperienceSheetState extends State<AddExperienceSheet> {
             SizedBox(height: 16.h),
             UJobTextField(
               label: 'Description',
+              isRequired: true,
               hint: 'Describe your responsibilities and achievements',
               controller: _descCtrl,
               maxLines: 4,

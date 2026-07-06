@@ -18,6 +18,7 @@ import '../../../core/widgets/ujob_notification_button.dart';
 import '../../../core/widgets/ujob_dashboard_section_header.dart';
 import '../../../core/widgets/ujob_boxed_empty_state.dart';
 import '../../../core/widgets/ujob_verification_banners.dart';
+import '../../../core/widgets/ujob_profile_setup_prompt.dart';
 
 class SeekerDashboardScreen extends ConsumerWidget {
   const SeekerDashboardScreen({super.key});
@@ -83,14 +84,24 @@ class SeekerDashboardScreen extends ConsumerWidget {
                 onSavedTap: () => context.push('/seeker/saved-jobs'),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: AppSpacing.pagePad,
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
+              sliver: SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Account status banner
-                    if (data.status == 'inactive') ...[
+                    // Profile completeness checked first, then account status
+                    if (!data.isProfileComplete) ...[
+                      InkWell(
+                        borderRadius: BorderRadius.circular(20.r),
+                        onTap: () => context.push('/seeker/profile'),
+                        child: UJobProfileSetupPrompt(
+                          title: l10n.completeProfileMatchesTitle,
+                          subtitle: l10n.completeProfileMatchesSubtitle,
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+                    ] else if (data.status == 'inactive') ...[
                       UJobAccountStatusBanner(
                         status: data.status,
                         title: context.l10n.accountInactiveTitle,
@@ -123,53 +134,55 @@ class SeekerDashboardScreen extends ConsumerWidget {
                       onActionTap: () => context.go('/seeker/jobs'),
                     ),
                     SizedBox(height: 8.h),
-                    if (data.recommendedJobs.isEmpty)
-                      const UJobBoxedEmptyState(
-                        title: 'No recent jobs found',
-                        subtitle:
-                            'Check back later or adjust your profile preferences.',
-                        icon: HugeIcons.strokeRoundedSearchMinus,
-                      )
-                    else
-                      ListView.separated(
-                        padding: EdgeInsets.zero,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: data.recommendedJobs.length,
-                        separatorBuilder: (_, _) => const SizedBox.shrink(),
-                        itemBuilder: (context, index) {
-                          final job = data.recommendedJobs[index];
-                          final isSaved = apps.any(
-                            (a) =>
-                                a.job.id == job.id &&
-                                a.status == ApplicationStatus.saved,
-                          );
-                          return UJobJobCard(
-                            job: job.copyWith(isSaved: isSaved),
-                            onTap: () => context.push(
-                              '/seeker/jobs/${job.id}',
-                              extra: {'source': 'dashboard'},
-                            ),
-                            onSaveTap: () {
-                              ref
-                                  .read(
-                                    seekerApplicationsProvider(null).notifier,
-                                  )
-                                  .toggleSave(job);
-                              UJobToast.success(
-                                context,
-                                isSaved ? context.l10n.jobUnsavedTitle : context.l10n.jobSavedTitle,
-                                sub: isSaved ? context.l10n.savedJobRemovedSubtitle : context.l10n.savedJobAddedSubtitle,
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    SizedBox(height: 32.h),
                   ],
                 ),
               ),
             ),
+            if (data.recommendedJobs.isEmpty)
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                sliver: SliverToBoxAdapter(
+                  child: const UJobBoxedEmptyState(
+                    title: 'No recent jobs found',
+                    subtitle:
+                        'Check back later or adjust your profile preferences.',
+                    icon: HugeIcons.strokeRoundedSearchMinus,
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                sliver: SliverList.builder(
+                  itemCount: data.recommendedJobs.length,
+                  itemBuilder: (context, index) {
+                    final job = data.recommendedJobs[index];
+                    final isSaved = apps.any(
+                      (a) =>
+                          a.job.id == job.id &&
+                          a.status == ApplicationStatus.saved,
+                    );
+                    return UJobJobCard(
+                      job: job.copyWith(isSaved: isSaved),
+                      onTap: () => context.push(
+                        '/seeker/jobs/${job.id}',
+                        extra: {'source': 'dashboard'},
+                      ),
+                      onSaveTap: () {
+                        ref
+                            .read(seekerApplicationsProvider(null).notifier)
+                            .toggleSave(job);
+                        UJobToast.success(
+                          context,
+                          isSaved ? context.l10n.jobUnsavedTitle : context.l10n.jobSavedTitle,
+                          sub: isSaved ? context.l10n.savedJobRemovedSubtitle : context.l10n.savedJobAddedSubtitle,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            SliverToBoxAdapter(child: SizedBox(height: 32.h + 16.h)),
           ],
         ),
         ),

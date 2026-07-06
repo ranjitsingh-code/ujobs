@@ -15,6 +15,8 @@ class SeekerProfileData {
 
   String get status => user.status ?? 'pending';
 
+  bool get isFresher => profile?.isFresher ?? false;
+
   bool get isProfileComplete {
     final profile = this.profile;
 
@@ -43,13 +45,15 @@ class SeekerProfileData {
     if (profile.salaryPeriod == null || profile.salaryPeriod!.isEmpty) return false;
     if (profile.availability == null || profile.availability!.isEmpty) return false;
 
-    // At least 1 valid experience
-    final hasExperience = profile.experiences.any((e) =>
-        e.jobTitle.isNotEmpty &&
-        e.companyName.isNotEmpty &&
-        (e.location != null && e.location!.isNotEmpty) &&
-        e.startDate != null);
-    if (!hasExperience) return false;
+    // At least 1 valid experience — waived for freshers
+    if (!profile.isFresher) {
+      final hasExperience = profile.experiences.any((e) =>
+          e.jobTitle.isNotEmpty &&
+          e.companyName.isNotEmpty &&
+          (e.location != null && e.location!.isNotEmpty) &&
+          e.startDate != null);
+      if (!hasExperience) return false;
+    }
 
     // At least 1 valid education
     final hasEducation = profile.educations.any((e) =>

@@ -23,6 +23,8 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/widgets/ujob_toast.dart';
 import '../dashboard/employer_dashboard_provider.dart';
+import '../../../core/widgets/ujob_verification_banners.dart';
+import '../../../core/widgets/ujob_profile_setup_prompt.dart';
 
 class CompanyProfileScreen extends ConsumerStatefulWidget {
   const CompanyProfileScreen({super.key});
@@ -304,6 +306,8 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
     final countriesState = ref.watch(countriesProvider);
     final countries = countriesState.valueOrNull ?? [];
 
+    final dashboard = ref.watch(employerDashboardProvider).valueOrNull;
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: RefreshIndicator(
@@ -324,6 +328,25 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (dashboard != null) ...[
+                      if (!dashboard.isCompanyProfileComplete) ...[
+                        UJobProfileSetupPrompt(
+                          title: context.l10n.employerProfileNotCompletedTitle,
+                          subtitle: context.l10n.employerProfileNotCompletedSubtitle,
+                          icon: HugeIcons.strokeRoundedAlert02,
+                        ),
+                        SizedBox(height: 24.h),
+                      ] else if (!dashboard.isAccountActive) ...[
+                        UJobAccountStatusBanner(status: dashboard.userStatus),
+                        SizedBox(height: 24.h),
+                      ] else if (!dashboard.isVerified) ...[
+                        UJobVerificationPendingBanner(
+                          title: context.l10n.employerAccountUnderReviewTitle,
+                          message: context.l10n.employerAccountUnderReviewSubtitle,
+                        ),
+                        SizedBox(height: 24.h),
+                      ],
+                    ],
                     // Company Info Form
                     _SectionCard(
                       title: "Company Information",
@@ -424,24 +447,9 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                           UJobPhoneNumberField(
                             label: "Contact Phone",
                             isRequired: true,
-                            countries: countries,
+                            isCodeEditable: false,
                             controller: _contactPhoneController,
                             initialDialCode: _selectedDialCode,
-                            onCountryCodeChanged: (v) {
-                              setState(() {
-                                _selectedDialCode = v ?? '+44';
-                                final matchedCountry = countries
-                                    .firstWhereOrNull((c) {
-                                      final cDial = c.phoneCode.startsWith('+')
-                                          ? c.phoneCode
-                                          : '+${c.phoneCode}';
-                                      return cDial == _selectedDialCode;
-                                    });
-                                if (matchedCountry != null) {
-                                  _selectedCountry = matchedCountry.name;
-                                }
-                              });
-                            },
                           ),
                         ],
                       ),
@@ -540,6 +548,50 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                             onChanged: (v) =>
                                 setState(() => _selectedWorkType = v),
                           ),
+                          if (workTypeLabel != null) ...[
+                            SizedBox(height: 8.h),
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6.w,
+                              runSpacing: 4.h,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    HugeIcon(
+                                      icon: HugeIcons.strokeRoundedBriefcase02,
+                                      color: AppColors.muted,
+                                      size: 16.r,
+                                    ),
+                                    SizedBox(width: 6.w),
+                                    Text(
+                                      context.l10n.candidatesWillSeeCompanyAs,
+                                      style: AppText.small.copyWith(
+                                        color: AppColors.muted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10.w,
+                                    vertical: 4.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warningBg,
+                                    borderRadius: BorderRadius.circular(100.r),
+                                  ),
+                                  child: Text(
+                                    workTypeLabel,
+                                    style: AppText.small.copyWith(
+                                      color: AppColors.warning,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -739,7 +791,9 @@ class CompanyProfileHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isVerified = company.verified == true;
+    // Verified badge only shows once profile fields are complete too —
+    // otherwise it contradicts the "profile not completed" hint below.
+    final isVerified = company.verified == true && company.isProfileComplete;
 
     // Get real country name instead of ISO2
     final countries = ref.read(countriesProvider).valueOrNull ?? [];
@@ -893,36 +947,6 @@ class CompanyProfileHeader extends ConsumerWidget {
               ),
             ],
           ),
-          if (!isVerified) ...[
-            SizedBox(height: 20.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.12),
-                borderRadius: AppRadius.lg,
-                border: Border.all(color: AppColors.white.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedCheckmarkBadge01,
-                    color: AppColors.white.withValues(alpha: 0.75),
-                    size: 20.r,
-                  ),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    child: Text(
-                      'Fill all required fields to receive a verified badge',
-                      style: AppText.caption.copyWith(
-                        color: AppColors.white.withValues(alpha: 0.85),
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );

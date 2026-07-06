@@ -10,6 +10,7 @@ class SeekerProfile {
   final String? salaryCurrency;
   final String? salaryPeriod;
   final String? availability;
+  final bool isFresher;
   final String? profileVisibility;
   final String? address;
   final String? zipCode;
@@ -46,6 +47,7 @@ class SeekerProfile {
     this.salaryCurrency,
     this.salaryPeriod,
     this.availability,
+    this.isFresher = false,
     this.profileVisibility,
     this.address,
     this.zipCode,
@@ -83,6 +85,7 @@ class SeekerProfile {
       salaryCurrency: json['salary_currency'] as String?,
       salaryPeriod: json['salary_period'] as String?,
       availability: json['availability'] as String?,
+      isFresher: json['is_fresher'] as bool? ?? false,
       profileVisibility: json['profile_visibility'] as String?,
       address: json['address'] as String?,
       zipCode: json['zip_code'] as String?,

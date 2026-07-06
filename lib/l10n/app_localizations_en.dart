@@ -2228,6 +2228,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Please complete all required profile fields before applying.';
 
   @override
+  String get completeProfileMatchesTitle =>
+      'Complete your profile to get better matches';
+
+  @override
+  String get completeProfileMatchesSubtitle =>
+      'Fill in the missing details so we can recommend jobs that fit you.';
+
+  @override
+  String get completeProfileToApplyTitle =>
+      'Complete your profile to apply for jobs';
+
+  @override
+  String get completeProfileToApplySubtitle =>
+      'Fill in all required fields below to unlock applying.';
+
+  @override
   String get accountInactiveTitle => 'Account Inactive';
 
   @override
@@ -2235,9 +2251,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can\'t apply for jobs right now. Your account is inactive — please contact support to reactivate it.';
 
   @override
-  String get accountReviewingTitle => 'Pending Review';
+  String get accountReviewingTitle => 'Your Account Is Under Review';
 
   @override
   String get accountReviewingSubtitle =>
-      'Your account is pending review by our admin team. You\'ll be able to apply for jobs once approved.';
+      'We\'ll verify it soon — you\'ll be able to apply for jobs as soon as it\'s approved.';
+
+  @override
+  String get candidatesWillSeeCompanyAs =>
+      'Candidates will see this company as ';
+
+  @override
+  String get employerAccountUnderReviewTitle => 'Your Account Is Under Review';
+
+  @override
+  String get employerAccountUnderReviewSubtitle =>
+      'Your account is under review. We\'ll verify it soon, and you\'ll be able to post jobs as soon as possible.';
+
+  @override
+  String get employerProfileNotCompletedTitle =>
+      'Your profile is not completed.';
+
+  @override
+  String get employerProfileNotCompletedSubtitle =>
+      'Your profile is not completed. Please complete your profile first. Once your profile has been completed, you will be able to post jobs.';
+
+  @override
+  String get employerProfileNotCompletedShort => 'Profile is not completed';
 }

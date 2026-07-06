@@ -13,6 +13,7 @@ class User {
   final String? avatarUrl;
   final String? emailVerifiedAt;
   final String? createdAt;
+  final int? profileCompleted;
 
   const User({
     required this.id,
@@ -29,6 +30,7 @@ class User {
     this.avatarUrl,
     this.emailVerifiedAt,
     this.createdAt,
+    this.profileCompleted,
   });
 
   String get fullName => '$firstName $lastName'.trim();
@@ -57,6 +59,9 @@ class User {
     avatarUrl: json['avatar_url'] as String?,
     emailVerifiedAt: json['email_verified_at'] as String?,
     createdAt: json['created_at'] as String?,
+    profileCompleted: json['profile_completed'] is int
+        ? json['profile_completed'] as int
+        : int.tryParse(json['profile_completed']?.toString() ?? ''),
   );
 
   User copyWith({

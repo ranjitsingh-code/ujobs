@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/models/job.dart';
+import '../../../core/models/user.dart';
+import '../../../core/models/seeker_profile.dart';
+import '../profile/seeker_profile_provider.dart';
 
 
 class SeekerDashboardData {
@@ -9,12 +12,14 @@ class SeekerDashboardData {
   final int matchesCount;
   final List<Job> recommendedJobs;
   final String status;
+  final bool isProfileComplete;
 
   SeekerDashboardData({
     required this.applicationsCount,
     required this.matchesCount,
     required this.recommendedJobs,
     required this.status,
+    required this.isProfileComplete,
   });
 }
 
@@ -31,11 +36,16 @@ final seekerDashboardProvider = FutureProvider.autoDispose<SeekerDashboardData>(
     final jobsRes = await dio.get(Ep.seekerMatching);
     final jobsData = (jobsRes.data['data'] as List).map((j) => Job.fromJson(j)).toList();
 
+    final user = User.fromJson(profileData);
+    final seekerProfiles = profileData['seeker_profiles'];
+    final profile = seekerProfiles != null ? SeekerProfile.fromJson(seekerProfiles) : null;
+
     return SeekerDashboardData(
       applicationsCount: statsData['stats']['applied_count'] ?? 0,
       matchesCount: statsData['stats']['matches_count'] ?? 0,
       recommendedJobs: jobsData,
       status: profileData['status']?.toString() ?? 'pending',
+      isProfileComplete: SeekerProfileData(user: user, profile: profile).isProfileComplete,
     );
   },
 );

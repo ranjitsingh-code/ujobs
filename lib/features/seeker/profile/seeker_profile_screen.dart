@@ -30,10 +30,10 @@ import 'seeker_profile_provider.dart';
 import '../dashboard/seeker_dashboard_provider.dart';
 import 'widgets/add_experience_sheet.dart';
 import 'widgets/add_education_sheet.dart';
-import '../../../core/providers/countries_provider.dart';
 import '../../../core/providers/job_form_options_provider.dart';
 import '../../../core/providers/skills_provider.dart';
 import '../../../core/widgets/ujob_phone_number_field.dart';
+import '../../../core/widgets/ujob_profile_setup_prompt.dart';
 
 class SeekerProfileScreen extends ConsumerStatefulWidget {
   const SeekerProfileScreen({super.key});
@@ -82,6 +82,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   List<Skill> _availableSkills = [];
 
   // Experience & Education
+  bool _isFresher = false;
   List<SeekerExperience> _experiences = [];
   List<SeekerEducation> _educations = [];
 
@@ -180,6 +181,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
       _selectedSkills = profile.skills
           .map((s) => Skill(id: int.tryParse(s.id) ?? 0, name: s.name))
           .toList();
+      _isFresher = profile.isFresher;
       _experiences = List.from(profile.experiences);
       _educations = List.from(profile.educations);
 
@@ -431,6 +433,14 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (profileData != null && !profileData.isProfileComplete) ...[
+                      UJobProfileSetupPrompt(
+                        title: context.l10n.completeProfileToApplyTitle,
+                        subtitle: context.l10n.completeProfileToApplySubtitle,
+                      ),
+                      SizedBox(height: 24.h),
+                    ],
+
                     // 1. Personal Information
                     _SectionCard(
                       title: 'Personal Information',
@@ -461,26 +471,12 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                             ],
                           ),
                           SizedBox(height: 16.h),
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final countriesAsync = ref.watch(
-                                countriesProvider,
-                              );
-                              final countries =
-                                  countriesAsync.valueOrNull ?? [];
-                              return UJobPhoneNumberField(
-                                label: "Phone Number",
-                                isRequired: true,
-                                countries: countries,
-                                controller: _phoneCtrl,
-                                initialDialCode: _phoneCode,
-                                onCountryCodeChanged: (v) {
-                                  setState(() {
-                                    _phoneCode = v ?? '+44';
-                                  });
-                                },
-                              );
-                            },
+                          UJobPhoneNumberField(
+                            label: "Phone Number",
+                            isRequired: true,
+                            isCodeEditable: false,
+                            controller: _phoneCtrl,
+                            initialDialCode: _phoneCode,
                           ),
                         ],
                       ),
@@ -520,26 +516,18 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                             ],
                           ),
                           SizedBox(height: 16.h),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: UJobTextField(
-                                  label: 'Address',
-                                  isRequired: true,
-                                  hint: '123 Oxford Street',
-                                  controller: _addressCtrl,
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: UJobTextField(
-                                  label: 'Zip / Post Code',
-                                  isRequired: true,
-                                  hint: 'W1D 1BS',
-                                  controller: _zipCtrl,
-                                ),
-                              ),
-                            ],
+                          UJobTextField(
+                            label: 'Address',
+                            isRequired: true,
+                            hint: '123 Oxford Street',
+                            controller: _addressCtrl,
+                          ),
+                          SizedBox(height: 16.h),
+                          UJobTextField(
+                            label: 'Zip / Post Code',
+                            isRequired: true,
+                            hint: 'W1D 1BS',
+                            controller: _zipCtrl,
                           ),
                         ],
                       ),
@@ -585,31 +573,26 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                           ),
                           if (_willingToRelocate) ...[
                             SizedBox(height: 16.h),
-                            Text('Relocation Type', style: AppText.bodyBold),
-                            SizedBox(height: 8.h),
-                            Row(
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Expanded(
-                                  child: RadioListTile<String>(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: const Text('Anywhere'),
-                                    value: 'anywhere',
-                                    groupValue: _relocationType,
-                                    onChanged: (v) =>
-                                        setState(() => _relocationType = v),
-                                    activeColor: AppColors.seekPrimary,
-                                  ),
+                                RadioListTile<String>(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text('Anywhere'),
+                                  value: 'anywhere',
+                                  groupValue: _relocationType,
+                                  onChanged: (v) =>
+                                      setState(() => _relocationType = v),
+                                  activeColor: AppColors.seekPrimary,
                                 ),
-                                Expanded(
-                                  child: RadioListTile<String>(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: const Text('Specific Cities'),
-                                    value: 'specific',
-                                    groupValue: _relocationType,
-                                    onChanged: (v) =>
-                                        setState(() => _relocationType = v),
-                                    activeColor: AppColors.seekPrimary,
-                                  ),
+                                RadioListTile<String>(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text('Desired Work Location'),
+                                  value: 'specific',
+                                  groupValue: _relocationType,
+                                  onChanged: (v) =>
+                                      setState(() => _relocationType = v),
+                                  activeColor: AppColors.seekPrimary,
                                 ),
                               ],
                             ),
@@ -619,7 +602,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                                 label: 'Desired Work Location',
                                 hint: _relocationCities.length >= 3
                                     ? 'Maximum 3 cities reached'
-                                    : 'Type a city and press Enter',
+                                    : 'Type a city and tap Add',
                                 controller: _relocationCitiesCtrl,
                                 readOnly: _relocationCities.length >= 3,
                                 onChanged: (val) {
@@ -654,7 +637,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               ),
                               SizedBox(height: 6.h),
                               Text(
-                                'You can add up to 3 cities. Press Enter or click Add.',
+                                'You can add up to 3 cities. Tap Add to include one.',
                                 style: AppText.small.copyWith(
                                   color: AppColors.muted,
                                 ),
@@ -1008,6 +991,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                             options: const [
                               ('Immediately', 'immediately'),
                               ('Within 1 month', 'within_1_month'),
+                              ('Within 2 months', 'within_2_months'),
                               ('Within 3 months', 'within_3_months'),
                               ('Not looking', 'not_looking'),
                             ],
@@ -1085,12 +1069,40 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                       title: 'Work Experience',
                       subtitle: "Your work history",
                       isRequired: true,
-                      hasContent: _experiences.isNotEmpty,
+                      hasContent: _isFresher || _experiences.isNotEmpty,
                       icon: HugeIcons.strokeRoundedBriefcase02,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (_experiences.isNotEmpty) ...[
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 24.r,
+                                height: 24.r,
+                                child: Checkbox(
+                                  value: _isFresher,
+                                  onChanged: (v) {
+                                    setState(() {
+                                      _isFresher = v ?? false;
+                                    });
+                                  },
+                                  activeColor: AppColors.seekPrimary,
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Text(
+                                  "I am a Fresher (I have no work experience)",
+                                  style: AppText.body.copyWith(
+                                    color: AppColors.text,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (!_isFresher) ...[
+                            SizedBox(height: 16.h),
+                            if (_experiences.isNotEmpty) ...[
                             ..._experiences.map(
                               (exp) => Container(
                                 margin: EdgeInsets.only(bottom: 12.h),
@@ -1258,6 +1270,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                             color: AppColors.seekPrimary,
                             outlined: true,
                           ),
+                          ],
                         ],
                       ),
                     ),
@@ -1478,7 +1491,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                       label: "Update Profile",
                       color: AppColors.seekPrimary,
                       onTap: () async {
-                        if (_experiences.isEmpty) {
+                        if (!_isFresher && _experiences.isEmpty) {
                           UJobToast.error(context, 'Work Experience Required',
                               sub: 'Please add at least 1 work experience entry.');
                           return;
@@ -1523,28 +1536,30 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                             "twitter_url": _twitterCtrl.text,
                             "website_url": _websiteCtrl.text,
                             "skills": _selectedSkills.map((e) => e.id).toList(),
-                            "seeker_experiences": _experiences
-                                .map(
-                                  (e) => {
-                                    if (e.id.isNotEmpty) "id": e.id,
-                                    "job_title": e.jobTitle,
-                                    "company_name": e.companyName,
-                                    "location": e.location ?? "",
-                                    "start_date": e.startDate != null
-                                        ? DateFormat(
-                                            'yyyy-MM-dd',
-                                          ).format(e.startDate!)
-                                        : null,
-                                    "end_date": e.endDate != null
-                                        ? DateFormat(
-                                            'yyyy-MM-dd',
-                                          ).format(e.endDate!)
-                                        : "",
-                                    "is_current": e.isCurrent,
-                                    "description": e.description ?? "",
-                                  },
-                                )
-                                .toList(),
+                            "is_fresher": _isFresher,
+                            if (!_isFresher)
+                              "seeker_experiences": _experiences
+                                  .map(
+                                    (e) => {
+                                      if (e.id.isNotEmpty) "id": e.id,
+                                      "job_title": e.jobTitle,
+                                      "company_name": e.companyName,
+                                      "location": e.location ?? "",
+                                      "start_date": e.startDate != null
+                                          ? DateFormat(
+                                              'yyyy-MM-dd',
+                                            ).format(e.startDate!)
+                                          : null,
+                                      "end_date": e.endDate != null
+                                          ? DateFormat(
+                                              'yyyy-MM-dd',
+                                            ).format(e.endDate!)
+                                          : "",
+                                      "is_current": e.isCurrent,
+                                      "description": e.description ?? "",
+                                    },
+                                  )
+                                  .toList(),
                             "seeker_educations": _educations
                                 .map(
                                   (e) => {

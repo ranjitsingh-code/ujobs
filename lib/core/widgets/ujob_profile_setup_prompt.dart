@@ -12,6 +12,7 @@ class UJobProfileSetupPrompt extends StatelessWidget {
   final String? buttonLabel;
   final Color accentColor;
   final Color backgroundColor;
+  final List<List<dynamic>> icon;
 
   const UJobProfileSetupPrompt({
     this.onSetup,
@@ -20,6 +21,7 @@ class UJobProfileSetupPrompt extends StatelessWidget {
     this.buttonLabel,
     this.accentColor = AppColors.warning,
     this.backgroundColor = AppColors.warningBg,
+    this.icon = HugeIcons.strokeRoundedUserAdd01,
     super.key,
   });
 
@@ -28,7 +30,6 @@ class UJobProfileSetupPrompt extends StatelessWidget {
     final l10n = context.l10n;
 
     return Container(
-      margin: EdgeInsets.only(bottom: 24.h),
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: backgroundColor,
@@ -44,7 +45,7 @@ class UJobProfileSetupPrompt extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: HugeIcon(
-              icon: HugeIcons.strokeRoundedUserAdd01,
+              icon: icon,
               color: accentColor,
               size: 28.r,
             ),

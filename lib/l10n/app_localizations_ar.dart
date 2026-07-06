@@ -2218,6 +2218,22 @@ class AppLocalizationsAr extends AppLocalizations {
       'يرجى إكمال جميع حقول الملف الشخصي المطلوبة قبل التقديم.';
 
   @override
+  String get completeProfileMatchesTitle =>
+      'أكمل ملفك الشخصي للحصول على تطابقات أفضل';
+
+  @override
+  String get completeProfileMatchesSubtitle =>
+      'أدخل التفاصيل الناقصة لنتمكن من ترشيح وظائف تناسبك.';
+
+  @override
+  String get completeProfileToApplyTitle =>
+      'أكمل ملفك الشخصي للتقديم على الوظائف';
+
+  @override
+  String get completeProfileToApplySubtitle =>
+      'املأ جميع الحقول المطلوبة أدناه لتتمكن من التقديم.';
+
+  @override
   String get accountInactiveTitle => 'الحساب غير نشط';
 
   @override
@@ -2225,9 +2241,29 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يمكنك التقديم على الوظائف حالياً. حسابك غير نشط — يرجى التواصل مع الدعم لإعادة تفعيله.';
 
   @override
-  String get accountReviewingTitle => 'قيد المراجعة';
+  String get accountReviewingTitle => 'حسابك قيد المراجعة';
 
   @override
   String get accountReviewingSubtitle =>
-      'حسابك قيد المراجعة من قبل فريق الإدارة. ستتمكن من التقديم على الوظائف بعد الموافقة.';
+      'سنتحقق منه قريباً — ستتمكن من التقديم على الوظائف بمجرد الموافقة عليه.';
+
+  @override
+  String get candidatesWillSeeCompanyAs => 'سيرى المرشحون هذه الشركة على أنها ';
+
+  @override
+  String get employerAccountUnderReviewTitle => 'حسابك قيد المراجعة';
+
+  @override
+  String get employerAccountUnderReviewSubtitle =>
+      'حسابك قيد المراجعة. سنتحقق منه قريباً، وستتمكن من نشر الوظائف في أقرب وقت ممكن.';
+
+  @override
+  String get employerProfileNotCompletedTitle => 'ملفك الشخصي غير مكتمل.';
+
+  @override
+  String get employerProfileNotCompletedSubtitle =>
+      'ملفك الشخصي غير مكتمل. يرجى إكمال ملفك الشخصي أولاً. بمجرد اكتمال ملفك الشخصي، ستتمكن من نشر الوظائف.';
+
+  @override
+  String get employerProfileNotCompletedShort => 'الملف الشخصي غير مكتمل';
 }

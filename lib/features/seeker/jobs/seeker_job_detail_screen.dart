@@ -998,6 +998,15 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
 
     final status = profileData?.status ?? 'pending';
 
+    if (profileData != null && !profileData.isProfileComplete) {
+      UJobToast.error(
+        context,
+        context.l10n.profileIncompleteTitle,
+        sub: context.l10n.profileIncompleteSubtitle,
+      );
+      return;
+    }
+
     if (status == 'suspended') {
       context.go('/suspended');
       return;
@@ -1017,15 +1026,6 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
         context,
         context.l10n.accountReviewingTitle,
         sub: context.l10n.accountReviewingSubtitle,
-      );
-      return;
-    }
-
-    if (profileData != null && !profileData.isProfileComplete) {
-      UJobToast.error(
-        context,
-        context.l10n.profileIncompleteTitle,
-        sub: context.l10n.profileIncompleteSubtitle,
       );
       return;
     }

@@ -4298,6 +4298,30 @@ abstract class AppLocalizations {
   /// **'Please complete all required profile fields before applying.'**
   String get profileIncompleteSubtitle;
 
+  /// No description provided for @completeProfileMatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile to get better matches'**
+  String get completeProfileMatchesTitle;
+
+  /// No description provided for @completeProfileMatchesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the missing details so we can recommend jobs that fit you.'**
+  String get completeProfileMatchesSubtitle;
+
+  /// No description provided for @completeProfileToApplyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile to apply for jobs'**
+  String get completeProfileToApplyTitle;
+
+  /// No description provided for @completeProfileToApplySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in all required fields below to unlock applying.'**
+  String get completeProfileToApplySubtitle;
+
   /// No description provided for @accountInactiveTitle.
   ///
   /// In en, this message translates to:
@@ -4313,14 +4337,50 @@ abstract class AppLocalizations {
   /// No description provided for @accountReviewingTitle.
   ///
   /// In en, this message translates to:
-  /// **'Pending Review'**
+  /// **'Your Account Is Under Review'**
   String get accountReviewingTitle;
 
   /// No description provided for @accountReviewingSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Your account is pending review by our admin team. You\'ll be able to apply for jobs once approved.'**
+  /// **'We\'ll verify it soon — you\'ll be able to apply for jobs as soon as it\'s approved.'**
   String get accountReviewingSubtitle;
+
+  /// No description provided for @candidatesWillSeeCompanyAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Candidates will see this company as '**
+  String get candidatesWillSeeCompanyAs;
+
+  /// No description provided for @employerAccountUnderReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Account Is Under Review'**
+  String get employerAccountUnderReviewTitle;
+
+  /// No description provided for @employerAccountUnderReviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is under review. We\'ll verify it soon, and you\'ll be able to post jobs as soon as possible.'**
+  String get employerAccountUnderReviewSubtitle;
+
+  /// No description provided for @employerProfileNotCompletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile is not completed.'**
+  String get employerProfileNotCompletedTitle;
+
+  /// No description provided for @employerProfileNotCompletedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile is not completed. Please complete your profile first. Once your profile has been completed, you will be able to post jobs.'**
+  String get employerProfileNotCompletedSubtitle;
+
+  /// No description provided for @employerProfileNotCompletedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile is not completed'**
+  String get employerProfileNotCompletedShort;
 }
 
 class _AppLocalizationsDelegate

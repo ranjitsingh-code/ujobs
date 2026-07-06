@@ -11,6 +11,7 @@ import '../models/country.dart';
 class UJobPhoneNumberField extends StatefulWidget {
   final String label;
   final bool isRequired;
+  final bool isCodeEditable;
   final List<Country>? countries;
   final TextEditingController controller;
   final String initialDialCode;
@@ -22,6 +23,7 @@ class UJobPhoneNumberField extends StatefulWidget {
   const UJobPhoneNumberField({
     required this.label,
     this.isRequired = false,
+    this.isCodeEditable = true,
     this.countries,
     required this.controller,
     this.initialDialCode = '+44',
@@ -179,34 +181,49 @@ class _UJobPhoneNumberFieldState extends State<UJobPhoneNumberField> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Country code prefix — tappable
-              GestureDetector(
-                onTap: () => _showCountryPicker(context),
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 14.w,
-                    vertical: 14.h,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
+              // Country code prefix — tappable, unless fixed by API
+              widget.isCodeEditable
+                  ? GestureDetector(
+                      onTap: () => _showCountryPicker(context),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 14.w,
+                          vertical: 14.h,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              (_selected.phoneCode.startsWith('+')
+                                  ? _selected.phoneCode
+                                  : '+${_selected.phoneCode}'),
+                              style: AppText.bodyBold.copyWith(
+                                color: AppColors.text,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedArrowDown01,
+                              color: AppColors.muted,
+                              size: 16.r,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 14.h,
+                      ),
+                      child: Text(
                         (_selected.phoneCode.startsWith('+')
                             ? _selected.phoneCode
                             : '+${_selected.phoneCode}'),
                         style: AppText.bodyBold.copyWith(color: AppColors.text),
                       ),
-                      SizedBox(width: 4.w),
-                      HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowDown01,
-                        color: AppColors.muted,
-                        size: 16.r,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
               // Divider
               Container(width: 1, height: 24.h, color: AppColors.borderLight),
               // Number input

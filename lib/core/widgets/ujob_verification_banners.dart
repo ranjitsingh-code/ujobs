@@ -73,7 +73,10 @@ class UJobAccountStatusBanner extends StatelessWidget {
 }
 
 class UJobVerificationPendingBanner extends StatelessWidget {
-  const UJobVerificationPendingBanner({super.key});
+  final String? title;
+  final String? message;
+
+  const UJobVerificationPendingBanner({this.title, this.message, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +108,7 @@ class UJobVerificationPendingBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Verification Pending',
+                  title ?? 'Verification Pending',
                   style: AppText.bodyMedium.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppColors.warning,
@@ -113,7 +116,8 @@ class UJobVerificationPendingBanner extends StatelessWidget {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'Your profile is under review by our team. This usually takes 24-48 hours.',
+                  message ??
+                      'Your profile is under review by our team. This usually takes 24-48 hours.',
                   style: AppText.small.copyWith(color: AppColors.warning),
                 ),
               ],

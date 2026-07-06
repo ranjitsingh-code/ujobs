@@ -77,9 +77,25 @@ class CompanyProfile {
       facebookUrl: json['facebook_url'] as String?,
       industryCategoryId: json['industry_category_id']?.toString(),
       activeJobs: json['active_jobs_count'] as int? ?? 0,
-      applicants: json['applicants_count'] as int? ?? 0,
+      applicants: json['total_applicants_count'] as int? ??
+          json['applicants_count'] as int? ??
+          0,
     );
   }
+
+  bool get isProfileComplete =>
+      name.isNotEmpty &&
+      (industryCategoryId != null && industryCategoryId!.isNotEmpty) &&
+      (description != null && description!.isNotEmpty) &&
+      (contactPersonName != null && contactPersonName!.isNotEmpty) &&
+      (contactEmail != null && contactEmail!.isNotEmpty) &&
+      (contactPhone != null && contactPhone!.isNotEmpty) &&
+      (address != null && address!.isNotEmpty) &&
+      (city != null && city!.isNotEmpty) &&
+      (postcode != null && postcode!.isNotEmpty) &&
+      (country != null && country!.isNotEmpty) &&
+      (size != null && size!.isNotEmpty) &&
+      (workType != null && workType!.isNotEmpty);
 
   CompanyProfile copyWith({
     String? name,

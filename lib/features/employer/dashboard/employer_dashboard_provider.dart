@@ -34,16 +34,6 @@ final companyProfileCompletenessProvider = Provider<double>((ref) {
   return profile.profileStatus / 100.0;
 });
 
-final isCompanyProfileCompleteProvider = Provider<bool>((ref) {
-  final profile = ref.watch(companyProfileProvider);
-  return profile.name.isNotEmpty &&
-      (profile.contactPersonName != null &&
-          profile.contactPersonName!.isNotEmpty) &&
-      (profile.address != null && profile.address!.isNotEmpty) &&
-      (profile.city != null && profile.city!.isNotEmpty) &&
-      (profile.country != null && profile.country!.isNotEmpty);
-});
-
 class EmployerDashboardData {
   final String companyName;
   final int totalJobs;
@@ -55,6 +45,7 @@ class EmployerDashboardData {
   final String verificationStatus;
   final String userStatus;
   final int profileCompleted;
+  final bool isCompanyProfileComplete;
 
   EmployerDashboardData({
     required this.companyName,
@@ -67,10 +58,11 @@ class EmployerDashboardData {
     required this.verificationStatus,
     required this.userStatus,
     required this.profileCompleted,
+    required this.isCompanyProfileComplete,
   });
 
   bool get isAccountActive => userStatus.toLowerCase() == 'active';
-  bool get canPostJob => isAccountActive && isVerified;
+  bool get canPostJob => isAccountActive && isVerified && isCompanyProfileComplete;
 }
 
 final employerDashboardProvider = FutureProvider.autoDispose<EmployerDashboardData>((ref) async {
@@ -84,15 +76,26 @@ final employerDashboardProvider = FutureProvider.autoDispose<EmployerDashboardDa
   final companiesList = profileData['companies'] as List? ?? [];
   final companyData = companiesList.isNotEmpty ? (companiesList.first as Map<String, dynamic>) : <String, dynamic>{};
   
+  CompanyProfile? company;
   if (companyData.isNotEmpty) {
+    final companyJson = {
+      ...companyData,
+      if (profileData['verified'] != null) 'verified': profileData['verified'],
+      if (profileData['active_jobs_count'] != null)
+        'active_jobs_count': profileData['active_jobs_count'],
+      if (profileData['total_applicants_count'] != null)
+        'total_applicants_count': profileData['total_applicants_count'],
+    };
+    company = CompanyProfile.fromJson(companyJson);
+    final resolvedCompany = company;
     Future.microtask(() {
-      ref.read(companyProfileProvider.notifier).state = CompanyProfile.fromJson(companyData);
+      ref.read(companyProfileProvider.notifier).state = resolvedCompany;
     });
   }
-  
+
   final dashData = dashRes.data['data'] ?? {};
   final recentJobsList = (dashData['recent_jobs'] as List?) ?? [];
-  
+
   final dash = EmployerDashboardData(
     companyName: companyData['name'] ?? 'Your Company',
     totalJobs: dashData['total_jobs'] ?? 0,
@@ -100,7 +103,7 @@ final employerDashboardProvider = FutureProvider.autoDispose<EmployerDashboardDa
     totalApplicants: dashData['total_applicants'] ?? 0,
     shortlisted: dashData['shortlisted_count'] ?? 0,
     recentJobs: recentJobsList.map((j) => Job.fromJson(j)).toList(),
-    isVerified: companyData['verification_status'] == 'verified',
+    isVerified: profileData['verified'] as bool? ?? (companyData['verification_status'] == 'verified'),
     verificationStatus: companyData['verification_status']?.toString() ?? 'unverified',
     userStatus: profileData['status']?.toString() ?? 'pending',
     profileCompleted: [
@@ -108,6 +111,7 @@ final employerDashboardProvider = FutureProvider.autoDispose<EmployerDashboardDa
       int.tryParse(companyData['profile_completed']?.toString() ?? ''),
       int.tryParse(dashData['profile_completed']?.toString() ?? ''),
     ].where((e) => e != null).fold(0, (max, e) => e! > max ? e : max),
+    isCompanyProfileComplete: company?.isProfileComplete ?? false,
   );
   
   debugPrint(

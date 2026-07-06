@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/ujob_verification_banners.dart';
+import '../../../core/widgets/ujob_profile_setup_prompt.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -104,21 +105,27 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
               onSearchChanged: (v) => setState(() => _query = v),
             ),
             if (dashboard != null) ...[
-              if (!dashboard.isAccountActive)
+              if (!dashboard.isCompanyProfileComplete)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                  child: UJobProfileSetupPrompt(
+                    title: context.l10n.employerProfileNotCompletedTitle,
+                    subtitle: context.l10n.employerProfileNotCompletedSubtitle,
+                    icon: HugeIcons.strokeRoundedAlert02,
+                    onSetup: () => context.push('/employer/profile'),
+                  ),
+                )
+              else if (!dashboard.isAccountActive)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
                   child: UJobAccountStatusBanner(status: dashboard.userStatus),
                 )
-              else if (dashboard.verificationStatus == 'pending')
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-                  child: const UJobVerificationPendingBanner(),
-                )
               else if (!dashboard.isVerified)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-                  child: UJobCompanyProfileSetup(
-                    onSetup: () => context.push('/employer/profile'),
+                  child: UJobVerificationPendingBanner(
+                    title: context.l10n.employerAccountUnderReviewTitle,
+                    message: context.l10n.employerAccountUnderReviewSubtitle,
                   ),
                 ),
             ],
@@ -143,6 +150,14 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
       floatingActionButton: _CompactPostJobButton(
         isProfileComplete: canPostJob,
         onTap: () {
+          if (dashboard != null && !dashboard.isCompanyProfileComplete) {
+            UJobToast.error(
+              context,
+              context.l10n.employerProfileNotCompletedTitle,
+              sub: context.l10n.employerProfileNotCompletedSubtitle,
+            );
+            return;
+          }
           if (dashboard != null && !dashboard.isAccountActive) {
             UJobToast.error(
               context,
@@ -154,8 +169,8 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
           if (!isVerified) {
             UJobToast.error(
               context,
-              'Verification Required',
-              sub: 'Please complete your company profile and get verified before you can post a job.',
+              context.l10n.employerAccountUnderReviewTitle,
+              sub: context.l10n.employerAccountUnderReviewSubtitle,
             );
             return;
           }
