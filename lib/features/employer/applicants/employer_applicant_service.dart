@@ -111,6 +111,13 @@ class EmployerApplicantService {
       showPhone: json['show_phone'] ?? true,
       location: json['location']?.toString() ?? '',
       coverLetter: _stripHtml(json['cover_letter']?.toString()),
+      // Flattened endpoint doesn't send a nested cover_letters join today —
+      // check it anyway (same shape as the per-job endpoint) so this keeps
+      // working if/when backend adds it, falling back to flat fields.
+      coverLetterUrl: (json['cover_letters'] as Map<String, dynamic>?)?['file_url']?.toString() ??
+          json['cover_letter_url']?.toString(),
+      coverLetterFileName: (json['cover_letters'] as Map<String, dynamic>?)?['file_name']?.toString() ??
+          json['cover_letter_file_name']?.toString(),
       about: _stripHtml(json['about']?.toString()),
       experienceYears: json['experience_years']?.toString() ?? '',
       expectedSalary: json['expected_salary']?.toString() ?? '',
@@ -123,6 +130,7 @@ class EmployerApplicantService {
       avatarUrl: json['avatar_url']?.toString(),
       resumeUrl: json['resume_url']?.toString(),
       seekerProfileId: json['seeker_profile_id']?.toString(),
+      seekerUserId: json['seeker_user_id']?.toString() ?? json['user_id']?.toString(),
       resumeId: json['resume_id']?.toString(),
       employerRating: json['employer_rating'] != null ? int.tryParse(json['employer_rating'].toString()) : null,
       notes: json['notes']?.toString(),
@@ -235,12 +243,20 @@ class EmployerApplicantService {
       }
     }
 
-    // Extract resume URL
-    String? resumeUrl;
-    final resumes = profile['resumes'] as List?;
-    if (resumes != null && resumes.isNotEmpty) {
-      resumeUrl = resumes[0]['file_url']?.toString();
-    }
+    // Resume attached to THIS application — resolved join keyed by resume_id,
+    // sits at application['resumes'] (singular). NOT profile['resumes'], which
+    // is the seeker's whole resume library and may not match what they
+    // attached here if they have more than one on file.
+    final attachedResume = application['resumes'] as Map<String, dynamic>?;
+    final resumeUrl = attachedResume?['file_url']?.toString();
+
+    // Same pattern for the cover letter document attached to THIS
+    // application — resolved join keyed by cover_letter_id, at
+    // application['cover_letters'] (singular), not profile['cover_letters'].
+    final attachedCoverLetter =
+        application['cover_letters'] as Map<String, dynamic>?;
+    final coverLetterUrl = attachedCoverLetter?['file_url']?.toString();
+    final coverLetterFileName = attachedCoverLetter?['file_name']?.toString();
 
     // Profile image logic
     final profileImage = users['profile_image']?.toString();
@@ -258,6 +274,8 @@ class EmployerApplicantService {
       phone: '${users['phone_code'] ?? ''}${users['phone'] ?? ''}',
       location: locationStr,
       coverLetter: _stripHtml(application['cover_letter']?.toString()),
+      coverLetterUrl: coverLetterUrl,
+      coverLetterFileName: coverLetterFileName,
       about: _stripHtml(profile['summary']?.toString()),
       experienceYears: (profile['experience_years']?.toString().isNotEmpty == true) ? '${profile['experience_years']} Years' : '',
       expectedSalary: expectedSalary,
@@ -269,6 +287,8 @@ class EmployerApplicantService {
       hasMessaged: application['conversation'] != null,
       avatarUrl: profileImage,
       resumeUrl: resumeUrl,
+      seekerProfileId: profile['id']?.toString(),
+      seekerUserId: profile['user_id']?.toString(),
     );
   }
 }

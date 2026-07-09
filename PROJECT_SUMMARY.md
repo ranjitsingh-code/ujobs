@@ -137,7 +137,72 @@ UJob is a dual-portal mobile application (Flutter) for **Employers** and **Job S
 
 ---
 
-## 3. Implementation Status (Last Updated: 2026-07-03, Session 10)
+## 3. Implementation Status (Last Updated: 2026-07-10, Session 12)
+
+#### Session 12 Changes (2026-07-10) — Chat/Notification Fixes, Cover-Letter API Gap, Terminal Env Var Bug
+
+##### Employer — Cover Letter URL Missing (backend gap, partial frontend fix):
+- Confirmed via live API responses: `GET /employer/jobs/:jobId/applicants` returns the applicant's cover-letter document nested as `cover_letters: { file_url, file_name }`. `GET /employer/applicants` (flattened all-jobs list) and `GET /employer/applicants/:id` (single detail) return **neither** that nested object **nor** a flat `cover_letter_url` — only the free-text `cover_letter` field, unlike `resume_url` which IS flat on all three endpoints.
+- `employer_applicant_service.dart`'s `_parseFlattenedApplicant` (used by `getAllApplicants`) hardened to also check a nested `cover_letters` object first, falling back to flat `cover_letter_url`/`cover_letter_file_name` — future-proofs it once backend adds the join, but does nothing until backend ships it.
+- **Backend action needed** (drafted message for backend team, not sent by Claude): add flat `cover_letter_url` (+ `cover_letter_file_name`) to `GET /employer/applicants` and `GET /employer/applicants/:id`, same pattern as existing `resume_url`.
+
+##### Push Notifications:
+- `notification_service.dart` — added colored (`#FFA000` amber, ANSI truecolor) `debugPrint` logging at all FCM entry points (background/foreground/opened/initial) and the local-notification tap handler, to make payload/metadata visible in terminal during testing.
+- **Duplicate chat screen on notification tap** — user-reported, only partially fixed:
+  - Fix 1: `notification_navigation.dart` — skip `push` if already on `/conversations/:chatId` (same-location guard).
+  - Fix 2: added a synchronous dedupe key (set *before* the `await SecureStorage().getRole()`) with a 2s window, since a single physical tap can trigger `handleNotificationTap` twice (FCM firing both `onMessageOpenedApp` and `getInitialMessage` for one cold-start tap) — both calls would otherwise read the pre-navigation route concurrently and both push.
+  - **Still reproducing** per user (seeker side, foreground, tap-from-status-bar, after full app rebuild) — two chat screens stack, confirmed via back-button behavior. Added `[NAV]` debug logging (entry, dedupe-block, location-check, push) plus `[FCM][local-tap]` logging at `onDidReceiveNotificationResponse` to pinpoint whether it's firing twice or the guard is comparing wrong values. **Next session: capture console output from a live repro and diagnose from actual log evidence, not further guessing.**
+
+##### Chat Screen UX:
+- Empty-state ("say hello") now shows a message icon + text in a row instead of bare centered text.
+- Messages now jump to the bottom (latest message) on initial screen load instead of opening scrolled to the top — guarded to fire once via `_didInitialScroll`.
+- **Message bubble alignment fixed**: was hardcoded by absolute role (`isRight = message.isMine != viewerIsEmployer` — employer's own messages always rendered left, seeker's always right, regardless of viewer). Changed to standard viewer-relative chat convention (`isRight = message.isMine` — your own messages always render right, whoever you're logged in as). Avatar selection (`myAvatar`/`otherAvatar`) updated to match; `_MessageBubble` no longer takes `viewerIsEmployer`/`employerAvatar`/`seekerAvatar` params.
+
+##### Dev Environment — API_KEY (diagnosed, not a code bug):
+- `dio_client.dart` reads `X-Api-Key` from `String.fromEnvironment('API_KEY')`. `.vscode/launch.json` passes it via `--dart-define`, so VS Code debug runs always worked. Running `flutter run` directly from terminal without `--dart-define=API_KEY=...` sends an **empty** key header → backend rejects → app can't reach API (worked fine in Postman since the key was typed in manually there). Confirmed as root cause and resolved by passing the same `--dart-define` flag from terminal.
+
+---
+
+#### Session 11 Changes (2026-07-06) — Profile-Completeness Gating Overhaul (Seeker + Employer), API Contract Fixes
+
+Committed+pushed as `1593c11` to `second/main`.
+
+##### Seeker — Profile Screen:
+- `ujob_phone_number_field.dart` — added `isCodeEditable` (default `true`). Country-code dial picker made fixed/non-tappable (`isCodeEditable: false`) in seeker profile phone field and employer contact phone field — value comes from API, matches backend contract, not user-editable.
+- Location section: Address now full-width, Zip/Post Code stacked below it (was side-by-side).
+- Relocation section: removed "Relocation Type" heading text; radio options "Anywhere"/"Desired Work Location" (renamed from "Specific Cities") changed row→column layout; city-input hint text no longer says "Press Enter" (mobile, not web).
+- Availability dropdown: added missing "Within 2 months" option.
+- **`is_fresher`** support added end-to-end: `SeekerProfile.isFresher` field, checkbox "I am a Fresher (I have no work experience)" in Work Experience section (hides experience list/Add button, skips required-experience validation, sends `is_fresher: true` + omits `seeker_experiences` in PUT payload). `SeekerProfileData.isProfileComplete` waives the ≥1-experience check when fresher.
+- Add/Edit Experience sheet: Description field now required (matches backend: mandatory unless fresher).
+- `User.profileCompleted` (server `profile_completed` field) is parsed into the model but **intentionally unused** — user explicitly said not to base any logic on it; `isProfileComplete` stays fully client-calculated.
+
+##### Seeker — Dashboard:
+- New banner "Complete your profile to get better matches" (reuses `UJobProfileSetupPrompt`) shown above job listings when `!isProfileComplete`, tappable → `/seeker/profile`.
+- Banner chain reordered: profile-completeness checked **first**, then account status (`inactive`/`pending`) — was previously two independent, unordered checks.
+- `accountReviewingTitle/Subtitle` copy rewritten to be less "internal-sounding" and more encouraging (was "Pending Review", now "Your Account Is Under Review... you'll be able to apply for jobs as soon as it's approved").
+
+##### Seeker — Job Detail / Apply Gate:
+- Reordered to match dashboard: `!isProfileComplete` checked before `suspended`/`inactive`/`pending` status checks.
+
+##### Employer — API Contract Fix (real bug found via live API docs comparison):
+- `/employer/me` response has `verified` (bool), `active_jobs_count`, `total_applicants_count` at **root** level, not nested inside `companies[0]` like the old parsing assumed. Fixed in `employer_dashboard_provider.dart` — merges these root fields into the company JSON before `CompanyProfile.fromJson` parses it. `company_profile.dart`'s `applicants` getter now reads `total_applicants_count` (actual API key) with fallback to old `applicants_count`.
+- Added `CompanyProfile.isProfileComplete` — checks all 12 starred/required fields (name, industryCategoryId, description, contactPersonName, contactEmail, contactPhone, address, city, postcode, country, size, workType).
+- `employer_dashboard_provider.dart` — `EmployerDashboardData` gained `isCompanyProfileComplete`; `canPostJob` now requires active + verified + complete (was missing the completeness check). Removed dead/wrong 5-field `isCompanyProfileCompleteProvider`.
+
+##### Employer — Unified 3-State Gating (Dashboard, My Jobs, Account/Company Profile screens):
+- Same else-if chain now used consistently in `employer_dashboard_screen.dart`, `my_jobs_screen.dart`, `company_profile_screen.dart`: **`!isCompanyProfileComplete`** (checked first) → amber "Your profile is not completed" banner; else **`!isAccountActive`** → account status banner; else **`!isVerified`** → "under review" banner; else → nothing shown, full access.
+- Same order applied to Post-Job tap gating (dashboard `_QuickActions.onPostJob` and my_jobs FAB `onTap`) with matching toast copy.
+- `company_profile_screen.dart` — `CompanyProfileHeader`'s local `isVerified` (drives name-badge checkmark) now requires `company.verified == true && company.isProfileComplete` — prevents the checkmark showing simultaneously with a "profile not completed" banner (was a real visual contradiction). Removed a redundant small "Profile is not completed" hint box from the header (full banner above already covers it).
+- Added dynamic amber pill badge in Hiring Information: "Candidates will see this company as **[On-site/Hybrid/Remote]**" driven by `_selectedWorkType`, wrapped in `Wrap` (was `Row`, overflowed on narrow screens).
+
+##### Widget fixes (affects both portals):
+- **`UJobProfileSetupPrompt`** (`lib/core/widgets/ujob_profile_setup_prompt.dart`) — removed a baked-in `margin: EdgeInsets.only(bottom: 24.h)` that was stacking with external `SizedBox(24.h)` at call sites, causing doubled (48.h) or, after a partial fix, zero spacing in different screens. Spacing is now always explicit at the call site — fixed in `employer_dashboard_screen.dart`, `my_jobs_screen.dart`, `company_profile_screen.dart`, `seeker_dashboard_screen.dart`, `seeker_profile_screen.dart`. Added optional `icon` param (default unchanged).
+- Icon `HugeIcons.strokeRoundedShield01` didn't render well in this banner context — swapped to `HugeIcons.strokeRoundedAlert02` (proven-working icon already used in `UJobVerificationPendingBanner`) everywhere the "profile not completed" banner appears.
+- `UJobVerificationPendingBanner` — added optional `title`/`message` params (was hardcoded text only).
+
+##### L10n additions (en + ar): `completeProfileMatchesTitle/Subtitle`, `completeProfileToApplyTitle/Subtitle`, `candidatesWillSeeCompanyAs`, `employerAccountUnderReviewTitle/Subtitle`, `employerProfileNotCompletedTitle/Subtitle/Short`.
+
+---
 
 #### Session 10 Changes (2026-07-03) — Account Status Simplification (supersedes Session 9 verification gating)
 

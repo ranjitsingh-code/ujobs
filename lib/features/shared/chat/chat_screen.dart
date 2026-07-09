@@ -1,7 +1,9 @@
 import 'package:go_router/go_router.dart';
 
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -18,8 +20,14 @@ import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_pdf_viewer.dart';
 import '../../../core/providers/role_provider.dart';
+import '../../../core/providers/auth_provider.dart';
 import 'conversation_provider.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
+import '../../../core/widgets/ujob_toast.dart';
+import '../../employer/applicants/employer_applicant_service.dart';
+import '../../../core/models/applicant.dart';
+import '../../../core/models/company.dart';
+import '../../seeker/jobs/seeker_job_provider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -31,6 +39,16 @@ class ChatScreen extends ConsumerStatefulWidget {
   final String? jobTitle;
   final String? applicationStatus;
   final bool isClosed;
+  // Employer-only. Same application id used by ApplicantDetailScreen's
+  // GET /employer/applicants/:id — lets ChatScreen fetch its own fresh
+  // name/email/phone/avatar instead of trusting route `extra` (which a
+  // cold-started push notification deep link won't have populated).
+  final String? applicantId;
+  // Seeker-only. Lets ChatScreen fetch the job's company (name/logo) the
+  // same self-hydrating way as applicantId does for employers. The seeker
+  // job-details API has no employer email/phone at all today (confirmed
+  // against a live response) — only name/logo are available.
+  final String? jobId;
 
   const ChatScreen({
     required this.conversationId,
@@ -42,6 +60,8 @@ class ChatScreen extends ConsumerStatefulWidget {
     this.jobTitle,
     this.applicationStatus,
     this.isClosed = false,
+    this.applicantId,
+    this.jobId,
     super.key,
   });
 
@@ -49,7 +69,8 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with WidgetsBindingObserver {
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   bool _sending = false;
@@ -58,26 +79,138 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   String? _stagedFilePath;
   String? _stagedFileName;
 
-  late bool _isClosed;
+  late bool _fallbackClosed;
+  Applicant? _applicant;
+  Company? _company;
+  bool _didInitialScroll = false;
+
+  void _jumpToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+      }
+    });
+  }
+
+  static const _pollInterval = Duration(seconds: 4);
+  Timer? _pollTimer;
+
+  // conversationsProvider and seekerConversationsProvider both hit the
+  // identical GET /conversations endpoint — only one is ever "this
+  // session's own list" depending on which role is active. Using both
+  // unconditionally double-fetches/double-polls the same data for nothing.
+  bool get _isEmployer => ref.read(activeRoleProvider.notifier).isEmployer;
+
+  List<Conversation> get _myConversations => _isEmployer
+      ? ref.read(conversationsProvider).valueOrNull ?? const []
+      : ref.read(seekerConversationsProvider).valueOrNull ?? const [];
 
   @override
   void initState() {
     super.initState();
-    _isClosed = widget.isClosed;
+    _fallbackClosed = widget.isClosed;
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        ref
-            .read(conversationsProvider.notifier)
-            .markAsRead(widget.conversationId);
-        ref
-            .read(seekerConversationsProvider.notifier)
-            .markAsRead(widget.conversationId);
+        if (_isEmployer) {
+          ref.read(conversationsProvider.notifier).markAsRead(widget.conversationId);
+        } else {
+          ref.read(seekerConversationsProvider.notifier).markAsRead(widget.conversationId);
+        }
+      }
+    });
+    _fetchApplicant();
+    _fetchJobCompany();
+    _startPolling();
+  }
+
+  Future<void> _fetchApplicant() async {
+    final applicantId = widget.applicantId;
+    if (applicantId == null || applicantId.isEmpty) return;
+    if (!ref.read(activeRoleProvider.notifier).isEmployer) return;
+    try {
+      final applicant = await ref
+          .read(employerApplicantServiceProvider)
+          .getApplicantDetails(applicantId);
+      if (mounted) setState(() => _applicant = applicant);
+    } catch (_) {
+      // Silent — screen falls back to whatever route `extra` provided.
+    }
+  }
+
+  Future<void> _fetchJobCompany() async {
+    final jobId = widget.jobId;
+    if (jobId == null || jobId.isEmpty) return;
+    if (ref.read(activeRoleProvider.notifier).isEmployer) return;
+    final parsedId = int.tryParse(jobId);
+    if (parsedId == null) return;
+    try {
+      final job = await ref.read(seekerJobServiceProvider).getJobDetails(parsedId);
+      if (mounted && job.company != null) setState(() => _company = job.company);
+    } catch (_) {
+      // Silent — screen falls back to whatever route `extra` provided.
+    }
+  }
+
+  String get _displayName {
+    if (_applicant?.name.isNotEmpty ?? false) return _applicant!.name;
+    if (_company?.name.isNotEmpty ?? false) return _company!.name;
+    return widget.otherName;
+  }
+
+  String? get _displayAvatar => _applicant?.avatarUrl ?? _company?.logo ?? widget.otherAvatar;
+
+  String get _displayInitials => (_applicant?.initials.isNotEmpty ?? false)
+      ? _applicant!.initials
+      : (widget.otherInitials ?? (widget.otherName.isNotEmpty ? widget.otherName[0] : '?'));
+
+  // Company has no email/phone at all today (confirmed against a live
+  // GET /seeker/jobs/:id response) — these stay employer-only until the
+  // backend exposes employer contact info to seekers.
+  String? get _displayEmail =>
+      (_applicant?.email.isNotEmpty ?? false) ? _applicant!.email : null;
+  String? get _displayPhone =>
+      (_applicant?.showPhone ?? true) && (_applicant?.phone.isNotEmpty ?? false)
+          ? _applicant!.phone
+          : null;
+
+  // Conversation-level chat_enabled isn't pushed in real time — poll this
+  // viewer's own conversation list alongside messages so an employer
+  // stopping the chat (from another screen/device) surfaces here within
+  // one interval.
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(_pollInterval, (_) {
+      ref.read(chatMessagesProvider(widget.conversationId).notifier).refresh();
+      if (_isEmployer) {
+        ref.read(conversationsProvider.notifier).refresh();
+      } else {
+        ref.read(seekerConversationsProvider.notifier).refresh();
       }
     });
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(chatMessagesProvider(widget.conversationId).notifier).refresh();
+      _startPolling();
+    } else if (state == AppLifecycleState.paused) {
+      _pollTimer?.cancel();
+    }
+  }
+
+  bool _liveIsClosed() {
+    for (final c in _myConversations) {
+      if (c.id == widget.conversationId) return !c.chatEnabled;
+    }
+    return _fallbackClosed;
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pollTimer?.cancel();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -98,7 +231,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               body: text,
             );
       } else {
-        ref
+        await ref
             .read(chatMessagesProvider(widget.conversationId).notifier)
             .send(text);
       }
@@ -122,7 +255,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  Future<void> _setChatStatus(bool enabled) async {
+    try {
+      await setChatStatus(ref, widget.conversationId, enabled);
+      if (_isEmployer) {
+        ref
+            .read(conversationsProvider.notifier)
+            .updateChatEnabled(widget.conversationId, enabled);
+      } else {
+        ref
+            .read(seekerConversationsProvider.notifier)
+            .updateChatEnabled(widget.conversationId, enabled);
+      }
+      if (!mounted) return;
+      setState(() => _fallbackClosed = !enabled);
+    } catch (e) {
+      if (!mounted) return;
+      UJobToast.error(context, context.l10n.errorTitle, sub: context.l10n.tryAgainMessage);
+    }
+  }
+
+  void _copyToClipboard(String value) {
+    Clipboard.setData(ClipboardData(text: value));
+    UJobToast.success(context, context.l10n.copiedToClipboardMessage);
+  }
+
   void _showUserDetailsSheet() {
+    final isClosed = _liveIsClosed();
+    final email = _displayEmail;
+    final phone = _displayPhone;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -150,12 +311,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ),
               UJobAvatar(
-                imageUrl: widget.otherAvatar,
-                initials: widget.otherInitials ?? widget.otherName[0],
+                imageUrl: _displayAvatar,
+                initials: _displayInitials,
                 size: 80.r,
               ),
               SizedBox(height: 16.h),
-              Text(widget.otherName, style: AppText.heading3),
+              Text(_displayName, style: AppText.heading3),
               SizedBox(height: 4.h),
               Text(
                 'Active now',
@@ -192,36 +353,54 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                       SizedBox(height: 12.h),
                     ],
-                    Row(
-                      children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedMail01,
-                          size: 16.r,
-                          color: AppColors.muted,
+                    if (email != null) ...[
+                      InkWell(
+                        onTap: () => _copyToClipboard(email),
+                        borderRadius: BorderRadius.circular(8.r),
+                        child: Row(
+                          children: [
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedMail01,
+                              size: 16.r,
+                              color: AppColors.muted,
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(email, style: AppText.body),
+                            ),
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedCopy01,
+                              size: 16.r,
+                              color: AppColors.muted,
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Text(
-                            '${widget.otherName.toLowerCase().replaceAll(' ', '.')}@example.com',
-                            style: AppText.body,
-                          ),
+                      ),
+                      SizedBox(height: 12.h),
+                    ],
+                    if (phone != null)
+                      InkWell(
+                        onTap: () => _copyToClipboard(phone),
+                        borderRadius: BorderRadius.circular(8.r),
+                        child: Row(
+                          children: [
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedCall02,
+                              size: 16.r,
+                              color: AppColors.muted,
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(phone, style: AppText.body),
+                            ),
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedCopy01,
+                              size: 16.r,
+                              color: AppColors.muted,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-                    Row(
-                      children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedCall02,
-                          size: 16.r,
-                          color: AppColors.muted,
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Text('+1 (555) 019-2834', style: AppText.body),
-                        ),
-                      ],
-                    ),
+                      ),
                     if (widget.otherLocation != null) ...[
                       SizedBox(height: 12.h),
                       Row(
@@ -267,72 +446,90 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
 
               SizedBox(height: 24.h),
-              if (!_isClosed)
+              if (ref.read(activeRoleProvider) == 'employer') ...[
+                if (!isClosed)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: HugeIcon(
+                      icon: HugeIcons.strokeRoundedLockPassword,
+                      color: AppColors.error,
+                      size: 24.r,
+                    ),
+                    title: Text(
+                      context.l10n.stopMessageTitle,
+                      style: AppText.bodyBold.copyWith(color: AppColors.error),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close bottom sheet
+                      showDialog(
+                        context: context,
+                        builder: (context) => UJobAlertDialog(
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedLockPassword,
+                            color: AppColors.error,
+                            size: 28.r,
+                          ),
+                          title: context.l10n.stopMessageTitle,
+                          description: context.l10n.stopMessageConfirmMessage,
+                          confirmText: context.l10n.stopMessageTitle,
+                          onConfirm: () {
+                            Navigator.pop(context); // Close dialog
+                            _setChatStatus(false);
+                          },
+                        ),
+                      );
+                    },
+                  )
+                else
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: HugeIcon(
+                      icon: HugeIcons.strokeRoundedLockPassword,
+                      color: AppColors.success,
+                      size: 24.r,
+                    ),
+                    title: Text(context.l10n.reopenChatTitle, style: AppText.bodyBold),
+                    onTap: () {
+                      Navigator.pop(context); // Close bottom sheet
+                      _setChatStatus(true);
+                    },
+                  ),
+              ],
+              // Block User hidden for now — not needed right now.
+              if (false)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: HugeIcon(
-                    icon: HugeIcons.strokeRoundedLockPassword,
-                    color: AppColors.text,
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    color: AppColors.error,
                     size: 24.r,
                   ),
-                  title: Text('Close Chat', style: AppText.bodyBold),
+                  title: Text(
+                    'Block User',
+                    style: AppText.bodyBold.copyWith(color: AppColors.error),
+                  ),
                   onTap: () {
                     Navigator.pop(context); // Close bottom sheet
                     showDialog(
                       context: context,
                       builder: (context) => UJobAlertDialog(
                         icon: HugeIcon(
-                          icon: HugeIcons.strokeRoundedLockPassword,
+                          icon: HugeIcons.strokeRoundedUserBlock01,
                           color: AppColors.error,
                           size: 28.r,
                         ),
-                        title: 'Close Chat',
+                        title: 'Block User',
                         description:
-                            'Are you sure you want to close this chat? You will not be able to send or receive messages until you reopen it.',
-                        confirmText: 'Close Chat',
+                            'Are you sure you want to block this user? They will no longer be able to message you or apply to your jobs.',
+                        confirmText: 'Block User',
                         onConfirm: () {
-                          setState(() {
-                            _isClosed = true;
-                          });
+                          // Implement block user logic here
                           Navigator.pop(context); // Close dialog
                         },
                       ),
                     );
                   },
                 ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: HugeIcon(
-                  icon: HugeIcons.strokeRoundedCancel01,
-                  color: AppColors.error,
-                  size: 24.r,
-                ),
-                title: Text(
-                  'Block User',
-                  style: AppText.bodyBold.copyWith(color: AppColors.error),
-                ),
-                onTap: () {
-                  Navigator.pop(context); // Close bottom sheet
-                  showDialog(
-                    context: context,
-                    builder: (context) => UJobAlertDialog(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedUserBlock01,
-                        color: AppColors.error,
-                        size: 28.r,
-                      ),
-                      title: 'Block User',
-                      description:
-                          'Are you sure you want to block this user? They will no longer be able to message you or apply to your jobs.',
-                      confirmText: 'Block User',
-                      onConfirm: () {
-                        // Implement block user logic here
-                        Navigator.pop(context); // Close dialog
-                      },
-                    ),
-                  );
-                },
-              ),
             ],
           ),
         );
@@ -344,6 +541,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final async = ref.watch(chatMessagesProvider(widget.conversationId));
+    final me = ref.watch(authProvider).valueOrNull;
+    final viewerIsEmployer = ref.read(activeRoleProvider.notifier).isEmployer;
+    final myConvs = viewerIsEmployer
+        ? ref.watch(conversationsProvider).valueOrNull ?? const []
+        : ref.watch(seekerConversationsProvider).valueOrNull ?? const [];
+    var isClosed = _fallbackClosed;
+    for (final c in myConvs) {
+      if (c.id == widget.conversationId) {
+        isClosed = !c.chatEnabled;
+        break;
+      }
+    }
+    // Bubble side/avatar follow the viewer, not a fixed role — whichever
+    // account is chatting sees their own messages on the right, same as
+    // any standard chat UI (WhatsApp-style), not "employer always right".
+    final myInitials = me?.initials ?? '?';
+    final myAvatar = me?.avatarUrl;
+    final otherInitials = _displayInitials;
+    final otherAvatar = _displayAvatar;
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: UJobAppBar(
@@ -352,7 +568,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           onTap: () {
             final isEmployer = ref.read(activeRoleProvider.notifier).isEmployer;
             if (isEmployer) {
-              context.push('/employer/applicants/${widget.otherId}');
+              context.push('/employer/applicants/${widget.applicantId ?? widget.otherId}');
             } else {
               _showUserDetailsSheet();
             }
@@ -364,8 +580,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               Stack(
                 children: [
                   UJobAvatar(
-                    imageUrl: widget.otherAvatar,
-                    initials: widget.otherInitials ?? widget.otherName[0],
+                    imageUrl: _displayAvatar,
+                    initials: _displayInitials,
                     size: 36.r,
                   ),
                   Positioned(
@@ -393,7 +609,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      widget.otherName,
+                      _displayName,
                       style: AppText.titleSm,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -430,8 +646,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ref.refresh(chatMessagesProvider(widget.conversationId)),
               ),
               data: (messages) {
+                if (messages.isNotEmpty && !_didInitialScroll) {
+                  _didInitialScroll = true;
+                  _jumpToBottom();
+                }
                 if (messages.isEmpty) {
-                  return Center(child: Text(l10n.sayHello));
+                  return Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedMessage01,
+                          size: 18.r,
+                          color: AppColors.muted,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(l10n.sayHello),
+                      ],
+                    ),
+                  );
                 }
                 return ListView.builder(
                   controller: _scrollCtrl,
@@ -450,7 +683,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (showDate) _DateDivider(date: msg.sentAt),
-                        _MessageBubble(message: msg),
+                        _MessageBubble(
+                          message: msg,
+                          myInitials: myInitials,
+                          myAvatar: myAvatar,
+                          otherInitials: otherInitials,
+                          otherAvatar: otherAvatar,
+                        ),
                       ],
                     );
                   },
@@ -458,46 +697,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               },
             ),
           ),
-          if (_isClosed)
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 24.h),
-              decoration: const BoxDecoration(
-                color: AppColors.surface,
-                border: Border(top: BorderSide(color: AppColors.borderLight)),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Text(
-                  'This chat has been closed.',
-                  textAlign: TextAlign.center,
-                  style: AppText.body.copyWith(color: AppColors.muted),
-                ),
-              ),
-            )
-          else
-            _InputBar(
-              controller: _msgCtrl,
-              sending: _sending,
-              onSend: _send,
-              stagedFileType: _stagedFileType,
-              stagedFilePath: _stagedFilePath,
-              stagedFileName: _stagedFileName,
-              onStageFile: (type, path, name) {
-                setState(() {
-                  _stagedFileType = type;
-                  _stagedFilePath = path;
-                  _stagedFileName = name;
-                });
-              },
-              onRemoveStagedFile: () {
-                setState(() {
-                  _stagedFileType = null;
-                  _stagedFilePath = null;
-                  _stagedFileName = null;
-                });
-              },
-            ),
+          if (isClosed)
+            _ChatStoppedBanner(isEmployer: viewerIsEmployer),
+          _InputBar(
+            controller: _msgCtrl,
+            sending: _sending,
+            enabled: !isClosed,
+            hintText: isClosed ? l10n.chatStoppedInputHint : null,
+            onSend: _send,
+            stagedFileType: _stagedFileType,
+            stagedFilePath: _stagedFilePath,
+            stagedFileName: _stagedFileName,
+            onStageFile: (type, path, name) {
+              setState(() {
+                _stagedFileType = type;
+                _stagedFilePath = path;
+                _stagedFileName = name;
+              });
+            },
+            onRemoveStagedFile: () {
+              setState(() {
+                _stagedFileType = null;
+                _stagedFilePath = null;
+                _stagedFileName = null;
+              });
+            },
+          ),
         ],
       ),
     );
@@ -505,6 +730,41 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+class _ChatStoppedBanner extends StatelessWidget {
+  final bool isEmployer;
+  const _ChatStoppedBanner({required this.isEmployer});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      color: AppColors.error.withValues(alpha: 0.08),
+      child: Row(
+        children: [
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedLockPassword,
+            color: AppColors.error,
+            size: 18.r,
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              isEmployer
+                  ? context.l10n.chatStoppedBannerEmployer
+                  : context.l10n.chatStoppedBannerSeeker,
+              style: AppText.small.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _DateDivider extends StatelessWidget {
@@ -546,11 +806,25 @@ class _DateDivider extends StatelessWidget {
 
 class _MessageBubble extends StatelessWidget {
   final ChatMessage message;
-  const _MessageBubble({required this.message});
+  final String myInitials;
+  final String? myAvatar;
+  final String otherInitials;
+  final String? otherAvatar;
+
+  const _MessageBubble({
+    required this.message,
+    required this.myInitials,
+    this.myAvatar,
+    required this.otherInitials,
+    this.otherAvatar,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isMine = message.isMine;
+    // Standard chat convention: whoever is viewing sees their own sent
+    // messages on the right, the other party's on the left — same for
+    // both seeker and employer accounts, not fixed by role.
+    final isRight = message.isMine;
     final time = DateFormat('HH:mm').format(message.sentAt);
 
     Widget contentWidget;
@@ -655,7 +929,7 @@ class _MessageBubble extends StatelessWidget {
             Text(
               message.body,
               style: AppText.body.copyWith(
-                color: isMine ? AppColors.white : AppColors.text,
+                color: isRight ? AppColors.white : AppColors.text,
                 height: 1.4,
               ),
             ),
@@ -672,11 +946,11 @@ class _MessageBubble extends StatelessWidget {
             width: double.infinity,
             padding: EdgeInsets.all(12.r),
             decoration: BoxDecoration(
-              color: isMine
+              color: isRight
                   ? AppColors.white.withValues(alpha: 0.2)
                   : AppColors.bg,
               borderRadius: BorderRadius.circular(12.r),
-              border: isMine ? null : Border.all(color: AppColors.borderLight),
+              border: isRight ? null : Border.all(color: AppColors.borderLight),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -703,7 +977,7 @@ class _MessageBubble extends StatelessWidget {
                           Text(
                             message.attachmentName ?? 'Document.pdf',
                             style: AppText.bodyBold.copyWith(
-                              color: isMine ? AppColors.white : AppColors.text,
+                              color: isRight ? AppColors.white : AppColors.text,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -712,7 +986,7 @@ class _MessageBubble extends StatelessWidget {
                           Text(
                             'PDF Document',
                             style: AppText.small.copyWith(
-                              color: isMine
+                              color: isRight
                                   ? AppColors.white.withValues(alpha: 0.8)
                                   : AppColors.muted2,
                             ),
@@ -796,7 +1070,7 @@ class _MessageBubble extends StatelessWidget {
                         vertical: 6.h,
                       ),
                       decoration: BoxDecoration(
-                        color: isMine
+                        color: isRight
                             ? AppColors.white.withValues(alpha: 0.15)
                             : AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(100.r),
@@ -807,13 +1081,13 @@ class _MessageBubble extends StatelessWidget {
                           HugeIcon(
                             icon: HugeIcons.strokeRoundedEye,
                             size: 14.r,
-                            color: isMine ? AppColors.white : AppColors.primary,
+                            color: isRight ? AppColors.white : AppColors.primary,
                           ),
                           SizedBox(width: 4.w),
                           Text(
                             'Preview',
                             style: AppText.small.copyWith(
-                              color: isMine
+                              color: isRight
                                   ? AppColors.white
                                   : AppColors.primary,
                               fontWeight: FontWeight.bold,
@@ -832,7 +1106,7 @@ class _MessageBubble extends StatelessWidget {
             Text(
               message.body,
               style: AppText.body.copyWith(
-                color: isMine ? AppColors.white : AppColors.text,
+                color: isRight ? AppColors.white : AppColors.text,
                 height: 1.4,
               ),
             ),
@@ -843,71 +1117,84 @@ class _MessageBubble extends StatelessWidget {
       contentWidget = Text(
         message.body,
         style: AppText.body.copyWith(
-          color: isMine ? AppColors.white : AppColors.text,
+          color: isRight ? AppColors.white : AppColors.text,
           height: 1.4,
         ),
       );
     }
 
-    return Align(
-      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 8.h),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.76,
-        ),
-        child: Column(
-          crossAxisAlignment: isMine
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-              decoration: BoxDecoration(
-                gradient: isMine
-                    ? const LinearGradient(
-                        colors: [
-                          AppColors.primaryDark,
-                          AppColors.primaryAccent,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: isMine ? null : AppColors.surface,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16.r),
-                  topRight: Radius.circular(16.r),
-                  bottomLeft: Radius.circular(isMine ? 16.r : 4.r),
-                  bottomRight: Radius.circular(isMine ? 4.r : 16.r),
-                ),
-                boxShadow: AppShadow.card(),
-              ),
-              child: contentWidget,
+    final avatar = UJobAvatar(
+      imageUrl: isRight ? myAvatar : otherAvatar,
+      initials: isRight ? myInitials : otherInitials,
+      size: 28.r,
+    );
+
+    return Row(
+      mainAxisAlignment: isRight ? MainAxisAlignment.end : MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (!isRight) ...[avatar, SizedBox(width: 8.w)],
+        Flexible(
+          child: Container(
+            margin: EdgeInsets.only(bottom: 8.h),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.7,
             ),
-            SizedBox(height: 3.h),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Column(
+              crossAxisAlignment: isRight
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
-                Text(
-                  time,
-                  style: AppText.caption.copyWith(color: AppColors.muted2),
-                ),
-                if (isMine) ...[
-                  SizedBox(width: 4.w),
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedTickDouble02,
-                    size: 14.r,
-                    color: message.isRead
-                        ? AppColors.primary
-                        : AppColors.muted2,
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    gradient: isRight
+                        ? const LinearGradient(
+                            colors: [
+                              AppColors.primaryDark,
+                              AppColors.primaryAccent,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: isRight ? null : AppColors.surface,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(16.r),
+                      topRight: Radius.circular(16.r),
+                      bottomLeft: Radius.circular(isRight ? 16.r : 4.r),
+                      bottomRight: Radius.circular(isRight ? 4.r : 16.r),
+                    ),
+                    boxShadow: AppShadow.card(),
                   ),
-                ],
+                  child: contentWidget,
+                ),
+                SizedBox(height: 3.h),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      time,
+                      style: AppText.caption.copyWith(color: AppColors.muted2),
+                    ),
+                    if (message.isMine) ...[
+                      SizedBox(width: 4.w),
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedTickDouble02,
+                        size: 14.r,
+                        color: message.isRead
+                            ? AppColors.primary
+                            : AppColors.muted2,
+                      ),
+                    ],
               ],
             ),
           ],
+            ),
+          ),
         ),
-      ),
+        if (isRight) ...[SizedBox(width: 8.w), avatar],
+      ],
     );
   }
 }
@@ -915,6 +1202,8 @@ class _MessageBubble extends StatelessWidget {
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
+  final bool enabled;
+  final String? hintText;
   final VoidCallback onSend;
   final String? stagedFileType;
   final String? stagedFilePath;
@@ -925,6 +1214,8 @@ class _InputBar extends StatelessWidget {
   const _InputBar({
     required this.controller,
     required this.sending,
+    this.enabled = true,
+    this.hintText,
     required this.onSend,
     this.stagedFileType,
     this.stagedFilePath,
@@ -1070,26 +1361,25 @@ class _InputBar extends StatelessWidget {
             ],
             Row(
               children: [
-                IconButton(
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedAttachment01,
-                    color: AppColors.muted,
-                    size: 24.r,
-                  ),
-                  onPressed: () => _showAttachmentSheet(context),
-                ),
+                // Attach button hidden for now — no attachment endpoint on
+                // the chat API yet. Re-enable by restoring this IconButton.
                 Expanded(
                   child: TextField(
                     controller: controller,
+                    enabled: enabled,
                     textCapitalization: TextCapitalization.sentences,
                     style: AppText.body,
                     maxLines: 4,
                     minLines: 1,
                     decoration: InputDecoration(
-                      hintText: l10n.typeMessage,
-                      hintStyle: AppText.body.copyWith(color: AppColors.muted2),
+                      hintText: hintText ?? l10n.typeMessage,
+                      hintStyle: AppText.body.copyWith(
+                        color: !enabled ? AppColors.error.withValues(alpha: 0.5) : AppColors.muted2,
+                      ),
                       filled: true,
-                      fillColor: AppColors.bg,
+                      fillColor: enabled
+                          ? AppColors.bg
+                          : AppColors.error.withValues(alpha: 0.05),
                       border: OutlineInputBorder(
                         borderRadius: AppRadius.xl2,
                         borderSide: BorderSide.none,
@@ -1103,19 +1393,22 @@ class _InputBar extends StatelessWidget {
                 ),
                 SizedBox(width: 8.w),
                 GestureDetector(
-                  onTap: sending ? null : onSend,
+                  onTap: (sending || !enabled) ? null : onSend,
                   child: Container(
                     width: 42.r,
                     height: 42.r,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primaryDark,
-                          AppColors.primaryAccent,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                    decoration: BoxDecoration(
+                      gradient: enabled
+                          ? const LinearGradient(
+                              colors: [
+                                AppColors.primaryDark,
+                                AppColors.primaryAccent,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: enabled ? null : AppColors.error.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: sending
@@ -1126,14 +1419,11 @@ class _InputBar extends StatelessWidget {
                               color: AppColors.white,
                             ),
                           )
-                        : Padding(
-                            padding: EdgeInsets.only(left: 2.w),
-                            child: Center(
-                              child: HugeIcon(
-                                icon: HugeIcons.strokeRoundedSent,
-                                color: AppColors.white,
-                                size: 20.r,
-                              ),
+                        : Center(
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedSent,
+                              color: enabled ? AppColors.white : AppColors.error,
+                              size: 20.r,
                             ),
                           ),
                   ),
