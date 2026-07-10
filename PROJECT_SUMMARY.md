@@ -137,7 +137,15 @@ UJob is a dual-portal mobile application (Flutter) for **Employers** and **Job S
 
 ---
 
-## 3. Implementation Status (Last Updated: 2026-07-10, Session 12)
+## 3. Implementation Status (Last Updated: 2026-07-11, Session 13)
+
+#### Session 13 Changes (2026-07-11) — Cover-Letter Flat-URL Follow-up (Backend Still Blocking)
+
+- Fixed `employer_applicant_service.dart`'s `_parseApplicant` (backs `GET /employer/jobs/:jobId/applicants`) — was reading only nested `cover_letters.file_url`/`.file_name` with no flat-field fallback. Added `?? cover_letter_url` / `?? cover_letter_file_name` fallback so all 3 employer applicant parsers now consistently try nested-then-flat, same as `resume_url`.
+- Confirmed cover-letter viewer UI already exists (no gap): `ujob_applicant_card.dart` action-sheet → `UJobPdfViewerScreen`, and `applicant_detail_screen.dart` dedicated tab with inline `UJobPdfViewer` + download button — both mirror the resume-viewing pattern already.
+- **User confirmed backend still not returning cover-letter data today.** Not a frontend bug — `GET /employer/applicants` and `GET /employer/applicants/:id` return no cover-letter field at all (flat or nested); `GET /employer/jobs/:jobId/applicants` has the nested join but no flat field either. Backend work still outstanding (see Session 12 entry below for the full drafted ask). Frontend is ready to pick up the field the moment backend ships it — no further Flutter changes needed until then.
+
+---
 
 #### Session 12 Changes (2026-07-10) — Chat/Notification Fixes, Cover-Letter API Gap, Terminal Env Var Bug
 

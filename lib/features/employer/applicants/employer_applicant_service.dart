@@ -255,8 +255,10 @@ class EmployerApplicantService {
     // application['cover_letters'] (singular), not profile['cover_letters'].
     final attachedCoverLetter =
         application['cover_letters'] as Map<String, dynamic>?;
-    final coverLetterUrl = attachedCoverLetter?['file_url']?.toString();
-    final coverLetterFileName = attachedCoverLetter?['file_name']?.toString();
+    final coverLetterUrl = attachedCoverLetter?['file_url']?.toString() ??
+        application['cover_letter_url']?.toString();
+    final coverLetterFileName = attachedCoverLetter?['file_name']?.toString() ??
+        application['cover_letter_file_name']?.toString();
 
     // Profile image logic
     final profileImage = users['profile_image']?.toString();
