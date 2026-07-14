@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -7,10 +8,12 @@ import 'package:upgrader/upgrader.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/role_provider.dart';
 import 'core/router/app_router.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/app_colors.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 
 void main() async {
@@ -31,9 +34,14 @@ void main() async {
     ..userInteractions = false
     ..dismissOnTap = false;
 
-  // ── Firebase setup (uncomment after running `flutterfire configure`) ──────
-  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // await NotificationService.init();
+  // ── Firebase setup ──────────────────────────────────────────────────────
+  // Never let push-notification setup block app startup.
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await NotificationService.init();
+  } catch (e) {
+    debugPrint('[Firebase] init failed: $e');
+  }
 
   // Lock orientation to portrait only
   await SystemChrome.setPreferredOrientations([
@@ -42,6 +50,12 @@ void main() async {
   ]);
 
   runApp(const ProviderScope(child: UJobApp()));
+
+  // Must run after runApp() — needs a live rootNavigatorKey.currentContext
+  // to navigate, which doesn't exist until the widget tree is built.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    NotificationService.handleInitialMessage();
+  });
 }
 
 class UJobApp extends ConsumerWidget {

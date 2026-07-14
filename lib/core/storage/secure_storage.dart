@@ -12,6 +12,7 @@ class SecureStorage {
   static const _keyLocale = 'locale'; // 'en' | 'ar'
   static const _keyEmail = 'remember_email';
   static const _keyPassword = 'remember_password';
+  static const _keyFcmToken = 'fcm_token';
 
   Future<void> saveTokens(String access, String refresh) async {
     await _s.write(key: _keyAccess, value: access);
@@ -36,6 +37,14 @@ class SecureStorage {
 
   Future<void> saveRole(String role) => _s.write(key: _keyRole, value: role);
   Future<String?> getRole() => _s.read(key: _keyRole);
+
+  // Last FCM token this device successfully sent to the backend (via
+  // login/register). Lets us detect a rotation later without re-fetching
+  // from FCM, and — once the backend adds a way to update it mid-session —
+  // avoid resending a token it already has.
+  Future<void> saveFcmToken(String token) =>
+      _s.write(key: _keyFcmToken, value: token);
+  Future<String?> getFcmToken() => _s.read(key: _keyFcmToken);
 
   Future<void> saveTheme(String mode) => _s.write(key: _keyTheme, value: mode);
   Future<String> getTheme() async => await _s.read(key: _keyTheme) ?? 'system';

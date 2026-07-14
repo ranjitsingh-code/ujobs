@@ -6,10 +6,39 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/animated_page_wrapper.dart';
+import '../shared/notifications/notifications_provider.dart';
 
-class SeekerShell extends ConsumerWidget {
+class SeekerShell extends ConsumerStatefulWidget {
   final Widget child;
   const SeekerShell({required this.child, super.key});
+
+  @override
+  ConsumerState<SeekerShell> createState() => _SeekerShellState();
+}
+
+class _SeekerShellState extends ConsumerState<SeekerShell>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // unreadNotificationCountProvider no longer polls — this shell is mounted
+  // for the whole logged-in session, so resuming from background is the
+  // right place to catch up the bell badge without a background timer.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(unreadNotificationCountProvider);
+    }
+  }
 
   int _indexFromPath(String path) {
     if (path.startsWith('/seeker/jobs')) return 1;
@@ -20,12 +49,12 @@ class SeekerShell extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _indexFromPath(location);
 
     return Scaffold(
-      body: AnimatedPageWrapper(child: child),
+      body: AnimatedPageWrapper(child: widget.child),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         selectedFontSize: 10,

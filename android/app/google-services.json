@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "557696688781",
+    "project_id": "ujobs-dbee1",
+    "storage_bucket": "ujobs-dbee1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:557696688781:android:faac7c9d861536da4cf8c4",
+        "android_client_info": {
+          "package_name": "com.example.ujobs_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbu_RKgdSwUhTm3a1RIT6Wt8kmC6gvXnw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:557696688781:android:87c519b18b980a134cf8c4",
+        "android_client_info": {
+          "package_name": "com.ujobs.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbu_RKgdSwUhTm3a1RIT6Wt8kmC6gvXnw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

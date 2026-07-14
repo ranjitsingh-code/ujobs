@@ -20,6 +20,7 @@ import '../../core/widgets/ujob_auth_links.dart';
 import '../../core/widgets/ujob_role_switch_card.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/widgets/ujob_toast.dart';
+import '../../core/services/notification_service.dart';
 
 class RegisterSeekerScreen extends ConsumerStatefulWidget {
   const RegisterSeekerScreen({super.key});
@@ -95,6 +96,7 @@ class _RegisterSeekerScreenState extends ConsumerState<RegisterSeekerScreen>
           'last_name': _lastCtrl.text.trim(),
           'email': _emailCtrl.text.trim(),
           'password': _passCtrl.text,
+          ...await NotificationService.deviceRegistrationFields(),
         },
       );
 

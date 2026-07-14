@@ -137,7 +137,106 @@ UJob is a dual-portal mobile application (Flutter) for **Employers** and **Job S
 
 ---
 
-## 3. Implementation Status (Last Updated: 2026-07-11, Session 13)
+## 3. Implementation Status (Last Updated: 2026-07-14, Session 16)
+
+#### Session 16 Changes (2026-07-14) — Post/Edit Job Real Bugs Fixed (user-reported "not working properly")
+
+User reported multiple complaints about Post Job / Edit Job. Reviewed `post_job_screen.dart`, `post_job_wizard_provider.dart`, `employer_job_service.dart` against the actual backend API spec (pasted by user) and found 5 real, confirmed bugs — no live API test needed, all reproducible by static read:
+
+1. **Country always wrong on submit** — `UJobCountryDropdown` returns `c.iso2` (e.g. `"GB"`) into `state.country`, but `_submitJob` did `countries.firstWhere((c) => c.name == state.country, ...)` — compared iso2 against `.name`, never matched, silently fell back to `countries.first` for every single submission regardless of what the user picked. Fixed: send `state.country` directly (it already IS the iso2 value the API wants). User confirmed this was the exact symptom reported ("country not selecting").
+2. **Edit Job never restored country** — `Job` model had no `country` field parsed from the API at all, and `post_job_screen.dart`'s edit-mode prefill never set it. Added `country` field to `Job` (parses `country` key), wired into `initState` prefill.
+3. **`education` fake default `'No requirement'`** (`post_job_wizard_provider.dart`) — not a valid value in the backend's enum (`high_school|diploma|bachelors|masters|phd|professional_cert`); being non-empty, it silently defeated the existing "auto-select first real option" dropdown logic, so nothing ever highlighted and an untouched submit sent an invalid string. Fixed default to `''`.
+4. **`salaryPeriod` fake default `'Yearly'`** (capitalized) — backend enum is lowercase `hourly|monthly|yearly`. Same dead-fallback bug as #3. Fixed default to `''`.
+5. **`benefits` hand-built as a string** without escaping — `'[${state.benefits.map((b) => '"$b"').join(',')}]'` breaks (invalid JSON) if any benefit name contains a `"`. Fixed to `jsonEncode(state.benefits)`.
+6. **Deadline date format mismatch** (`ujob_date_picker_field.dart`) — picker stored/emitted `MM/dd/yyyy` (e.g. `12/31/2026`); backend spec requires ISO `YYYY-MM-DD`. Any deadline picked via the calendar was submitted in the wrong format. Fixed picker to use `yyyy-MM-dd` both for parsing and formatting, consistent with the Edit-prefill path (which was already ISO from `job.closesAt`).
+7. Also fixed fallback literal casing `'High School'` → `'high_school'` (only hit if the options API call itself fails).
+
+**Verified NOT broken** (checked, no bug): Close Job, Delete Job, Pause/Reactivate — all correctly wired to `EmployerJobService.updateJobStatus`/`deleteJob` (real REST calls) from `my_jobs_screen.dart`, `employer_job_detail_screen.dart`, `employer_dashboard_screen.dart`.
+
+**Noted but not fixed (out of scope, not bugs)**: `EmployerJobService.postJob`/`.updateJob` methods are dead code — `post_job_screen.dart` builds its own raw `dio` call inline instead of using them (works correctly, just duplicated logic — flag for future cleanup). `auto_reject_after_deadline` field from the backend spec has no UI toggle anywhere (backend defaults `false`, not broken, just unbuilt). `employer_job_provider.dart`'s `addFromForm`/`updateFromForm`/`updateStatus`/`deleteJob` StateNotifier methods are unused dead code (local-state-only, never called — real screens all use `EmployerJobService` directly).
+
+Files changed: `lib/core/models/job.dart`, `lib/features/employer/jobs/post_job_screen.dart`, `lib/features/employer/jobs/post_job_wizard_provider.dart`, `lib/core/widgets/ujob_date_picker_field.dart`. `flutter analyze` clean on all. **User confirmed working on-device after these fixes.**
+
+---
+
+
+#### Session 15 Changes (2026-07-13) — Update-Profile Loading+Nav (both portals), Edit-Job No-Data Bug Fixed
+
+##### Employer `company_profile_screen.dart` — Update Profile:
+- Already had a working button spinner (`UJobButton(isLoading: _isLoading)`). Added `context.go('/employer')` right after the success toast in `_updateProfile()`, so a successful save now lands the user back on the employer dashboard instead of staying on the profile screen.
+
+##### Seeker `seeker_profile_screen.dart` — Update Profile:
+- The screen's existing `_isLoading` flag was already claimed by the initial profile-load spinner (reusing it for the save action would blank the whole form during save). Added a separate `_isUpdating` flag, wired to the Update Profile `UJobButton(isLoading: _isUpdating)`. On success, navigates to `context.go('/seeker')` after the toast; `_isUpdating` reset in a `finally` block either way.
+
+##### Employer `post_job_screen.dart` — Edit Job showed no previous data (real bug, fixed in 2 passes):
+- **Root cause**: `PostJobScreen` prefilled its form from the `Job` object passed via GoRouter's `extra` param. From **My Jobs** list and **Dashboard**, that `Job` comes from `employerJobsProvider` (`GET /employer/jobs`, a list endpoint returning summary fields only — no `description`/`requirements`/`responsibilities`/etc). Edit-from-**Job-Detail-screen** worked fine because it already sourced from `employerJobDetailProvider` (single-job `GET`, full fields).
+- **Fix applied**: `initState` now always refetches full detail via `employerJobDetailProvider(id)` before seeding the form, regardless of which screen the Edit action was tapped from (falls back to the passed-in `extra` job only if the refetch itself throws).
+- **First attempt at showing a loading state made it worse — noted for future reference**: gating the wizard step widgets behind a loading screen meant nothing `ref.watch`'d the (`autoDispose`) `postJobWizardProvider` during the fetch; Riverpod disposed the provider (zero listeners) right after the fetched data was written into it, before the step widgets ever mounted to read it — silently blank, no error. Fixed by keeping the step widgets mounted from the first frame (keeps a live watcher across the async gap) and showing the loading spinner as a `Positioned.fill` overlay in a `Stack` instead of hiding the tree. User confirmed fixed on-device after this second pass.
+
+---
+
+#### Session 14 Changes (2026-07-12) — Push Notification Deep-Fixes, Chat Screen Overhaul, Post-Job/Applicant-Profile Bugs (not committed yet)
+
+##### Backend handoff docs written:
+- `docs/backend_fcm_fix_prompt.md` — new, self-contained prompt for a separate backend AI agent (no Flutter/repo references, per user's explicit ask). Covers 5 confirmed bugs: (1) `sender_name` in `message` push not resolved per actual `sender_id` — proven with 2 live payloads from the same conversation showing the identical name regardless of who the real sender was; (2) `application_id` sent as `app_id`; (3) verify `job_id` present in `job_approved`/`application_submitted`; (4) `job_id`/`application_id` missing from `message` push + `GET /conversations` (needed for chat's contact-info panel); (5) employer email/phone missing from `GET /seeker/jobs/:id` company object.
+- `docs/fcm_push_notification_spec.txt` updated — `message` payload now documents `job_id`/`application_id` fields, and explicit sender_name/avatar-must-resolve-fresh-per-sender rules with the live-log proof inline.
+- **Backend already shipped part of Bug 4 mid-session** — user's live log confirmed `job_id`/`application_id` now present in the `message` push payload. Client wired to consume them (see below). `GET /conversations` still not confirmed updated — Messages-list-tap entry point still can't populate these ids until backend adds them there too.
+
+##### `notification_navigation.dart` — full rewrite of the tap-routing logic:
+- Added `jobId`/`applicantId` to the `message`-case `extra` map (now that backend sends them) so chat's contact-info sheet can self-hydrate on a notification-tap open.
+- **Fixed `Failed assertion: '!_debugLocked'` crash** — all `context.push`/`pushReplacement` calls now run inside a single `SchedulerBinding.instance.addPostFrameCallback`, since FCM's tap callback can fire while the Navigator is still mid-transition.
+- **Fixed duplicate-chat-screen-on-back-stack bug** (multiple rounds) — first attempt (checking `GoRouter.of(context).routerDelegate.currentConfiguration.uri`) was still racy when 2 taps landed in the same frame batch. Final fix: track `_currentOpenChatId` explicitly via the existing `registerChatRefreshCallback`/`unregisterChatRefreshCallback` pair (called from `ChatScreen.initState`/`dispose`) — a real, synchronous, widget-lifecycle-tied source of truth instead of a derived/racy router string.
+- Added `EasyLoading.show()`/`.dismiss()` around the tap-to-navigate gap (role lookup + frame-defer wait) — reuses the app's existing global `flutter_easyloading` wiring (`main.dart:113`), no new dependency.
+- Added `handleForegroundMessage()` — hooked into `FirebaseMessaging.onMessage` (foreground listener) in `notification_service.dart`. On a foreground `message` push, silently refreshes the viewer's own conversations list + the specific open chat (if any) via `ProviderContainer` reached through `rootNavigatorKey` — event-driven "auto load," no polling added.
+
+##### Chat screen (`chat_screen.dart`) + both Messages list screens — removed polling entirely:
+- Was `Timer.periodic` every 4s (chat) / 15s (both messages lists) calling `.refresh()` — too many API calls per user's explicit ask. Replaced everywhere with: pull-to-refresh (`RefreshIndicator`, loading/error/empty states made scrollable so it still works when the list is short/empty), a refresh `IconButton` added to the left of each screen's existing menu icon, refresh-on-app-resume, and refresh-on-matching-push (via the callback registry above).
+- **Fixed a regression this same session caused**: "jump to bottom on chat open" only worked via `ref.listen`, which never fires for an already-resolved/cached provider (revisiting a chat opened earlier this session) — previously silently masked by the 4s poll eventually forcing a transition. Fixed by also checking the current value directly on every build, not just via the listener.
+- **Fixed `ujob_app_bar.dart`'s app-bar title getting visually cut under the icons** — its `Padding` reserved a fixed 48dp gutter sized for exactly one icon; adding the refresh icon doubled `rightWidget`'s width. Added optional `rightGutter` param (default unchanged everywhere else), set to `88.w` on the 3 screens with 2 icons.
+- **Keyboard covering the last message** — two iterations. First: scroll-to-bottom on `TextField` focus + a fixed delay guess (worked once, coincidentally riding an unrelated one-time initial-load auto-scroll, then failed on refocus). Final fix: `didChangeMetrics()` override reacting to the real `viewInsets.bottom` growing — fires correctly every time regardless of open count, no timing guesses.
+
+##### `applicant_detail_screen.dart` — cover-letter tab merged into Profile tab:
+- Removed the "Cover Letter" tab (was 3 tabs, now 2: Profile / Screening Questions).
+- Added a resume-style card (same PDF icon/filename/view/download layout as the Resume card) inside the Profile tab using `applicant.coverLetterUrl`.
+- Deleted the now-dead `_buildCoverLetterTab` method + its now-unused `ujob_pdf_viewer.dart` import.
+
+##### `post_job_wizard_provider.dart` — real correctness bug found+fixed:
+- `PostJobState`'s `employmentType`/`workplaceType` defaulted to fake literal strings `'Full-Time'`/`'Remote'` instead of `''`. This silently broke the *already-correct* "auto-select first option" fallback logic in `step1_job_details.dart` (the `isEmpty` check never triggered since state was never truly empty) — no chip ever visually highlighted, AND the wrong literal string got sent to the backend on submit instead of the real API value, unless the user manually tapped a chip first. Fixed defaults to `''`.
+
+##### Confirmed via direct code read (not fixed, just diagnosed — informational for future sessions):
+- Employer applicant menu: `GET /employer/applicants/:id` needs `application_id` only, endpoint itself fine.
+- Seeker chat menu: `GET /seeker/jobs/:id` needs `job_id` only, endpoint itself fine, already called correctly by `chat_screen.dart`'s `_fetchJobCompany()`.
+- `applicant_detail_screen.dart:136-139`'s `applicants.firstWhere(..., orElse: () => applicants.first)` silently shows the WRONG applicant if the id isn't in the already-cached `/employer/applicants` list — **not yet fixed**, flagged for a future session.
+
+**User workflow note for future sessions:** this user wants "explain your understanding first, wait for explicit go-ahead" before every code change — followed strictly this session, worked well, keep doing it.
+
+##### Text rename: "Message"/"Chat" → "Contact" (l10n, both en+ar, both roles):
+- `messages` ("Messages" screen title, both Messages screens + notifications filter chip) → **Contact**
+- `messageAction` ("Message" button, employer applicant detail + seeker my-applications/job-detail) → **Contact**
+- `startMessageAction` (employer action-sheet, first contact) → **Contact**
+- `openChatAction` (employer action-sheet, resume existing) → **Contact**
+- `stopMessageTitle` (employer toggle-off action) → **Stop Contact**
+- Fixed 2 pre-existing l10n rule violations found while doing this: `employer_messages_screen.dart`/`seeker_messages_screen.dart`'s screen title and the notifications filter chip were hardcoded raw `'Messages'` strings, not routed through l10n at all — now use `context.l10n.messages`.
+- Regenerated `app_localizations_*.dart` via `flutter gen-l10n` after editing the `.arb` files (config lives in `l10n.yaml`, not command-line args).
+- Left alone (sentence-level body text where "contact" reads wrong): `chatStoppedBannerSeeker/Employer`, `typeMessage` placeholder, `chatNotYetAvailableMessage`, `stopMessageConfirmMessage`.
+
+##### Unread notification badge — removed its 30s poll too:
+- `notifications_provider.dart`: `unreadNotificationCountProvider` was a `StreamProvider` polling `getUnreadCount()` every 30s for as long as any screen showed the bell icon — same class of issue as the chat/messages polling already removed earlier this session. Converted to a plain `FutureProvider` (single fetch, refreshed only via `ref.invalidate`).
+- `employer_shell.dart`/`seeker_shell.dart` converted `ConsumerWidget` → `ConsumerStatefulWidget` + `WidgetsBindingObserver`, invalidate the provider on app resume — these shells are mounted for the whole logged-in session, so this reliably catches the badge up without a timer.
+- `notification_navigation.dart`'s `handleForegroundMessage` now invalidates the unread-count provider for **any** foreground notification type (not just `message`), since `new_application`/`job_approved`/etc. all bump it too. Existing mark-as-read/delete invalidations left untouched.
+
+**User confirmed via live testing at end of session: all fixes from this session working correctly on device.**
+
+##### Whole-project mismatch audit (requested end of session — deferred to next session, not fixed today):
+- **Real bug found, not just cleanup**: `seeker_company_profile_screen.dart:489,492` — when a company has no LinkedIn/Facebook URL, falls back to hardcoded **fake demo links** (`linkedin.com/company/ujobs-demo`, `facebook.com/ujobs-demo`) and opens them for real companies. Same class as the post-job dropdown fake-defaults bug fixed this session.
+- Confirmed: zero polling timers left anywhere in `lib/` (full sweep done).
+- Static-text/l10n violations: job-status toast messages ("Job paused/published/closed/deleted" etc.) hardcoded identically 3x across `my_jobs_screen.dart`, `employer_dashboard_screen.dart`, `employer_job_detail_screen.dart` instead of shared l10n keys; 3 hardcoded screen titles; `my_jobs_screen.dart`'s Close/Delete Job dialog ignores existing `closeJob1`/`deleteJob` l10n keys already used correctly in the sibling screen.
+- API endpoint gaps: `employer_applicant_service.dart` bypasses `Ep` constants entirely with raw inline URLs (one duplicates unused `Ep.applicants()`); no `Ep.empAccount` constant exists (asymmetric vs `Ep.seekAccount`); a few other raw-string/`Ep` divergences.
+- `Icons.*` (not HugeIcons) in 3 real files: `add_education_sheet.dart:112`, `add_experience_sheet.dart:116`, `ujob_document_viewer_screen.dart:255`. Also 5 in `company_profile_screen_old.dart` — that file looks dead/unreferenced, candidate for deletion.
+- 2 spots hand-roll raw `ElevatedButton`/`OutlinedButton` instead of `UJobButton`: `employer_dashboard_screen.dart:58-61`, `notifications_screen.dart:298-327`.
+- **User said: fix tomorrow, not today.** Next session: start here if user doesn't have a new priority.
+
+---
 
 #### Session 13 Changes (2026-07-11) — Cover-Letter Flat-URL Follow-up (Backend Still Blocking)
 

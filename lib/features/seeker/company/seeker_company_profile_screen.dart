@@ -84,7 +84,8 @@ class _SeekerCompanyProfileScreenState
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           alignment: Alignment.center,
-                          child: widget.company.logo != null
+                          child: widget.company.logo != null &&
+                                  widget.company.logo!.isNotEmpty
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(12.r),
                                   child: Image.network(
@@ -92,6 +93,15 @@ class _SeekerCompanyProfileScreenState
                                     width: 56.r,
                                     height: 56.r,
                                     fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => Text(
+                                      widget.company.name.isNotEmpty
+                                          ? widget.company.name[0]
+                                              .toUpperCase()
+                                          : 'C',
+                                      style: AppText.heading2.copyWith(
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
                                   ),
                                 )
                               : Text(

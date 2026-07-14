@@ -24,6 +24,7 @@ import '../../../core/widgets/ujob_verification_banners.dart';
 import 'seeker_job_provider.dart';
 import '../applications/seeker_application_provider.dart';
 import '../profile/seeker_profile_provider.dart';
+import '../../shared/chat/conversation_provider.dart';
 
 class SeekerJobDetailScreen extends ConsumerStatefulWidget {
   final int jobId;
@@ -42,7 +43,39 @@ class SeekerJobDetailScreen extends ConsumerStatefulWidget {
 class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
     with SingleTickerProviderStateMixin {
   bool _hasApplied = false;
+  bool _openingChat = false;
   late TabController _tabController;
+
+  Future<void> _openChat(dynamic job) async {
+    if (_openingChat) return;
+    setState(() => _openingChat = true);
+    try {
+      final companyName = job.company?.name as String?;
+      final conv = await resolveJobConversation(ref, companyName: companyName);
+      if (!mounted) return;
+      if (conv == null) {
+        context.push('/seeker/messages');
+        return;
+      }
+      final displayName =
+          conv.otherName.isNotEmpty ? conv.otherName : (companyName ?? '');
+      context.push(
+        '/conversations/${conv.id}',
+        extra: {
+          'otherId': conv.otherId,
+          'name': displayName,
+          'initials': conv.otherInitials,
+          'avatar': conv.otherAvatar,
+          'jobId': widget.jobId.toString(),
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      context.push('/seeker/messages');
+    } finally {
+      if (mounted) setState(() => _openingChat = false);
+    }
+  }
 
   @override
   void initState() {
@@ -323,16 +356,18 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                         ),
                                       ),
                                     ),
-                                    /*
                                     SizedBox(height: 8.h),
                                     GestureDetector(
                                       onTap: () {
-                                        UJobToast.info(
-                                          context,
-                                          'Not yet available',
-                                          sub:
-                                              'You can only message the company after being shortlisted for an interview.',
-                                        );
+                                        if (job.chatEnabled) {
+                                          _openChat(job);
+                                        } else {
+                                          UJobToast.info(
+                                            context,
+                                            l10n.messageAction,
+                                            sub: l10n.chatNotYetAvailableMessage,
+                                          );
+                                        }
                                       },
                                       child: Container(
                                         padding: EdgeInsets.symmetric(
@@ -340,28 +375,42 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                           vertical: 6.h,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: AppColors.surface,
+                                          color: (job.chatEnabled
+                                                  ? AppColors.seekPrimary
+                                                  : AppColors.muted)
+                                              .withValues(alpha: 0.12),
                                           borderRadius: BorderRadius.circular(
                                             20.r,
-                                          ),
-                                          border: Border.all(
-                                            color: AppColors.borderLight,
                                           ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            HugeIcon(
-                                              icon: HugeIcons
-                                                  .strokeRoundedMessage02,
-                                              color: AppColors.muted,
-                                              size: 16.r,
-                                            ),
+                                            if (_openingChat)
+                                              SizedBox(
+                                                width: 14.r,
+                                                height: 14.r,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  color: AppColors.seekPrimary,
+                                                ),
+                                              )
+                                            else
+                                              HugeIcon(
+                                                icon: HugeIcons
+                                                    .strokeRoundedMessage02,
+                                                color: job.chatEnabled
+                                                    ? AppColors.seekPrimary
+                                                    : AppColors.muted,
+                                                size: 16.r,
+                                              ),
                                             SizedBox(width: 6.w),
                                             Text(
-                                              'Message',
+                                              l10n.messageAction,
                                               style: AppText.small.copyWith(
-                                                color: AppColors.muted,
+                                                color: job.chatEnabled
+                                                    ? AppColors.seekPrimary
+                                                    : AppColors.muted,
                                                 fontWeight: FontWeight.w600,
                                               ),
                                             ),
@@ -369,7 +418,6 @@ class _SeekerJobDetailScreenState extends ConsumerState<SeekerJobDetailScreen>
                                         ),
                                       ),
                                     ),
-                                    */
                                   ],
                                 ),
                               ],

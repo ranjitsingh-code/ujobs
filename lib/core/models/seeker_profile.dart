@@ -33,6 +33,7 @@ class SeekerProfile {
   final List<SeekerExperience> experiences;
   final List<SeekerEducation> educations;
   final List<SeekerResume> resumes;
+  final List<CoverLetter> coverLetters;
   final List<dynamic> certifications;
 
   const SeekerProfile({
@@ -69,6 +70,7 @@ class SeekerProfile {
     this.experiences = const [],
     this.educations = const [],
     this.resumes = const [],
+    this.coverLetters = const [],
     this.certifications = const [],
   });
 
@@ -118,6 +120,10 @@ class SeekerProfile {
           [],
       resumes: (json['resumes'] as List?)
               ?.map((e) => SeekerResume.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      coverLetters: (json['cover_letters'] as List?)
+              ?.map((e) => CoverLetter.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
@@ -229,6 +235,32 @@ class SeekerResume {
 
   factory SeekerResume.fromJson(Map<String, dynamic> json) {
     return SeekerResume(
+      id: json['id'].toString(),
+      fileUrl: json['file_url'] as String? ?? '',
+      fileName: json['file_name'] as String? ?? '',
+      isPrimary: json['is_primary'] as bool? ?? false,
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
+    );
+  }
+}
+
+class CoverLetter {
+  final String id;
+  final String fileUrl;
+  final String fileName;
+  final bool isPrimary;
+  final DateTime? createdAt;
+
+  const CoverLetter({
+    required this.id,
+    required this.fileUrl,
+    required this.fileName,
+    this.isPrimary = false,
+    this.createdAt,
+  });
+
+  factory CoverLetter.fromJson(Map<String, dynamic> json) {
+    return CoverLetter(
       id: json['id'].toString(),
       fileUrl: json['file_url'] as String? ?? '',
       fileName: json['file_name'] as String? ?? '',

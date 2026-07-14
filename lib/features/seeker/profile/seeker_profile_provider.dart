@@ -17,6 +17,12 @@ class SeekerProfileData {
 
   bool get isFresher => profile?.isFresher ?? false;
 
+  // Server's profile_completed (13 checkpoints incl. avatar_url, skills,
+  // experience, education) can't reach 100 while those sections stay hidden
+  // in this UI (client request) — kept for display only, NOT used for gating.
+  int get profileCompletionPercent => user.profileCompleted ?? 0;
+
+  // Gates on only the fields actually shown+required in the current UI.
   bool get isProfileComplete {
     final profile = this.profile;
 
@@ -38,32 +44,10 @@ class SeekerProfileData {
         (profile.summary == null || profile.summary!.isEmpty)) {
       return false;
     }
-    if (profile.experienceYearsInt == null) return false;
-    if (profile.experienceMonths == null) return false;
-    if (profile.expectedSalary == null) return false;
-    if (profile.salaryCurrency == null || profile.salaryCurrency!.isEmpty) return false;
-    if (profile.salaryPeriod == null || profile.salaryPeriod!.isEmpty) return false;
     if (profile.availability == null || profile.availability!.isEmpty) return false;
 
-    // At least 1 valid experience — waived for freshers
-    if (!profile.isFresher) {
-      final hasExperience = profile.experiences.any((e) =>
-          e.jobTitle.isNotEmpty &&
-          e.companyName.isNotEmpty &&
-          (e.location != null && e.location!.isNotEmpty) &&
-          e.startDate != null);
-      if (!hasExperience) return false;
-    }
-
-    // At least 1 valid education
-    final hasEducation = profile.educations.any((e) =>
-        e.institution.isNotEmpty &&
-        e.degree.isNotEmpty &&
-        e.fieldOfStudy.isNotEmpty &&
-        (e.grade != null && e.grade!.isNotEmpty) &&
-        e.startDate != null &&
-        e.endDate != null);
-    if (!hasEducation) return false;
+    // Skills, Experience, Education, Avatar are excluded — those sections are
+    // hidden in the UI (client request, will re-add later).
 
     return true;
   }
@@ -117,6 +101,26 @@ class SeekerProfileService {
 
   Future<void> deleteResume(String id) async {
     await _client.dio.delete('${Ep.seekerResumes}/$id');
+  }
+
+  Future<List<CoverLetter>> listCoverLetters() async {
+    final response = await _client.dio.get(Ep.seekerCoverLetters);
+    final data = response.data['data'] as List;
+    return data
+        .map((item) => CoverLetter.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<CoverLetter> uploadCoverLetter(String filePath) async {
+    final formData = FormData.fromMap({
+      'cover_letter': await MultipartFile.fromFile(filePath),
+    });
+    final response = await _client.dio.post(Ep.seekerCoverLetters, data: formData);
+    return CoverLetter.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> deleteCoverLetter(String id) async {
+    await _client.dio.delete('${Ep.seekerCoverLetters}/$id');
   }
 
   Future<Skill> createSkill(String name) async {

@@ -248,6 +248,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             otherInitials: extra['initials'] as String?,
             otherAvatar: extra['avatar'] as String?,
             jobTitle: extra['jobTitle'] as String?,
+            applicantId: extra['applicantId'] as String?,
+            jobId: extra['jobId'] as String?,
           );
         },
       ),

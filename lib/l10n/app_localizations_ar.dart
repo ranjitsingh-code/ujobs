@@ -660,7 +660,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get jobs => 'الوظائف';
 
   @override
-  String get messages => 'الرسائل';
+  String get messages => 'التواصل';
 
   @override
   String get profile => 'الملف الشخصي';
@@ -811,6 +811,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get uploadResume => 'رفع السيرة الذاتية';
 
   @override
+  String get uploadCoverLetter => 'رفع خطاب التقديم';
+
+  @override
   String get allTab => 'الكل';
 
   @override
@@ -853,6 +856,123 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get coverLetterHint => 'مرحباً، أنا متحمس للتقدم لهذا الدور لأن...';
+
+  @override
+  String get successTitle => 'نجاح';
+
+  @override
+  String get errorTitle => 'خطأ';
+
+  @override
+  String get uploadFailedTitle => 'فشل الرفع';
+
+  @override
+  String get fileTooLargeTitle => 'الملف كبير جدًا';
+
+  @override
+  String get tryAgainMessage => 'يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get coverLettersLoadErrorTitle => 'تعذر تحميل خطابات التقديم';
+
+  @override
+  String get coverLetterFileSizeLimit =>
+      'يجب أن يكون حجم الملف أقل من 3 ميجابايت.';
+
+  @override
+  String get coverLetterUploadedMessage => 'تم رفع خطاب التقديم بنجاح!';
+
+  @override
+  String get coverLetterDeletedMessage => 'تم حذف خطاب التقديم بنجاح!';
+
+  @override
+  String coverLetterDeleteErrorMessage(Object error) {
+    return 'خطأ في حذف خطاب التقديم: $error';
+  }
+
+  @override
+  String get deleteCoverLetterTitle => 'حذف خطاب التقديم؟';
+
+  @override
+  String get deleteCoverLetterConfirmMessage => 'هل تريد حذف خطاب التقديم هذا؟';
+
+  @override
+  String get coverLetterExceedsLimitMessage =>
+      'يتجاوز خطاب التقديم الحد المسموح به في الخادم. جرّب ملفًا أصغر.';
+
+  @override
+  String get coverLetterUploadErrorMessage =>
+      'تعذر رفع خطاب التقديم. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get coverLetterRequiredEmptyMessage =>
+      'لم يتم العثور على خطاب تقديم. يرجى رفع واحد للمتابعة.';
+
+  @override
+  String get coverLetterOptionalEmptyMessage =>
+      'لم يتم رفع خطاب تقديم بعد. يمكنك المتابعة بدونه.';
+
+  @override
+  String get pdfCoverLetterMaxSizeHint => 'PDF فقط — بحد أقصى 3 ميجابايت';
+
+  @override
+  String get myCoverLetterTitle => 'خطاب التقديم الخاص بي';
+
+  @override
+  String get coverLetterSectionSubtitle =>
+      'ارفع خطاب تقديم ليراجعه أصحاب العمل';
+
+  @override
+  String get coverLetterEmptyStateTitle => 'ارفع خطاب التقديم الخاص بك';
+
+  @override
+  String get pdfDocumentLabel => 'مستند PDF';
+
+  @override
+  String get downloadAction => 'تنزيل';
+
+  @override
+  String get noCoverLetterProvidedMessage => 'لم يتم تقديم خطاب تقديم.';
+
+  @override
+  String get couldNotLaunchDownloadUrl => 'تعذر فتح رابط التنزيل.';
+
+  @override
+  String get messageAction => 'تواصل';
+
+  @override
+  String get startMessageAction => 'تواصل';
+
+  @override
+  String get openChatAction => 'تواصل';
+
+  @override
+  String get chatNotYetAvailableMessage =>
+      'يمكنك مراسلة الشركة فقط بعد أن تتواصل معك أولاً.';
+
+  @override
+  String get stopMessageTitle => 'إيقاف التواصل';
+
+  @override
+  String get stopMessageConfirmMessage =>
+      'هل أنت متأكد أنك تريد إيقاف مراسلة هذا المتقدم؟ لن يتمكن من إرسال أو استقبال الرسائل حتى تعيد فتحها.';
+
+  @override
+  String get reopenChatTitle => 'إعادة فتح المحادثة';
+
+  @override
+  String get chatStoppedBannerSeeker =>
+      'لقد أوقف صاحب العمل هذه المحادثة. لا يمكنك إرسال رسائل.';
+
+  @override
+  String get chatStoppedBannerEmployer =>
+      'لقد أوقفت هذه المحادثة. أعد فتحها لإرسال الرسائل مجددًا.';
+
+  @override
+  String get chatStoppedInputHint => 'تم إيقاف المحادثة من قبل صاحب العمل...';
+
+  @override
+  String get copiedToClipboardMessage => 'تم النسخ إلى الحافظة';
 
   @override
   String get reviewAndSubmit => 'مراجعة وإرسال';
@@ -1015,6 +1135,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sayHello => 'لا توجد رسائل بعد. قل مرحباً!';
+
+  @override
+  String get newMessages => 'رسالة جديدة';
 
   @override
   String get searchConversations => 'بحث في المحادثات...';

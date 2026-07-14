@@ -21,6 +21,7 @@ import '../../core/widgets/ujob_auth_links.dart';
 import '../../core/widgets/ujob_role_switch_card.dart';
 import '../../core/providers/role_provider.dart';
 import '../../core/widgets/ujob_toast.dart';
+import '../../core/services/notification_service.dart';
 
 class RegisterEmployerScreen extends ConsumerStatefulWidget {
   const RegisterEmployerScreen({super.key});
@@ -189,6 +190,7 @@ class _RegisterEmployerScreenState extends ConsumerState<RegisterEmployerScreen>
             'ch_company_status': selectedDetail.companyStatus,
             'ch_company_type': selectedDetail.companyType,
           },
+          ...await NotificationService.deviceRegistrationFields(),
         },
       );
 

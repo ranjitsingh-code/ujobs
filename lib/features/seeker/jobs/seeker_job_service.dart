@@ -56,12 +56,12 @@ class SeekerJobService {
   Future<void> applyJob(
     int jobId, {
     String? resumeId,
-    String? coverLetter,
+    String? coverLetterId,
     List<Map<String, dynamic>>? answers,
   }) async {
     final payload = <String, dynamic>{};
     if (resumeId != null) payload['resume_id'] = resumeId;
-    if (coverLetter != null && coverLetter.isNotEmpty) payload['cover_letter'] = coverLetter;
+    if (coverLetterId != null) payload['cover_letter_id'] = coverLetterId;
     if (answers != null && answers.isNotEmpty) payload['answers'] = answers;
 
     await _client.dio.post(

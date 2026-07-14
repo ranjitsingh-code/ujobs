@@ -660,7 +660,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get jobs => 'Jobs';
 
   @override
-  String get messages => 'Messages';
+  String get messages => 'Contact';
 
   @override
   String get profile => 'Profile';
@@ -811,6 +811,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uploadResume => 'Upload Resume';
 
   @override
+  String get uploadCoverLetter => 'Upload Cover Letter';
+
+  @override
   String get allTab => 'All';
 
   @override
@@ -853,6 +856,124 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get coverLetterHint =>
       'Hi, I\'m excited to apply for this role because...';
+
+  @override
+  String get successTitle => 'Success';
+
+  @override
+  String get errorTitle => 'Error';
+
+  @override
+  String get uploadFailedTitle => 'Upload Failed';
+
+  @override
+  String get fileTooLargeTitle => 'File Too Large';
+
+  @override
+  String get tryAgainMessage => 'Please try again.';
+
+  @override
+  String get coverLettersLoadErrorTitle => 'Could not load cover letters';
+
+  @override
+  String get coverLetterFileSizeLimit => 'File must be smaller than 3 MB.';
+
+  @override
+  String get coverLetterUploadedMessage =>
+      'Cover letter uploaded successfully!';
+
+  @override
+  String get coverLetterDeletedMessage => 'Cover letter deleted successfully!';
+
+  @override
+  String coverLetterDeleteErrorMessage(Object error) {
+    return 'Error deleting cover letter: $error';
+  }
+
+  @override
+  String get deleteCoverLetterTitle => 'Delete Cover Letter?';
+
+  @override
+  String get deleteCoverLetterConfirmMessage =>
+      'Do you want to delete this cover letter?';
+
+  @override
+  String get coverLetterExceedsLimitMessage =>
+      'Cover letter exceeds server limit. Try a smaller file.';
+
+  @override
+  String get coverLetterUploadErrorMessage =>
+      'Could not upload cover letter. Please try again.';
+
+  @override
+  String get coverLetterRequiredEmptyMessage =>
+      'No cover letter found. Please upload one to continue.';
+
+  @override
+  String get coverLetterOptionalEmptyMessage =>
+      'No cover letter uploaded yet. You can continue without one.';
+
+  @override
+  String get pdfCoverLetterMaxSizeHint => 'PDF only — max 3 MB';
+
+  @override
+  String get myCoverLetterTitle => 'My Cover Letter';
+
+  @override
+  String get coverLetterSectionSubtitle =>
+      'Upload a cover letter for employers to review';
+
+  @override
+  String get coverLetterEmptyStateTitle => 'Upload your cover letter';
+
+  @override
+  String get pdfDocumentLabel => 'PDF Document';
+
+  @override
+  String get downloadAction => 'Download';
+
+  @override
+  String get noCoverLetterProvidedMessage => 'No cover letter provided.';
+
+  @override
+  String get couldNotLaunchDownloadUrl => 'Could not launch download URL.';
+
+  @override
+  String get messageAction => 'Contact';
+
+  @override
+  String get startMessageAction => 'Contact';
+
+  @override
+  String get openChatAction => 'Contact';
+
+  @override
+  String get chatNotYetAvailableMessage =>
+      'You can only message the company once they reach out first.';
+
+  @override
+  String get stopMessageTitle => 'Stop Contact';
+
+  @override
+  String get stopMessageConfirmMessage =>
+      'Are you sure you want to stop messaging with this applicant? They will not be able to send or receive messages until you reopen it.';
+
+  @override
+  String get reopenChatTitle => 'Reopen Chat';
+
+  @override
+  String get chatStoppedBannerSeeker =>
+      'The employer has stopped this chat. You cannot send messages.';
+
+  @override
+  String get chatStoppedBannerEmployer =>
+      'You have stopped this chat. Reopen it to send messages again.';
+
+  @override
+  String get chatStoppedInputHint => 'Chat stopped by employer...';
+
+  @override
+  String get copiedToClipboardMessage => 'Copied to clipboard';
 
   @override
   String get reviewAndSubmit => 'Review & Submit';
@@ -1018,6 +1139,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sayHello => 'No messages yet. Say hello!';
+
+  @override
+  String get newMessages => 'New message';
 
   @override
   String get searchConversations => 'Search conversations...';

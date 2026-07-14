@@ -13,6 +13,12 @@ class UJobAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color? titleColor;
   final bool showBack;
   final PreferredSizeWidget? bottom;
+  // Reserved gutter so the centered title/customTitle never renders under
+  // rightWidget. Defaults to fitting exactly one standard icon button —
+  // override when rightWidget is wider (e.g. two icons side by side),
+  // otherwise long titles get clipped underneath it instead of ellipsizing
+  // clear of it.
+  final double? rightGutter;
 
   const UJobAppBar({
     required this.title,
@@ -23,6 +29,7 @@ class UJobAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.titleColor,
     this.showBack = true,
     this.bottom,
+    this.rightGutter,
     super.key,
   });
 
@@ -51,7 +58,10 @@ class UJobAppBar extends StatelessWidget implements PreferredSizeWidget {
                       : SizedBox(width: 40.r),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 48.w),
+                  padding: EdgeInsets.only(
+                    left: 48.w,
+                    right: rightGutter ?? 48.w,
+                  ),
                   child: customTitle ??
                       Text(
                         title,

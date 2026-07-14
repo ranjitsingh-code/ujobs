@@ -32,6 +32,25 @@ class Step1JobDetails extends ConsumerWidget {
       return UJobLoading(count: 3);
     }
 
+    // New job (state starts empty) — default to the API's first option so
+    // the picked value is real, not just a visual highlight, the moment
+    // options load. Edit mode already seeds state from the job being
+    // edited before this widget ever builds, so this never overwrites it.
+    if (state.employmentType.isEmpty && options.employmentTypes.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.updateField(
+          state.copyWith(employmentType: options.employmentTypes.first.value),
+        );
+      });
+    }
+    if (state.workplaceType.isEmpty && options.workplaceTypes.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.updateField(
+          state.copyWith(workplaceType: options.workplaceTypes.first.value),
+        );
+      });
+    }
+
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),

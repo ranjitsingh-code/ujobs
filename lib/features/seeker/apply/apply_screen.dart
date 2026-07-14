@@ -21,7 +21,6 @@ import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_document_viewer_screen.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_result_screen.dart';
-import '../../../core/widgets/ujob_rich_text_editor.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_toast.dart';
 import '../../../core/widgets/ujob_wizard_stepper.dart';
@@ -54,13 +53,17 @@ enum ApplyStep { resumeAndCoverLetter, questions }
 
 class _ApplyScreenState extends ConsumerState<ApplyScreen> {
   int _stepIndex = 0;
-  final _coverCtrl = TextEditingController();
   final Map<int, String> _questionAnswers = {};
 
   List<SeekerResume> _resumes = [];
   String? _selectedResumeId;
   bool _loadingResumes = true;
   bool _uploadingResume = false;
+
+  List<CoverLetter> _coverLetters = [];
+  String? _selectedCoverLetterId;
+  bool _uploadingCoverLetter = false;
+
   bool _submitting = false;
   bool _submitted = false;
 
@@ -130,18 +133,10 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
   @override
   void initState() {
     super.initState();
-    _coverCtrl.addListener(() {
-      if (mounted) setState(() {});
-    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadResumes();
+      _loadCoverLetters();
     });
-  }
-
-  @override
-  void dispose() {
-    _coverCtrl.dispose();
-    super.dispose();
   }
 
   Future<void> _loadResumes({String? preferredResumeId}) async {
@@ -243,14 +238,107 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
     return 'Last updated ${DateFormat('d MMM yyyy').format(date)}';
   }
 
+  Future<void> _loadCoverLetters({String? preferredCoverLetterId}) async {
+    try {
+      final coverLetters =
+          await ref.read(seekerProfileServiceProvider).listCoverLetters();
+      if (!mounted) return;
+      setState(() {
+        _coverLetters = coverLetters;
+        _selectedCoverLetterId = _resolveSelectedCoverLetterId(
+          coverLetters,
+          preferredCoverLetterId: preferredCoverLetterId,
+        );
+      });
+    } catch (e) {
+      if (!mounted) return;
+      UJobToast.error(
+        context,
+        context.l10n.coverLettersLoadErrorTitle,
+        sub: context.l10n.tryAgainMessage,
+      );
+    }
+  }
+
+  String? _resolveSelectedCoverLetterId(
+    List<CoverLetter> coverLetters, {
+    String? preferredCoverLetterId,
+  }) {
+    if (preferredCoverLetterId != null &&
+        coverLetters.any((cl) => cl.id == preferredCoverLetterId)) {
+      return preferredCoverLetterId;
+    }
+    if (_selectedCoverLetterId != null &&
+        coverLetters.any((cl) => cl.id == _selectedCoverLetterId)) {
+      return _selectedCoverLetterId;
+    }
+    final primary = coverLetters.where((cl) => cl.isPrimary).toList();
+    if (primary.isNotEmpty) return primary.first.id;
+    if (coverLetters.isNotEmpty) return coverLetters.first.id;
+    return null;
+  }
+
+  Future<void> _uploadNewCoverLetter() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (result == null || result.files.single.path == null) return;
+
+      final path = result.files.single.path!;
+      final file = File(path);
+      if (file.lengthSync() > 3 * 1024 * 1024) {
+        if (!mounted) return;
+        UJobToast.error(
+          context,
+          context.l10n.uploadFailedTitle,
+          sub: context.l10n.coverLetterFileSizeLimit,
+        );
+        return;
+      }
+
+      setState(() => _uploadingCoverLetter = true);
+      final uploaded = await ref
+          .read(seekerProfileServiceProvider)
+          .uploadCoverLetter(path);
+      await _loadCoverLetters(preferredCoverLetterId: uploaded.id);
+      if (!mounted) return;
+      UJobToast.success(
+        context,
+        context.l10n.successTitle,
+        sub: context.l10n.coverLetterUploadedMessage,
+      );
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final apiError = parseApiErrorDetail(e);
+      UJobToast.error(
+        context,
+        context.l10n.uploadFailedTitle,
+        sub: apiError.message,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      UJobToast.error(
+        context,
+        context.l10n.uploadFailedTitle,
+        sub: context.l10n.tryAgainMessage,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _uploadingCoverLetter = false);
+      }
+    }
+  }
+
   bool _canProceed(ApplyStep step, dynamic job) {
     if (step == ApplyStep.resumeAndCoverLetter) {
       if (_requiresResume(job) && _selectedResumeId == null) {
         return false;
       }
       if (_requiresCoverLetter(job)) {
-        final text = getPlainTextFromQuillJson(_coverCtrl.text).trim();
-        return text.isNotEmpty;
+        return _selectedCoverLetterId != null;
       }
       return true;
     }
@@ -309,7 +397,7 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
       await ref.read(seekerJobServiceProvider).applyJob(
             widget.jobId,
             resumeId: _selectedResumeId,
-            coverLetter: _coverCtrl.text.trim(),
+            coverLetterId: _selectedCoverLetterId,
             answers: answers,
           );
       ref.invalidate(seekerJobDetailProvider(widget.jobId));
@@ -407,7 +495,13 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
                       formatResumeUpdatedAt: _formatResumeUpdatedAt,
                       showCoverLetter: showCoverLetter,
                       coverLetterRequired: _requiresCoverLetter(job),
-                      coverController: _coverCtrl,
+                      coverLetters: _coverLetters,
+                      selectedCoverLetterId: _selectedCoverLetterId,
+                      onCoverLetterSelected: (id) {
+                        setState(() => _selectedCoverLetterId = id);
+                      },
+                      onUploadCoverLetter: _uploadNewCoverLetter,
+                      uploadingCoverLetter: _uploadingCoverLetter,
                     )
                   : _StepScreeningQuestions(
                       questions: job.screeningQuestions ?? [],
@@ -447,7 +541,11 @@ class _StepResumeAndCoverLetter extends StatelessWidget {
   final String Function(DateTime?) formatResumeUpdatedAt;
   final bool showCoverLetter;
   final bool coverLetterRequired;
-  final TextEditingController coverController;
+  final List<CoverLetter> coverLetters;
+  final String? selectedCoverLetterId;
+  final ValueChanged<String> onCoverLetterSelected;
+  final VoidCallback onUploadCoverLetter;
+  final bool uploadingCoverLetter;
 
   const _StepResumeAndCoverLetter({
     required this.showResume,
@@ -460,7 +558,11 @@ class _StepResumeAndCoverLetter extends StatelessWidget {
     required this.formatResumeUpdatedAt,
     required this.showCoverLetter,
     required this.coverLetterRequired,
-    required this.coverController,
+    required this.coverLetters,
+    required this.selectedCoverLetterId,
+    required this.onCoverLetterSelected,
+    required this.onUploadCoverLetter,
+    required this.uploadingCoverLetter,
   });
 
   @override
@@ -545,47 +647,48 @@ class _StepResumeAndCoverLetter extends StatelessWidget {
               'Introduce yourself and explain why you\'re a great fit.',
               style: AppText.body.copyWith(color: AppColors.muted),
             ),
-            SizedBox(height: 24.h),
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: coverController,
-              builder: (context, value, child) {
-                final displayCtrl = TextEditingController(
-                  text: getPlainTextFromQuillJson(value.text),
-                );
-                return GestureDetector(
-                  onTap: () => showUJobRichTextEditor(
-                    context: context,
-                    title: 'Cover Letter',
-                    initialValue: coverController.text,
-                    returnHtml: true,
-                    onSave: (val) {
-                      coverController.text = val;
-                    },
+            SizedBox(height: 16.h),
+            if (coverLetters.isNotEmpty) ...[
+              ...coverLetters.map(
+                (cl) => Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: _CoverLetterOptionCard(
+                    coverLetter: cl,
+                    selectedCoverLetterId: selectedCoverLetterId,
+                    lastUpdated: formatResumeUpdatedAt(cl.createdAt),
+                    onSelect: () => onCoverLetterSelected(cl.id),
                   ),
-                  child: UJobTextField(
-                    label: context.l10n.coverLetterTitle,
-                    hint: "Tap to write your cover letter in the rich editor...",
-                    controller: displayCtrl,
-                    readOnly: true,
-                    minLines: 5,
-                    maxLines: 10,
-                    labelTrailing: HugeIcon(
-                      icon: HugeIcons.strokeRoundedMaximize01,
-                      color: AppColors.seekPrimary,
-                      size: 20.r,
-                    ),
-                    onTap: () => showUJobRichTextEditor(
-                      context: context,
-                      title: 'Cover Letter',
-                      initialValue: coverController.text,
-                      returnHtml: true,
-                      onSave: (val) {
-                        coverController.text = val;
-                      },
-                    ),
-                  ),
-                );
-              },
+                ),
+              ),
+            ] else ...[
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Text(
+                  coverLetterRequired
+                      ? context.l10n.coverLetterRequiredEmptyMessage
+                      : context.l10n.coverLetterOptionalEmptyMessage,
+                  style: AppText.body.copyWith(color: AppColors.muted),
+                ),
+              ),
+              SizedBox(height: 12.h),
+            ],
+            UJobButton(
+              label: context.l10n.uploadCoverLetter,
+              onTap: onUploadCoverLetter,
+              color: AppColors.seekPrimary,
+              outlined: true,
+              isLoading: uploadingCoverLetter,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              context.l10n.pdfCoverLetterMaxSizeHint,
+              style: AppText.small.copyWith(color: AppColors.muted),
             ),
           ],
         ],
@@ -673,6 +776,103 @@ class _ResumeOptionCard extends StatelessWidget {
                     title: 'My Resume',
                     fileUrl: resume.fileUrl,
                     fileName: resume.fileName,
+                  ),
+                ),
+              );
+            },
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedEye,
+              color: AppColors.seekPrimary,
+              size: 20.r,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoverLetterOptionCard extends StatelessWidget {
+  final CoverLetter coverLetter;
+  final String? selectedCoverLetterId;
+  final String lastUpdated;
+  final VoidCallback onSelect;
+
+  const _CoverLetterOptionCard({
+    required this.coverLetter,
+    required this.selectedCoverLetterId,
+    required this.lastUpdated,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = selectedCoverLetterId == coverLetter.id;
+    return Container(
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: selected ? AppColors.seekPrimary : AppColors.border,
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: onSelect,
+              borderRadius: BorderRadius.circular(12.r),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.h),
+                child: Row(
+                  children: [
+                    Radio<String>(
+                      value: coverLetter.id,
+                      groupValue: selectedCoverLetterId,
+                      onChanged: (_) => onSelect(),
+                      activeColor: AppColors.seekPrimary,
+                    ),
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedPdf01,
+                      color: AppColors.error,
+                      size: 28.r,
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            coverLetter.fileName,
+                            style: AppText.bodyBold,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            lastUpdated,
+                            style: AppText.small.copyWith(color: AppColors.muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UJobDocumentViewerScreen(
+                    title: context.l10n.myCoverLetterTitle,
+                    fileUrl: coverLetter.fileUrl,
+                    fileName: coverLetter.fileName,
                   ),
                 ),
               );

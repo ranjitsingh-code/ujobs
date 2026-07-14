@@ -12,6 +12,7 @@ class Job {
   final String employmentType; // e.g., full_time, part_time
   final String workplaceType; // e.g., remote, onsite, hybrid
   final String? location;
+  final String? country;
   final String? salaryMin;
   final String? salaryMax;
   final String? salaryCurrency;
@@ -44,6 +45,7 @@ class Job {
   final bool isApplied;
   final String? applicationId;
   final String? applicationStatus;
+  final bool chatEnabled;
 
   Job({
     required this.id,
@@ -54,6 +56,7 @@ class Job {
     required this.employmentType,
     required this.workplaceType,
     this.location,
+    this.country,
     this.salaryMin,
     this.salaryMax,
     this.salaryCurrency,
@@ -83,6 +86,7 @@ class Job {
     this.isApplied = false,
     this.applicationId,
     this.applicationStatus,
+    this.chatEnabled = false,
   });
 
   factory Job.fromJson(Map<String, dynamic> json) {
@@ -95,6 +99,7 @@ class Job {
       employmentType: json['employment_type'] as String? ?? '',
       workplaceType: json['workplace_type'] as String? ?? '',
       location: (json['location'] ?? json['city'])?.toString(),
+      country: json['country']?.toString(),
       salaryMin: json['salary_min']?.toString(),
       salaryMax: json['salary_max']?.toString(),
       salaryCurrency: json['salary_currency'] as String?,
@@ -148,6 +153,7 @@ class Job {
       isApplied: json['is_applied'] ?? false,
       applicationId: json['application_id']?.toString(),
       applicationStatus: json['application_status']?.toString(),
+      chatEnabled: json['chat_enabled'] ?? false,
     );
   }
 
@@ -197,6 +203,7 @@ class Job {
     String? employmentType,
     String? workplaceType,
     String? location,
+    String? country,
     String? salaryMin,
     String? salaryMax,
     String? experienceLevel,
@@ -224,6 +231,7 @@ class Job {
     bool? isApplied,
     String? applicationId,
     String? applicationStatus,
+    bool? chatEnabled,
   }) {
     return Job(
       id: id,
@@ -234,6 +242,7 @@ class Job {
       employmentType: employmentType ?? this.employmentType,
       workplaceType: workplaceType ?? this.workplaceType,
       location: location ?? this.location,
+      country: country ?? this.country,
       salaryMin: salaryMin ?? this.salaryMin,
       salaryMax: salaryMax ?? this.salaryMax,
       salaryCurrency: salaryCurrency ?? salaryCurrency,
@@ -264,6 +273,7 @@ class Job {
       isApplied: isApplied ?? this.isApplied,
       applicationId: applicationId ?? this.applicationId,
       applicationStatus: applicationStatus ?? this.applicationStatus,
+      chatEnabled: chatEnabled ?? this.chatEnabled,
     );
   }
 

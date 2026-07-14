@@ -1,0 +1,230 @@
+Firebase Push Notification Payload Specification
+==================================================
+
+We need FCM push notifications structured consistently across all notification
+types, so the Flutter app can route every notification click through one
+universal handler - no per-feature special casing, no guessing, no
+search/matching logic on the client.
+
+Do not create different payload structures for different features.
+One common structure for everything.
+
+--------------------------------------------------
+
+COMMON FCM PAYLOAD STRUCTURE
+
+Every push notification must send:
+
+{
+  "notification": {
+    "title": "Notification title",
+    "body": "Notification message"
+  },
+  "data": {
+    "type": "notification_type",
+    "screen": "target_screen",
+    "user_id": "receiver_user_id",
+    "created_at": "timestamp"
+  }
+}
+
+- type   -> identifies notification behavior (primary routing key)
+- screen -> navigation fallback if the app doesn't recognize `type` yet
+            (forward-compatibility for future types on older app versions)
+- Additional ids (below, per type) -> load the exact data needed,
+  no lookups/guessing
+
+--------------------------------------------------
+
+NOTIFICATION TYPES REQUIRED
+
+1. Chat Message
+
+Type: message
+Screen: chat_screen
+
+IMPORTANT: Push only - never saved to the notification table.
+
+{
+  "type": "message",
+  "screen": "chat_screen",
+  "chat_id": "conversation_id",
+  "sender_id": "sender_user_id",
+  "sender_name": "sender_name",
+  "sender_avatar": "sender_avatar_url",
+  "job_id": "job_id",
+  "application_id": "application_id"
+}
+
+Requirements:
+- chat_id must be the exact conversation id - the app opens it directly.
+- Do NOT send only job_id and expect the app to resolve a conversation from
+  it - there's no reliable job->conversation link on the seeker side, and
+  matching by company name is unreliable when a seeker has multiple
+  conversations with the same company. chat_id stays the primary id used to
+  open the conversation; job_id/application_id below are ADDITIONAL fields,
+  not a replacement for chat_id.
+- sender_name/sender_avatar must be included inline - the app should never
+  need a second API call just to render the chat header before opening it.
+- sender_name/sender_avatar MUST be resolved fresh from the message's actual
+  sender_id every single time - never cached or reused from the
+  conversation's first message or its own initiator. Confirmed bug: two
+  pushes for the same conversation (chat_id 14), one from each direction,
+  both returned sender_name "MD AZAD HOSSAIN TUTUL" even though sender_id
+  correctly flipped between the seeker (47) and the employer (46) - the
+  employer's push should have shown the company name instead. Verify by
+  sending messages in both directions in one conversation and confirming
+  sender_name changes correctly every time.
+- When sender_id resolves to an employer/company account, sender_name must
+  be the company profile name (not the employer's personal user name), and
+  sender_avatar must be the company logo (not a personal avatar).
+- job_id/application_id must be included so the app can load company info
+  (seeker side, via job_id) or applicant info (employer side, via
+  application_id) for the chat screen's contact-info panel, without a
+  separate lookup. Include whichever apply to this conversation - a
+  conversation tied to a job application should be able to supply both.
+- The same job_id/application_id fields must also be added to each
+  conversation object returned by GET /conversations, so the app can
+  resolve these ids when opening chat from the Messages inbox list
+  directly (not just from a push tap).
+
+--------------------------------------------------
+
+2. New Applicant (Employer)
+
+Type: new_application
+Screen: applicant_profile
+
+{
+  "type": "new_application",
+  "screen": "applicant_profile",
+  "employer_id": "employer_id",
+  "application_id": "application_id",
+  "job_id": "job_id"
+}
+
+IMPORTANT: Use application_id only. The app's applicant-profile endpoint is
+keyed by application id - there is no separate applicant_id concept on the
+app side. Don't send both.
+
+--------------------------------------------------
+
+3. Job Approved (Employer)
+
+Type: job_approved
+Screen: job_details
+
+{
+  "type": "job_approved",
+  "screen": "job_details",
+  "employer_id": "employer_id",
+  "job_id": "job_id"
+}
+
+--------------------------------------------------
+
+4. Application Status Update (Seeker)
+
+Type: stage_change
+Screen: application_details
+
+{
+  "type": "stage_change",
+  "screen": "application_details",
+  "application_id": "application_id",
+  "job_id": "job_id",
+  "status": "shortlisted"
+}
+
+status values: shortlisted, interview, offered, hired, rejected
+(match whatever the application/applicant status field already uses
+elsewhere in the API).
+
+--------------------------------------------------
+
+5. Application Submitted (Seeker)
+
+Type: application_submitted
+Screen: application_details
+
+{
+  "type": "application_submitted",
+  "screen": "application_details",
+  "application_id": "application_id",
+  "job_id": "job_id",
+  "employer_id": "employer_id",
+  "seeker_id": "seeker_id"
+}
+
+--------------------------------------------------
+
+6. Future Notification Types
+
+Every new type follows the same shape - type + screen + whatever ids that
+screen needs to self-load its data (never rely on the app already having
+that data cached). Examples: interview_scheduled, payment_completed,
+profile_verified.
+
+--------------------------------------------------
+
+DEVICE TOKEN - ALREADY SOLVED, ONE GAP REMAINS
+
+Initial registration is ALREADY IMPLEMENTED - device_token + device_type
+are accepted directly on:
+- POST /auth/login
+- POST /auth/register/seeker
+- POST /auth/register/employer
+
+These already support multiple devices per account and refresh an existing
+token on resend. No new registration endpoint needed - the app sends these
+on every login/register call already.
+
+The one remaining gap: a device that stays logged in for a long time
+without re-authenticating never gets a chance to tell the backend its FCM
+token rotated (FCM rotates tokens occasionally). For that case only, add:
+
+PATCH /api/v1/mobile/auth/device-token
+Requires: Authorization: Bearer <token>, X-Api-Key
+
+{
+  "device_token": "firebase_token",
+  "device_type": "android" | "ios"
+}
+
+Requirements:
+- Update the existing token for this authenticated user/device (same
+  reassignment behavior as login already has).
+- Remove/deactivate a token if a push send to it comes back as
+  invalid/unregistered (standard FCM cleanup).
+
+--------------------------------------------------
+
+NOTIFICATION TABLE STORAGE RULE
+
+Save to notification table:
+  new_application, job_approved, stage_change, application_submitted,
+  and future business-event types.
+
+Never save:
+  message (chat) - push-only, always. Chat notifications must never appear
+  in the in-app notification inbox.
+
+--------------------------------------------------
+
+FINAL REQUIREMENT
+
+Please check the existing backend code first:
+- Existing notification models
+- Notification APIs
+- FCM service
+- User/device models
+- Database structure
+
+Then implement the required changes so the payload matches exactly what's
+specified above.
+
+GOAL:
+User receives notification
+  -> User clicks notification
+  -> App opens the exact required screen with the exact data
+  -> No guessing, no manual searching, no incorrect navigation

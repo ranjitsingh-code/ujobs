@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/api_endpoints.dart';
+import '../../../core/providers/auth_provider.dart';
 
 enum ApplicationStatus {
   pending,
@@ -21,6 +23,10 @@ class Conversation {
   final int unreadCount;
   final bool otherOnline;
   final bool requiresEmployerReply;
+  final bool chatEnabled;
+  // Not returned by GET /conversations — the API has no job linkage on a
+  // conversation, so these stay null/false for real data. UI already
+  // guards on them being null (see seeker/employer messages screens).
   final String? jobTitle;
   final ApplicationStatus? applicationStatus;
 
@@ -35,9 +41,27 @@ class Conversation {
     this.unreadCount = 0,
     this.otherOnline = false,
     this.requiresEmployerReply = false,
+    this.chatEnabled = true,
     this.jobTitle,
     this.applicationStatus,
   });
+
+  factory Conversation.fromJson(Map<String, dynamic> json) {
+    final otherUser = json['other_user'] as Map<String, dynamic>? ?? {};
+    final lastMsg = json['last_message'] as Map<String, dynamic>?;
+    return Conversation(
+      id: json['id'].toString(),
+      otherId: otherUser['id']?.toString() ?? '',
+      otherName: otherUser['name']?.toString() ?? '',
+      otherAvatar: otherUser['avatar_url']?.toString(),
+      lastMessage: lastMsg?['body']?.toString(),
+      lastAt: lastMsg?['created_at'] != null
+          ? DateTime.tryParse(lastMsg!['created_at'].toString())
+          : null,
+      unreadCount: json['unread_count'] as int? ?? 0,
+      chatEnabled: json['chat_enabled'] as bool? ?? true,
+    );
+  }
 
   Conversation copyWith({
     int? unreadCount,
@@ -46,6 +70,7 @@ class Conversation {
     DateTime? lastAt,
     ApplicationStatus? applicationStatus,
     bool? requiresEmployerReply,
+    bool? chatEnabled,
   }) {
     return Conversation(
       id: id,
@@ -59,6 +84,7 @@ class Conversation {
       otherOnline: otherOnline ?? this.otherOnline,
       requiresEmployerReply:
           requiresEmployerReply ?? this.requiresEmployerReply,
+      chatEnabled: chatEnabled ?? this.chatEnabled,
       jobTitle: jobTitle,
       applicationStatus: applicationStatus ?? this.applicationStatus,
     );
@@ -85,73 +111,113 @@ class ChatMessage {
     this.attachmentUrl,
     this.attachmentName,
   });
+
+  // Real API has no sender_role — identity comes from sender_user_id
+  // compared against the viewer's own user id.
+  factory ChatMessage.fromJson(
+    Map<String, dynamic> json, {
+    required String currentUserId,
+  }) {
+    return ChatMessage(
+      id: json['id'].toString(),
+      body: json['body']?.toString() ?? '',
+      isMine: json['sender_user_id']?.toString() == currentUserId,
+      sentAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+      isRead: json['is_read'] as bool? ?? false,
+    );
+  }
 }
 
-final demoConversations = <Conversation>[
-  Conversation(
-    id: 'conv-a1',
-    otherId: 'a1',
-    otherName: 'Alice Johnson',
-    otherAvatar: 'https://i.pravatar.cc/150?u=alice',
-    lastMessage: 'Thank you for the offer!',
-    lastAt: DateTime.now().subtract(const Duration(minutes: 5)),
-    unreadCount: 0,
-    otherOnline: true,
-    requiresEmployerReply: false,
-    jobTitle: 'Software Engineer',
-    applicationStatus: ApplicationStatus.hired,
-  ),
-  Conversation(
-    id: 'conv-a2',
-    otherId: 'a2',
-    otherName: 'Bob Smith',
-    otherAvatar: 'https://i.pravatar.cc/150?u=bob',
-    lastMessage: 'Looking forward to the next steps.',
-    lastAt: DateTime.now().subtract(const Duration(hours: 3)),
-    unreadCount: 2,
-    otherOnline: false,
-    requiresEmployerReply: true,
-    jobTitle: 'Software Engineer',
-    applicationStatus: ApplicationStatus.shortlisted,
-  ),
-  Conversation(
-    id: 'conv-a3',
-    otherId: 'a3',
-    otherName: 'Charlie Brown',
-    otherAvatar: 'https://i.pravatar.cc/150?u=charlie',
-    lastMessage: 'What time is the technical interview?',
-    lastAt: DateTime.now().subtract(const Duration(days: 1)),
-    unreadCount: 1,
-    otherOnline: true,
-    requiresEmployerReply: true,
-    jobTitle: 'Website Developer',
-    applicationStatus: ApplicationStatus.interviewing,
-  ),
-  Conversation(
-    id: 'conv-a5',
-    otherId: 'a5',
-    otherName: 'Evan Wright',
-    otherAvatar: 'https://i.pravatar.cc/150?u=evan',
-    lastMessage: 'Thank you for your consideration.',
-    lastAt: DateTime.now().subtract(const Duration(days: 3)),
-    unreadCount: 0,
-    otherOnline: false,
-    requiresEmployerReply: false,
-    jobTitle: 'SEO Expert',
-    applicationStatus: ApplicationStatus.offered,
-  ),
-];
+Future<List<Conversation>> _fetchConversations(Ref ref) async {
+  final dio = ref.read(dioClientProvider).dio;
+  final response = await dio.get(Ep.conversations);
+  final data = response.data['data'] as List;
+  return data
+      .map((json) => Conversation.fromJson(json as Map<String, dynamic>))
+      .toList();
+}
+
+/// Seeker-side. The API has no job_id on a conversation, so there is no
+/// exact way to resolve "the conversation for this job." Best-effort: if
+/// there's only one conversation, use it; otherwise try to match by company
+/// name against the other party's name, falling back to the most recent
+/// conversation.
+Future<Conversation?> resolveJobConversation(
+  WidgetRef ref, {
+  String? companyName,
+}) async {
+  final dio = ref.read(dioClientProvider).dio;
+  final response = await dio.get(Ep.conversations);
+  final data = response.data['data'] as List;
+  final conversations = data
+      .map((json) => Conversation.fromJson(json as Map<String, dynamic>))
+      .toList();
+  if (conversations.isEmpty) return null;
+  if (conversations.length == 1) return conversations.first;
+
+  if (companyName != null && companyName.trim().isNotEmpty) {
+    final needle = companyName.trim().toLowerCase();
+    for (final conv in conversations) {
+      final otherName = conv.otherName.trim().toLowerCase();
+      if (otherName.isNotEmpty &&
+          (otherName.contains(needle) || needle.contains(otherName))) {
+        return conv;
+      }
+    }
+  }
+
+  conversations.sort(
+    (a, b) => (b.lastAt ?? DateTime(0)).compareTo(a.lastAt ?? DateTime(0)),
+  );
+  return conversations.first;
+}
+
+/// Employer-only. Opens (or retrieves the existing) conversation with a
+/// seeker for a specific job. Returns the conversation id.
+Future<String> openConversation(
+  WidgetRef ref, {
+  required String seekerUserId,
+  required String jobId,
+}) async {
+  final dio = ref.read(dioClientProvider).dio;
+  final response = await dio.post(
+    Ep.conversations,
+    data: {
+      'seeker_user_id': int.tryParse(seekerUserId) ?? seekerUserId,
+      'job_id': int.tryParse(jobId) ?? jobId,
+    },
+  );
+  return (response.data['data']['id']).toString();
+}
+
+/// Employer-only. Enables/disables further messages on a conversation.
+Future<bool> setChatStatus(WidgetRef ref, String conversationId, bool enabled) async {
+  final dio = ref.read(dioClientProvider).dio;
+  final response = await dio.patch(
+    Ep.conversationChatStatus(conversationId),
+    data: {'enabled': enabled},
+  );
+  return response.data['data']['chat_enabled'] as bool? ?? enabled;
+}
 
 class ConversationsNotifier
     extends StateNotifier<AsyncValue<List<Conversation>>> {
-  ConversationsNotifier() : super(const AsyncLoading()) {
+  ConversationsNotifier(this.ref) : super(const AsyncLoading()) {
     _init();
   }
 
-  void _init() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    state = AsyncData(List.from(demoConversations));
+  final Ref ref;
+
+  Future<void> _init() async {
+    try {
+      state = AsyncData(await _fetchConversations(ref));
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+    }
   }
+
+  Future<void> refresh() => _init();
 
   void markAllAsRead() {
     state.whenData((convs) {
@@ -193,6 +259,16 @@ class ConversationsNotifier
     });
   }
 
+  void updateChatEnabled(String id, bool enabled) {
+    state.whenData((convs) {
+      state = AsyncData(
+        convs
+            .map((c) => c.id == id ? c.copyWith(chatEnabled: enabled) : c)
+            .toList(),
+      );
+    });
+  }
+
   void deleteConversations(List<String> ids) {
     state.whenData((convs) {
       state = AsyncData(convs.where((c) => !ids.contains(c.id)).toList());
@@ -205,70 +281,26 @@ final conversationsProvider =
       ConversationsNotifier,
       AsyncValue<List<Conversation>>
     >((ref) {
-      return ConversationsNotifier();
+      return ConversationsNotifier(ref);
     });
-
-final demoSeekerConversations = <Conversation>[
-  Conversation(
-    id: 'conv-e1',
-    otherId: 'e1',
-    otherName: 'Google',
-    otherInitials: 'G',
-    lastMessage: 'Congratulations! We would like to offer you the position.',
-    lastAt: DateTime.now().subtract(const Duration(minutes: 5)),
-    unreadCount: 0,
-    otherOnline: true,
-    jobTitle: 'Senior Flutter Developer',
-    applicationStatus: ApplicationStatus.offered,
-  ),
-  Conversation(
-    id: 'conv-e2',
-    otherId: 'e2',
-    otherName: 'Nexovia Solutions',
-    otherInitials: 'N',
-    lastMessage: 'Your technical interview is scheduled for tomorrow.',
-    lastAt: DateTime.now().subtract(const Duration(hours: 3)),
-    unreadCount: 2,
-    otherOnline: false,
-    jobTitle: 'Mobile App Developer',
-    applicationStatus: ApplicationStatus.shortlisted,
-  ),
-  Conversation(
-    id: 'conv-e3',
-    otherId: 'e3',
-    otherName: 'Amazon',
-    otherInitials: 'A',
-    lastMessage: 'Thank you for your application. We are reviewing it.',
-    lastAt: DateTime.now().subtract(const Duration(days: 1)),
-    unreadCount: 1,
-    otherOnline: true,
-    jobTitle: 'Software Engineer',
-    applicationStatus: ApplicationStatus.applied,
-  ),
-  Conversation(
-    id: 'conv-e4',
-    otherId: 'e4',
-    otherName: 'Microsoft',
-    otherInitials: 'M',
-    lastMessage: 'Unfortunately, we have moved forward with other candidates.',
-    lastAt: DateTime.now().subtract(const Duration(days: 3)),
-    unreadCount: 0,
-    otherOnline: false,
-    jobTitle: 'Backend Developer',
-    applicationStatus: ApplicationStatus.rejected,
-  ),
-];
 
 class SeekerConversationsNotifier
     extends StateNotifier<AsyncValue<List<Conversation>>> {
-  SeekerConversationsNotifier() : super(const AsyncLoading()) {
+  SeekerConversationsNotifier(this.ref) : super(const AsyncLoading()) {
     _init();
   }
 
-  void _init() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    state = AsyncData(List.from(demoSeekerConversations));
+  final Ref ref;
+
+  Future<void> _init() async {
+    try {
+      state = AsyncData(await _fetchConversations(ref));
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+    }
   }
+
+  Future<void> refresh() => _init();
 
   void markAllAsRead() {
     state.whenData((convs) {
@@ -304,6 +336,16 @@ class SeekerConversationsNotifier
     });
   }
 
+  void updateChatEnabled(String id, bool enabled) {
+    state.whenData((convs) {
+      state = AsyncData(
+        convs
+            .map((c) => c.id == id ? c.copyWith(chatEnabled: enabled) : c)
+            .toList(),
+      );
+    });
+  }
+
   void deleteConversations(List<String> ids) {
     state.whenData((convs) {
       state = AsyncData(convs.where((c) => !ids.contains(c.id)).toList());
@@ -316,45 +358,75 @@ final seekerConversationsProvider =
       SeekerConversationsNotifier,
       AsyncValue<List<Conversation>>
     >((ref) {
-      return SeekerConversationsNotifier();
+      return SeekerConversationsNotifier(ref);
     });
 
 final chatMessagesProvider =
     StateNotifierProvider.family<
-      DemoChatNotifier,
+      ChatMessagesNotifier,
       AsyncValue<List<ChatMessage>>,
       String
     >((ref, conversationId) {
-      return DemoChatNotifier(ref, conversationId);
+      return ChatMessagesNotifier(ref, conversationId);
     });
 
-class DemoChatNotifier extends StateNotifier<AsyncValue<List<ChatMessage>>> {
-  DemoChatNotifier(this.ref, this.conversationId)
-    : super(AsyncData(_demoMessages(conversationId)));
+class ChatMessagesNotifier extends StateNotifier<AsyncValue<List<ChatMessage>>> {
+  ChatMessagesNotifier(this.ref, this.conversationId)
+    : super(const AsyncLoading()) {
+    _load();
+  }
 
   final Ref ref;
   final String conversationId;
 
-  void send(String body) {
-    final messages = state.valueOrNull ?? const <ChatMessage>[];
-    state = AsyncData([
-      ...messages,
-      ChatMessage(
-        id: 'local-${DateTime.now().microsecondsSinceEpoch}',
-        body: body,
-        isMine: true,
-        sentAt: DateTime.now(),
-        isRead: true,
-      ),
-    ]);
-    ref
-        .read(conversationsProvider.notifier)
-        .updateLastMessage(conversationId, body, DateTime.now());
-    ref
-        .read(seekerConversationsProvider.notifier)
-        .updateLastMessage(conversationId, body, DateTime.now());
+  Future<void> _load() async {
+    try {
+      final dio = ref.read(dioClientProvider).dio;
+      final response = await dio.get(Ep.messages(conversationId));
+      final data = response.data['data'] as List;
+      final userId = ref.read(authProvider).valueOrNull?.id ?? '';
+      state = AsyncData(
+        data
+            .map((json) => ChatMessage.fromJson(
+                  json as Map<String, dynamic>,
+                  currentUserId: userId,
+                ))
+            .toList(),
+      );
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+    }
   }
 
+  Future<void> refresh() => _load();
+
+  Future<void> send(String body) async {
+    final dio = ref.read(dioClientProvider).dio;
+    final response = await dio.post(
+      Ep.messages(conversationId),
+      data: {'body': body},
+    );
+    final json = response.data['data'] as Map<String, dynamic>;
+    final sent = ChatMessage(
+      id: json['id'].toString(),
+      body: json['body']?.toString() ?? body,
+      isMine: true,
+      sentAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
+          DateTime.now(),
+      isRead: json['is_read'] as bool? ?? false,
+    );
+    final messages = state.valueOrNull ?? const <ChatMessage>[];
+    state = AsyncData([...messages, sent]);
+    ref
+        .read(conversationsProvider.notifier)
+        .updateLastMessage(conversationId, sent.body, sent.sentAt);
+    ref
+        .read(seekerConversationsProvider.notifier)
+        .updateLastMessage(conversationId, sent.body, sent.sentAt);
+  }
+
+  /// No attachment endpoint exists on the chat API — this stays a
+  /// local-only, non-persisted message (pre-existing limitation, not new).
   void sendAttachment({
     required String type,
     required String url,
@@ -369,66 +441,11 @@ class DemoChatNotifier extends StateNotifier<AsyncValue<List<ChatMessage>>> {
         body: body,
         isMine: true,
         sentAt: DateTime.now(),
-        isRead: true,
+        isRead: false,
         attachmentType: type,
         attachmentUrl: url,
         attachmentName: name,
       ),
     ]);
   }
-}
-
-List<ChatMessage> _demoMessages(String conversationId) {
-  final now = DateTime.now();
-  final name = switch (conversationId) {
-    'conv-a1' => 'Alice',
-    'conv-a2' => 'Bob',
-    'conv-a3' => 'Charlie',
-    'conv-a4' => 'Diana',
-    'conv-a5' => 'Evan',
-    _ => 'Applicant',
-  };
-  return [
-    ChatMessage(
-      id: '$conversationId-1',
-      body: 'Hello, I applied for the position and wanted to follow up.',
-      isMine: false,
-      sentAt: now.subtract(const Duration(hours: 2)),
-      isRead: true,
-    ),
-    ChatMessage(
-      id: '$conversationId-2',
-      body: 'Hi $name, could you please send your latest portfolio?',
-      isMine: true,
-      sentAt: now.subtract(const Duration(hours: 1, minutes: 50)),
-      isRead: true,
-    ),
-    ChatMessage(
-      id: '$conversationId-3',
-      body: 'Sure, here is my design portfolio.',
-      isMine: false,
-      sentAt: now.subtract(const Duration(hours: 1, minutes: 45)),
-      isRead: true,
-      attachmentType: 'image',
-      attachmentUrl:
-          'https://images.unsplash.com/photo-1542435503-956c469947f6?auto=format&fit=crop&q=80&w=600',
-    ),
-    ChatMessage(
-      id: '$conversationId-4',
-      body: 'And here is my detailed resume.',
-      isMine: false,
-      sentAt: now.subtract(const Duration(hours: 1, minutes: 44)),
-      isRead: true,
-      attachmentType: 'pdf',
-      attachmentName: '${name}_Resume_2026.pdf',
-      attachmentUrl:
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    ),
-    ChatMessage(
-      id: '$conversationId-5',
-      body: 'Thank you. I am available if you need any additional information.',
-      isMine: false,
-      sentAt: now.subtract(const Duration(minutes: 20)),
-    ),
-  ];
 }

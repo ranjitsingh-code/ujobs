@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/widgets/ujob_rich_text_display.dart';
 import '../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,7 +19,9 @@ import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'employer_applicant_provider.dart';
+import 'employer_applicant_service.dart';
 import '../../../core/widgets/ujob_toast.dart';
+import '../../shared/chat/conversation_provider.dart';
 
 class ApplicantDetailScreen extends ConsumerStatefulWidget {
   final Applicant? applicant;
@@ -35,11 +38,73 @@ class ApplicantDetailScreen extends ConsumerStatefulWidget {
 class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _openingChat = false;
+
+  Future<void> _openChat(Applicant applicant) async {
+    if (_openingChat) return;
+    setState(() => _openingChat = true);
+    try {
+      var seekerUserId = applicant.seekerUserId;
+      // Applicant objects loaded from the "All Applicants" list / single
+      // detail endpoints don't reliably carry seeker_user_id. The per-job
+      // applicants endpoint does (verified against a real payload), so
+      // fall back to it before giving up.
+      if (seekerUserId == null || seekerUserId.isEmpty) {
+        final jobId = int.tryParse(applicant.jobId);
+        if (jobId != null) {
+          final jobApplicants = await ref
+              .read(employerApplicantServiceProvider)
+              .getJobApplicants(jobId);
+          final match = jobApplicants.where((a) => a.id == applicant.id);
+          if (match.isNotEmpty) {
+            seekerUserId = match.first.seekerUserId;
+          }
+        }
+      }
+      if (seekerUserId == null || seekerUserId.isEmpty) {
+        if (!mounted) return;
+        UJobToast.error(
+          context,
+          context.l10n.errorTitle,
+          sub: context.l10n.tryAgainMessage,
+        );
+        return;
+      }
+      final conversationId = await openConversation(
+        ref,
+        seekerUserId: seekerUserId,
+        jobId: applicant.jobId,
+      );
+      if (!applicant.hasMessaged) {
+        ref.read(employerApplicantsProvider.notifier).markAsMessaged(applicant.id);
+      }
+      if (!mounted) return;
+      context.push(
+        '/conversations/$conversationId',
+        extra: {
+          'otherId': seekerUserId,
+          'name': applicant.name,
+          'initials': applicant.initials,
+          'avatar': applicant.avatarUrl,
+          'applicantId': applicant.id,
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      UJobToast.error(
+        context,
+        context.l10n.errorTitle,
+        sub: context.l10n.tryAgainMessage,
+      );
+    } finally {
+      if (mounted) setState(() => _openingChat = false);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     
     // Silently refresh data in the background if we have an applicant to refresh
     if (widget.applicant != null || widget.applicantId != null) {
@@ -192,85 +257,54 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                                       );
                                     },
                                   ),
-                                  // if (isChatEnabled) ...[
-                                  //   SizedBox(height: 12.h),
-                                  //   InkWell(
-                                  //     borderRadius: BorderRadius.circular(20.r),
-                                  //     onTap: () {
-                                  //       void handleMessage() {
-                                  //         if (!applicant.hasMessaged) {
-                                  //           ref
-                                  //               .read(
-                                  //                 employerApplicantsProvider
-                                  //                     .notifier,
-                                  //               )
-                                  //               .markAsMessaged(applicant.id);
-                                  //         }
-                                  //         context.push(
-                                  //           '/conversations/conv-${applicant.id}',
-                                  //           extra: {
-                                  //             'name': applicant.name,
-                                  //             'initials': applicant.initials,
-                                  //             'avatar': null,
-                                  //           },
-                                  //         );
-                                  //       }
-
-                                  //       if (applicant.hasMessaged) {
-                                  //         handleMessage();
-                                  //       } else {
-                                  //         _showConfirmationDialog(
-                                  //           context: context,
-                                  //           title: 'Message Applicant',
-                                  //           description:
-                                  //               'Do you want to send a message to ${applicant.name}?',
-                                  //           confirmText: 'Message',
-                                  //           color: AppColors.primary,
-                                  //           icon: HugeIcon(
-                                  //             icon: HugeIcons
-                                  //                 .strokeRoundedMessage01,
-                                  //             color: AppColors.primary,
-                                  //             size: 28.r,
-                                  //           ),
-                                  //           onConfirm: handleMessage,
-                                  //         );
-                                  //       }
-                                  //     },
-                                  //     child: Container(
-                                  //       padding: EdgeInsets.symmetric(
-                                  //         horizontal: 12.w,
-                                  //         vertical: 6.h,
-                                  //       ),
-                                  //       decoration: BoxDecoration(
-                                  //         color: AppColors.primary.withValues(
-                                  //           alpha: 0.1,
-                                  //         ),
-                                  //         borderRadius: BorderRadius.circular(
-                                  //           20.r,
-                                  //         ),
-                                  //       ),
-                                  //       child: Row(
-                                  //         mainAxisSize: MainAxisSize.min,
-                                  //         children: [
-                                  //           HugeIcon(
-                                  //             icon: HugeIcons
-                                  //                 .strokeRoundedMessage01,
-                                  //             color: AppColors.primary,
-                                  //             size: 16.r,
-                                  //           ),
-                                  //           SizedBox(width: 6.w),
-                                  //           Text(
-                                  //             'Message',
-                                  //             style: AppText.small.copyWith(
-                                  //               color: AppColors.primary,
-                                  //               fontWeight: FontWeight.bold,
-                                  //             ),
-                                  //           ),
-                                  //         ],
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ],
+                                  SizedBox(height: 12.h),
+                                  InkWell(
+                                    borderRadius: BorderRadius.circular(20.r),
+                                    onTap: () => _openChat(applicant),
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 12.w,
+                                        vertical: 6.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          20.r,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (_openingChat)
+                                            SizedBox(
+                                              width: 16.r,
+                                              height: 16.r,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: AppColors.primary,
+                                              ),
+                                            )
+                                          else
+                                            HugeIcon(
+                                              icon: HugeIcons
+                                                  .strokeRoundedMessage01,
+                                              color: AppColors.primary,
+                                              size: 16.r,
+                                            ),
+                                          SizedBox(width: 6.w),
+                                          Text(
+                                            context.l10n.messageAction,
+                                            style: AppText.small.copyWith(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
@@ -340,7 +374,6 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                         unselectedLabelStyle: AppText.body,
                         tabs: const [
                           Tab(text: 'Profile'),
-                          Tab(text: 'Cover Letter'),
                           Tab(text: 'Screening Questions'),
                         ],
                       ),
@@ -352,7 +385,6 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                 controller: _tabController,
                 children: [
                   _buildProfileTab(applicant),
-                  _buildCoverLetterTab(applicant),
                   _buildAnswersTab(applicant),
                 ],
               ),
@@ -436,6 +468,91 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
                   ),
                   onPressed: () async {
                     final url = Uri.parse(applicant.resumeUrl!);
+                    try {
+                      final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+                      if (!launched) throw Exception('Could not launch');
+                    } catch (e) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Could not launch download URL.',
+                            style: AppText.body.copyWith(color: Colors.white),
+                          ),
+                          backgroundColor: AppColors.error,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        if (applicant.coverLetterUrl != null && applicant.coverLetterUrl!.isNotEmpty)
+          _buildSectionCard(
+            'Cover Letter',
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12.r),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedPdf01,
+                    color: AppColors.error,
+                    size: 28.r,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        applicant.coverLetterUrl!.split('/').last,
+                        style: AppText.bodyBold,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        'PDF Document',
+                        style: AppText.small.copyWith(color: AppColors.muted),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedEye,
+                    color: AppColors.primary,
+                    size: 24.r,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                        builder: (context) => UJobDocumentViewerScreen(
+                          title: 'Cover Letter Details',
+                          fileUrl: applicant.coverLetterUrl!,
+                          fileName: applicant.coverLetterUrl!.split('/').last,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(width: 8.w),
+                IconButton(
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedDownload04,
+                    color: AppColors.primary,
+                    size: 24.r,
+                  ),
+                  onPressed: () async {
+                    final url = Uri.parse(applicant.coverLetterUrl!);
                     try {
                       final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
                       if (!launched) throw Exception('Could not launch');
@@ -727,37 +844,6 @@ class _ApplicantDetailScreenState extends ConsumerState<ApplicantDetailScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCoverLetterTab(Applicant applicant) {
-    return ListView(
-      padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 20.w),
-      children: [
-        if (applicant.coverLetter != null) ...[
-          Container(
-            padding: EdgeInsets.all(20.r),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: AppRadius.md,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.02),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: UJobRichTextDisplay(content: applicant.coverLetter!),
-          ),
-        ] else
-          Center(
-            child: Text(
-              'No Cover Letter provided.',
-              style: AppText.body.copyWith(color: AppColors.muted),
-            ),
-          ),
-      ],
     );
   }
 

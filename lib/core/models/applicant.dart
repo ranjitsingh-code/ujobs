@@ -15,6 +15,8 @@ class Applicant {
   final String phone;
   final String location;
   final String? coverLetter;
+  final String? coverLetterUrl;
+  final String? coverLetterFileName;
   final Map<String, String>? screeningAnswers;
   final String? about;
   final String experienceYears;
@@ -27,6 +29,7 @@ class Applicant {
   final String? avatarUrl;
   final String? resumeUrl;
   final String? seekerProfileId;
+  final String? seekerUserId;
   final String? resumeId;
   final DateTime? updatedAt;
   final int? employerRating;
@@ -54,6 +57,8 @@ class Applicant {
     this.phone = '',
     this.location = '',
     this.coverLetter,
+    this.coverLetterUrl,
+    this.coverLetterFileName,
     this.screeningAnswers,
     this.about,
     this.experienceYears = '',
@@ -66,6 +71,7 @@ class Applicant {
     this.avatarUrl,
     this.resumeUrl,
     this.seekerProfileId,
+    this.seekerUserId,
     this.resumeId,
     this.updatedAt,
     this.employerRating,
@@ -94,6 +100,8 @@ class Applicant {
     this.phone = '',
     this.location = '',
     this.coverLetter,
+    this.coverLetterUrl,
+    this.coverLetterFileName,
     this.screeningAnswers,
     this.about,
     this.experienceYears = '',
@@ -106,6 +114,7 @@ class Applicant {
     this.avatarUrl,
     this.resumeUrl,
     this.seekerProfileId,
+    this.seekerUserId,
     this.resumeId,
     this.updatedAt,
     this.employerRating,
@@ -123,6 +132,13 @@ class Applicant {
 
 
   factory Applicant.fromJson(Map<String, dynamic> json) {
+    // Some fields the API documents as a plain string come back as a nested
+    // object instead for certain applicants (e.g. `conversation` is an
+    // object once a chat exists for that applicant) — a raw `json['x']`
+    // assignment to a String? field then throws and aborts the whole
+    // parse. Guard so an unexpected shape yields null instead of a crash.
+    String? asString(dynamic v) => v is String ? v : null;
+
     String getInitials(String name) {
       if (name.isEmpty) return 'NA';
       final parts = name.trim().split(' ');
@@ -138,7 +154,7 @@ class Applicant {
       name: json['name'] ?? '',
       initials: getInitials(json['name'] ?? ''),
       role: json['role'] ?? '',
-      targetJobTitle: json['target_job_title'],
+      targetJobTitle: asString(json['target_job_title']),
       status: json['status'] ?? 'applied',
       appliedAt: json['applied_at'] != null ? DateTime.tryParse(json['applied_at']) ?? DateTime.now() : DateTime.now(),
       updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at']) : null,
@@ -146,9 +162,16 @@ class Applicant {
       phone: json['phone'] ?? '',
       showPhone: json['show_phone'] ?? true,
       location: json['location'] ?? '',
-      coverLetter: json['cover_letter'],
+      coverLetter: asString(json['cover_letter']),
+      // Attached document is the resolved join at json['cover_letters']
+      // (singular, keyed by cover_letter_id) — falls back to a flat field
+      // in case this endpoint ever returns it that way instead.
+      coverLetterUrl: (json['cover_letters'] as Map<String, dynamic>?)?['file_url'] ??
+          json['cover_letter_url'],
+      coverLetterFileName: (json['cover_letters'] as Map<String, dynamic>?)?['file_name'] ??
+          json['cover_letter_file_name'],
       screeningAnswers: json['screening_answers'] != null ? Map<String, String>.from(json['screening_answers']) : null,
-      about: json['about'],
+      about: asString(json['about']),
       experienceYears: json['experience_years'] ?? '',
       expectedSalary: json['expected_salary'] ?? '',
       availability: json['availability'] ?? '',
@@ -156,20 +179,22 @@ class Applicant {
       education: (json['education'] as List?)?.map((e) => Map<String, String>.from(e.map((k, v) => MapEntry(k.toString(), v?.toString() ?? '')))).toList() ?? [],
       skills: (json['skills'] as List?)?.map((e) => e.toString()).toList() ?? [],
       hasMessaged: json['has_messaged'] ?? false,
-      avatarUrl: json['avatar_url'],
-      resumeUrl: json['resume_url'],
+      avatarUrl: asString(json['avatar_url']),
+      resumeUrl: (json['resumes'] as Map<String, dynamic>?)?['file_url'] ??
+          json['resume_url'],
       seekerProfileId: json['seeker_profile_id']?.toString(),
+      seekerUserId: json['seeker_user_id']?.toString() ?? json['user_id']?.toString(),
       resumeId: json['resume_id']?.toString(),
       employerRating: json['employer_rating'] != null ? int.tryParse(json['employer_rating'].toString()) : null,
-      notes: json['notes'],
-      conversation: json['conversation'],
-      linkedinUrl: json['linkedin_url'],
-      githubUrl: json['github_url'],
-      portfolioUrl: json['portfolio_url'],
-      twitterUrl: json['twitter_url'],
-      websiteUrl: json['website_url'],
+      notes: asString(json['notes']),
+      conversation: asString(json['conversation']),
+      linkedinUrl: asString(json['linkedin_url']),
+      githubUrl: asString(json['github_url']),
+      portfolioUrl: asString(json['portfolio_url']),
+      twitterUrl: asString(json['twitter_url']),
+      websiteUrl: asString(json['website_url']),
       openToRelocation: json['open_to_relocation'] ?? false,
-      relocationType: json['relocation_type'],
+      relocationType: asString(json['relocation_type']),
     );
   }
 
@@ -249,6 +274,23 @@ class Applicant {
       hasMessaged: hasMessaged ?? this.hasMessaged,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       resumeUrl: resumeUrl ?? this.resumeUrl,
+      coverLetterUrl: coverLetterUrl,
+      coverLetterFileName: coverLetterFileName,
+      seekerProfileId: seekerProfileId,
+      seekerUserId: seekerUserId,
+      resumeId: resumeId,
+      updatedAt: updatedAt,
+      employerRating: employerRating,
+      notes: notes,
+      conversation: conversation,
+      showPhone: showPhone,
+      linkedinUrl: linkedinUrl,
+      githubUrl: githubUrl,
+      portfolioUrl: portfolioUrl,
+      twitterUrl: twitterUrl,
+      websiteUrl: websiteUrl,
+      openToRelocation: openToRelocation,
+      relocationType: relocationType,
     );
   }
 }

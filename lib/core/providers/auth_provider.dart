@@ -7,6 +7,7 @@ import '../models/company_profile.dart';
 import 'role_provider.dart';
 import '../utils/api_error_parser.dart';
 import '../../features/employer/dashboard/employer_dashboard_provider.dart';
+import '../services/notification_service.dart';
 
 final dioClientProvider = Provider<DioClient>((ref) {
   return DioClient(ref);
@@ -76,7 +77,12 @@ class AuthNotifier extends AsyncNotifier<User?> {
     try {
       final res = await dio.post(
         Ep.login,
-        data: {'email': email, 'password': password, 'role': apiRole},
+        data: {
+          'email': email,
+          'password': password,
+          'role': apiRole,
+          ...await NotificationService.deviceRegistrationFields(),
+        },
       );
       final rawData = res.data as Map<String, dynamic>;
 

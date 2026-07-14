@@ -115,9 +115,8 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
     _cityController.text = company.city ?? '';
     _postcodeController.text = company.postcode ?? '';
     
-    // Map ISO2 from backend back to Country Name for the Dropdown
-    final countries = ref.read(countriesProvider).valueOrNull ?? [];
-    _selectedCountry = countries.firstWhereOrNull((c) => c.iso2 == company.country)?.name ?? company.country;
+    // Dropdown value is ISO2 (matches UJobCountryDropdown option values + API field directly)
+    _selectedCountry = company.country;
 
     _selectedSize = company.size;
     _selectedWorkType = company.workType;
@@ -226,10 +225,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
             int.tryParse(_selectedIndustryId!) ?? _selectedIndustryId!;
       }
       if (_selectedCountry != null) {
-        final countryIso = ref.read(countriesProvider).valueOrNull?.firstWhereOrNull((c) => c.name == _selectedCountry)?.iso2;
-        if (countryIso != null) {
-          payload["country"] = countryIso;
-        }
+        payload["country"] = _selectedCountry!;
       }
       if (_selectedSize != null) payload["company_size"] = _selectedSize!;
       if (_selectedWorkType != null) payload["work_type"] = _selectedWorkType!;
@@ -251,6 +247,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
 
       if (mounted) {
         UJobToast.success(context, 'Success', sub: 'Profile updated successfully!');
+        context.go('/employer');
       }
     } on DioException {
       if (mounted) {
@@ -289,19 +286,6 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
 
     final categoriesState = ref.watch(categoriesProvider);
     final categories = categoriesState.valueOrNull ?? [];
-    
-    ref.listen(countriesProvider, (prev, next) {
-      if (next.hasValue && next.value != null && next.value!.isNotEmpty) {
-        if (_selectedCountry != null && _selectedCountry!.length == 2) {
-          final match = next.value!.firstWhereOrNull((c) => c.iso2 == _selectedCountry);
-          if (match != null) {
-            setState(() {
-              _selectedCountry = match.name;
-            });
-          }
-        }
-      }
-    });
     
     final countriesState = ref.watch(countriesProvider);
     final countries = countriesState.valueOrNull ?? [];
@@ -498,7 +482,7 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                               setState(() {
                                 _selectedCountry = v;
                                 final matchedCountry = countries
-                                    .firstWhereOrNull((c) => c.name == v);
+                                    .firstWhereOrNull((c) => c.iso2 == v);
                                 if (matchedCountry != null &&
                                     matchedCountry.phoneCode.isNotEmpty) {
                                   _selectedDialCode =
@@ -549,47 +533,74 @@ class _CompanyProfileScreenState extends ConsumerState<CompanyProfileScreen> {
                                 setState(() => _selectedWorkType = v),
                           ),
                           if (workTypeLabel != null) ...[
-                            SizedBox(height: 8.h),
-                            Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 6.w,
-                              runSpacing: 4.h,
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    HugeIcon(
-                                      icon: HugeIcons.strokeRoundedBriefcase02,
-                                      color: AppColors.muted,
-                                      size: 16.r,
-                                    ),
-                                    SizedBox(width: 6.w),
-                                    Text(
-                                      context.l10n.candidatesWillSeeCompanyAs,
-                                      style: AppText.small.copyWith(
-                                        color: AppColors.muted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Container(
+                            SizedBox(height: 12.h),
+                            Builder(
+                              builder: (context) {
+                                final accent = switch (_selectedWorkType) {
+                                  'onsite' => AppColors.info,
+                                  'hybrid' => AppColors.purple,
+                                  'remote' => AppColors.success,
+                                  _ => AppColors.primary,
+                                };
+                                final accentBg = switch (_selectedWorkType) {
+                                  'onsite' => AppColors.infoBg,
+                                  'hybrid' => AppColors.purpleBg,
+                                  'remote' => AppColors.successBg,
+                                  _ => AppColors.primaryLight,
+                                };
+                                return Container(
+                                  width: double.infinity,
                                   padding: EdgeInsets.symmetric(
-                                    horizontal: 10.w,
-                                    vertical: 4.h,
+                                    horizontal: 12.w,
+                                    vertical: 10.h,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.warningBg,
-                                    borderRadius: BorderRadius.circular(100.r),
-                                  ),
-                                  child: Text(
-                                    workTypeLabel,
-                                    style: AppText.small.copyWith(
-                                      color: AppColors.warning,
-                                      fontWeight: FontWeight.w700,
+                                    color: accentBg,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(
+                                      color: accent.withValues(alpha: 0.18),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(6.r),
+                                        decoration: BoxDecoration(
+                                          color: accent.withValues(alpha: 0.14),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: HugeIcon(
+                                          icon: HugeIcons.strokeRoundedBriefcase02,
+                                          color: accent,
+                                          size: 14.r,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10.w),
+                                      Expanded(
+                                        child: Text.rich(
+                                          TextSpan(
+                                            text: context
+                                                .l10n
+                                                .candidatesWillSeeCompanyAs,
+                                            style: AppText.small.copyWith(
+                                              color: AppColors.muted,
+                                            ),
+                                            children: [
+                                              TextSpan(
+                                                text: workTypeLabel,
+                                                style: AppText.small.copyWith(
+                                                  color: accent,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ],
@@ -845,18 +856,19 @@ class CompanyProfileHeader extends ConsumerWidget {
                 clipBehavior: Clip.hardEdge,
                 child: company.logo != null && company.logo!.isNotEmpty
                     ? (company.logo!.startsWith('http')
-                          ? Image.network(company.logo!, fit: BoxFit.cover)
-                          : Image.file(File(company.logo!), fit: BoxFit.cover))
-                    : Center(
-                        child: Text(
-                          company.name.isNotEmpty
-                              ? company.name[0].toUpperCase()
-                              : 'A',
-                          style: AppText.heading1.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
+                          ? Image.network(
+                              company.logo!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  _CompanyLogoInitial(name: company.name),
+                            )
+                          : Image.file(
+                              File(company.logo!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  _CompanyLogoInitial(name: company.name),
+                            ))
+                    : _CompanyLogoInitial(name: company.name),
               ),
               SizedBox(width: 16.w),
               // Info
@@ -948,6 +960,21 @@ class CompanyProfileHeader extends ConsumerWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CompanyLogoInitial extends StatelessWidget {
+  final String name;
+  const _CompanyLogoInitial({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : 'A',
+        style: AppText.heading1.copyWith(color: AppColors.primary),
       ),
     );
   }

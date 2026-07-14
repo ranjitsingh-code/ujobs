@@ -27,7 +27,7 @@ class UJobDatePickerField extends StatelessWidget {
     DateTime initialDate = DateTime.now().add(const Duration(days: 30));
     if (value.isNotEmpty) {
       try {
-        initialDate = DateFormat('MM/dd/yyyy').parse(value);
+        initialDate = DateFormat('yyyy-MM-dd').parse(value);
       } catch (_) {}
     }
 
@@ -51,7 +51,7 @@ class UJobDatePickerField extends StatelessWidget {
     );
 
     if (picked != null) {
-      final formatted = DateFormat('MM/dd/yyyy').format(picked);
+      final formatted = DateFormat('yyyy-MM-dd').format(picked);
       onChanged(formatted);
     }
   }

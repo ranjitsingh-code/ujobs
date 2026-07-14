@@ -16,21 +16,10 @@ class UJobLogo extends StatelessWidget {
     super.key,
   });
 
-  String get _path {
-    switch (variant) {
-      case LogoVariant.color:
-        return AppAssets.logo;
-      case LogoVariant.white:
-        return AppAssets.logoWhite;
-      case LogoVariant.mark:
-        return AppAssets.logoMark;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return UJobImage(
-      path: _path,
+      path: AppAssets.logo,
       width: width,
       height: height,
       fit: BoxFit.contain,

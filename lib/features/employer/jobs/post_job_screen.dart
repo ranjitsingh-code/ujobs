@@ -1,6 +1,5 @@
 import '../../../core/providers/job_form_options_provider.dart';
 import '../../../core/providers/categories_provider.dart';
-import '../../../core/providers/countries_provider.dart';
 import '../../../core/providers/feature_flags_provider.dart';
 import 'dart:convert';
 import 'package:vsc_quill_delta_to_html/vsc_quill_delta_to_html.dart';
@@ -15,11 +14,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/models/job.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/api_error_parser.dart';
 import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_button.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
+import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_wizard_stepper.dart';
 import '../../../core/widgets/ujob_toast.dart';
 import '../../../core/widgets/ujob_rich_text_editor.dart';
@@ -50,59 +51,78 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   int _currentStep = 0;
   final int _totalSteps = 6;
 
+  bool _isLoadingJobDetail = false;
+
   bool get _isEditing => widget.job != null;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.job != null) {
-        final job = widget.job!;
-        ref
-            .read(postJobWizardProvider.notifier)
-            .updateField(
-              PostJobState(
-                title: job.title,
-                description: job.description,
-                category: job.categoryId ?? job.category ?? '',
-                openings: job.openings ?? '1',
-                employmentType: job.employmentType,
-                workplaceType: job.workplaceType,
-                city: job.location ?? '',
-                salaryMin: job.salaryMin ?? '',
-                salaryMax: job.salaryMax ?? '',
-                currency: job.salaryCurrency ?? 'GBP',
-                salaryPeriod: job.salaryPeriod ?? 'monthly',
-                experience: job.experienceLevel ?? '',
-                requirements: job.requiredSkills ?? '',
-                responsibilities: job.responsibilities ?? '',
-                education: job.education ?? '',
-                preferredSkills: job.preferredSkills ?? [],
-                languages: job.languages ?? [],
-                certifications: job.certifications ?? [],
-                benefits: job.benefits ?? [],
-                applyVia: job.applyVia ?? 'internal',
-                resumeRequirement: job.resumeRequirement ?? 'required',
-                coverLetterRequirement:
-                    job.coverLetterRequirement ?? 'optional',
-                deadline: job.closesAt != null
-                    ? job.closesAt!.toIso8601String().split('T').first
-                    : '',
-                screeningQuestions: (job.screeningQuestions ?? [])
-                    .map(
-                      (q) => ScreeningQuestion(
-                        text:
-                            q['question_text'] ??
-                            q['text'] ??
-                            q['question'] ??
-                            '',
-                        isRequired: q['is_required'] ?? true,
-                      ),
-                    )
-                    .toList(),
-              ),
-            );
+    if (widget.job != null) {
+      _isLoadingJobDetail = true;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (widget.job == null) return;
+
+      // The Job passed via route `extra` may come from a list endpoint
+      // (My Jobs / Dashboard) that only returns summary fields. Always
+      // re-fetch the full job detail so every entry point prefills correctly.
+      Job job = widget.job!;
+      try {
+        job = await ref.read(employerJobDetailProvider(job.id).future);
+      } catch (_) {
+        // Fall back to whatever was passed via extra if the refetch fails.
       }
+
+      if (!mounted) return;
+
+      ref
+          .read(postJobWizardProvider.notifier)
+          .updateField(
+            PostJobState(
+              title: job.title,
+              description: job.description,
+              category: job.categoryId ?? job.category ?? '',
+              openings: job.openings ?? '1',
+              employmentType: job.employmentType,
+              workplaceType: job.workplaceType,
+              city: job.location ?? '',
+              country: job.country ?? '',
+              salaryMin: job.salaryMin ?? '',
+              salaryMax: job.salaryMax ?? '',
+              currency: job.salaryCurrency ?? 'GBP',
+              salaryPeriod: job.salaryPeriod ?? 'monthly',
+              experience: job.experienceLevel ?? '',
+              requirements: job.requiredSkills ?? '',
+              responsibilities: job.responsibilities ?? '',
+              education: job.education ?? '',
+              preferredSkills: job.preferredSkills ?? [],
+              languages: job.languages ?? [],
+              certifications: job.certifications ?? [],
+              benefits: job.benefits ?? [],
+              applyVia: job.applyVia ?? 'internal',
+              resumeRequirement: job.resumeRequirement ?? 'required',
+              coverLetterRequirement:
+                  job.coverLetterRequirement ?? 'optional',
+              deadline: job.closesAt != null
+                  ? job.closesAt!.toIso8601String().split('T').first
+                  : '',
+              screeningQuestions: (job.screeningQuestions ?? [])
+                  .map(
+                    (q) => ScreeningQuestion(
+                      text:
+                          q['question_text'] ??
+                          q['text'] ??
+                          q['question'] ??
+                          '',
+                      isRequired: q['is_required'] ?? true,
+                    ),
+                  )
+                  .toList(),
+            ),
+          );
+
+      setState(() => _isLoadingJobDetail = false);
     });
   }
 
@@ -187,7 +207,6 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
 
     final options = ref.read(jobFormOptionsProvider).valueOrNull;
     final categories = ref.read(categoriesProvider).valueOrNull;
-    final countries = ref.read(countriesProvider).valueOrNull;
 
     final fallbackApplyVia = options?.applicationMethods.isNotEmpty == true
         ? options!.applicationMethods.first.value
@@ -215,7 +234,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
         : 'monthly';
     final fallbackEducation = options?.minimumEducationLevels.isNotEmpty == true
         ? options!.minimumEducationLevels.first.value
-        : 'High School';
+        : 'high_school';
 
     // Minimal validation
     if (!_validateStepOne()) {
@@ -237,14 +256,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
             ? state.category
             : fallbackCategory,
         'city': state.city,
-        'country':
-            countries
-                ?.firstWhere(
-                  (c) => c.name == state.country,
-                  orElse: () => countries.first,
-                )
-                .iso2 ??
-            'GB',
+        'country': state.country.isNotEmpty ? state.country : 'GB',
         'vacancies': int.tryParse(state.openings) ?? 1,
         if (state.deadline.isNotEmpty) 'application_deadline': state.deadline,
         if (state.salaryMin.isNotEmpty)
@@ -279,7 +291,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
             .join(', '),
         if (state.ageMin.isNotEmpty) 'age_min': int.tryParse(state.ageMin),
         if (state.ageMax.isNotEmpty) 'age_max': int.tryParse(state.ageMax),
-        'benefits': '[${state.benefits.map((b) => '"$b"').join(',')}]',
+        'benefits': jsonEncode(state.benefits),
         'application_method': state.applyVia.isNotEmpty
             ? state.applyVia
             : fallbackApplyVia,
@@ -392,36 +404,62 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              color: AppColors.surface,
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              child: UJobWizardStepper(
-                currentStep: _currentStep,
-                steps: stepLabels,
-              ),
-            ),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  Step1JobDetails(),
-                  Step2Requirements(),
-                  Step3Benefits(),
-                  Step4Application(),
-                  Step5Screening(),
-                  Step6Review(
-                    onPublish: () {
-                      context.pop();
-                    },
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  color: AppColors.surface,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                    vertical: 16.h,
                   ),
-                ],
+                  child: UJobWizardStepper(
+                    currentStep: _currentStep,
+                    steps: stepLabels,
+                  ),
+                ),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      Step1JobDetails(),
+                      Step2Requirements(),
+                      Step3Benefits(),
+                      Step4Application(),
+                      Step5Screening(),
+                      Step6Review(
+                        onPublish: () {
+                          context.pop();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                _buildBottomBar(l10n, publishLabel, publishStatus),
+              ],
+            ),
+          ),
+          if (_isLoadingJobDetail)
+            Positioned.fill(
+              child: Container(
+                color: AppColors.bg,
+                child: const UJobLoading(),
               ),
             ),
-            Container(
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(
+    AppLocalizations l10n,
+    String publishLabel,
+    String publishStatus,
+  ) {
+    return Container(
               padding: EdgeInsets.all(20.r),
               decoration: BoxDecoration(
                 color: AppColors.surface,
@@ -509,10 +547,6 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                         ),
                       ],
                     ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

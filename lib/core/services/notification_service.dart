@@ -32,18 +32,15 @@ const _notifDetails = NotificationDetails(
   iOS: DarwinNotificationDetails(),
 );
 
-// Must be top-level — invoked when app is fully terminated
+// Must be top-level — invoked when app is backgrounded/terminated. Only
+// logs here: when the payload carries a `notification` block (as ours
+// does), the OS/FCM SDK auto-renders the system-tray notification itself
+// in this state — calling _localNotifs.show() here too used to duplicate
+// it. Foreground is different (OS suppresses it there), handled separately
+// in onMessage below.
 @pragma('vm:entry-point')
 Future<void> _backgroundHandler(RemoteMessage message) async {
   _fcmLog('[background]', message.data);
-  final n = message.notification;
-  if (n == null) return;
-  await _localNotifs.show(
-    id: message.hashCode,
-    title: n.title,
-    body: n.body,
-    notificationDetails: _notifDetails,
-  );
 }
 
 class NotificationService {
@@ -96,7 +93,7 @@ class NotificationService {
     // v22 API: named parameter `settings`
     await _localNotifs.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('@mipmap/launcher_icon'),
         iOS: DarwinInitializationSettings(),
       ),
       // Tap on the local notification we show below, while app is in the
@@ -117,6 +114,7 @@ class NotificationService {
     // Foreground: FCM suppresses notification UI by default — show locally
     FirebaseMessaging.onMessage.listen((msg) {
       _fcmLog('[foreground]', msg.data);
+      handleForegroundMessage(msg.data);
       final n = msg.notification;
       if (n == null) return;
       _localNotifs.show(
@@ -135,13 +133,6 @@ class NotificationService {
       handleNotificationTap(msg.data);
     });
 
-    // Tap that cold-started the app from fully terminated.
-    final initialMessage = await _fcm.getInitialMessage();
-    if (initialMessage != null) {
-      _fcmLog('[initial]', initialMessage.data);
-      await handleNotificationTap(initialMessage.data);
-    }
-
     // Cache every token FCM hands us (initial + any later rotation) so a
     // future "update device token" endpoint can tell if this device's
     // token has changed since it last told the backend, without needing
@@ -156,6 +147,19 @@ class NotificationService {
       debugPrint('[FCM] Token refreshed: $newToken');
       await SecureStorage().saveFcmToken(newToken);
     });
+  }
+
+  // Tap that cold-started the app from fully terminated. Must run AFTER
+  // runApp() — rootNavigatorKey.currentContext is null until the widget
+  // tree exists, and handleNotificationTap() silently no-ops on a null
+  // context, dropping the navigation (app would just land on the normal
+  // splash → dashboard redirect instead of the tapped chat/screen).
+  static Future<void> handleInitialMessage() async {
+    final initialMessage = await _fcm.getInitialMessage();
+    if (initialMessage != null) {
+      _fcmLog('[initial]', initialMessage.data);
+      await handleNotificationTap(initialMessage.data, isColdStart: true);
+    }
   }
 
   static Future<String?> getToken() => _safeGetToken();

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/l10n_extensions.dart';
 import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_empty.dart';
 import '../../../core/widgets/ujob_pill_tab_bar.dart';
@@ -15,6 +15,7 @@ import '../../../core/providers/role_provider.dart';
 import '../../../core/models/notification.dart';
 import 'notifications_provider.dart';
 import '../../../core/providers/feature_flags_provider.dart';
+import '../../../core/services/notification_navigation.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -43,8 +44,6 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
     super.dispose();
   }
 
-
-
   List<String> get _currentTabs {
     final featuresAsync = ref.watch(featureFlagsProvider);
     final chatEnabled = featuresAsync.valueOrNull?.chat ?? false;
@@ -54,7 +53,7 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
   List<String> get _currentLabels {
     final featuresAsync = ref.watch(featureFlagsProvider);
     final chatEnabled = featuresAsync.valueOrNull?.chat ?? false;
-    return ['All', 'Unread', 'Applications', if (chatEnabled) 'Messages', 'System'];
+    return ['All', 'Unread', 'Applications', if (chatEnabled) context.l10n.messages, 'System'];
   }
 
 
@@ -238,9 +237,8 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                                   primaryColor: primaryColor,
                                   onTap: () {
                                     ref.read(notificationsProvider.notifier).markAsRead(n.id);
-                                    final isEmployer = ref.read(activeRoleProvider) == 'employer';
-                                    
-                                    final bool isActionable = n.type == 'message' || 
+
+                                    final bool isActionable = n.type == 'message' ||
                                                               n.type == 'job' || 
                                                               n.type == 'job_approved' || 
                                                               n.type == 'application' || 
@@ -298,34 +296,12 @@ class _NotificationsState extends ConsumerState<NotificationsScreen> {
                                                     SizedBox(width: 12.w),
                                                     Expanded(
                                                       child: ElevatedButton(
-                                                        onPressed: () {
+                                                        onPressed: () async {
                                                           Navigator.pop(ctx);
-                                                          final jobId = n.data?['job_id']?.toString();
-                                                          final appId = n.data?['app_id']?.toString();
-                                                          final stage = n.data?['stage']?.toString();
-
-                                                          if (n.type == 'new_application' && appId != null) {
-                                                            context.push('/employer/applicants/$appId');
-                                                          } else if ((n.type == 'job_approved' || n.type == 'application_submitted' || n.type == 'new_matching_job') && jobId != null) {
-                                                            context.push(isEmployer ? '/employer/jobs/$jobId' : '/seeker/jobs/$jobId');
-                                                          } else if (n.type == 'stage_change') {
-                                                            int tabIndex = 0; // Default to 'All'
-                                                            if (stage == 'shortlisted') tabIndex = 3;
-                                                            if (stage == 'interview') tabIndex = 4;
-                                                            if (stage == 'offered') tabIndex = 5;
-                                                            if (stage == 'hired') tabIndex = 6;
-                                                            if (stage == 'rejected') tabIndex = 7;
-                                                            context.push('/seeker/applied', extra: tabIndex);
-                                                          } else if (n.type == 'message') {
-                                                            context.push('/conversations/1', extra: {'name': isEmployer ? 'Jim' : 'Nexovia Solutions'});
-                                                          } else {
-                                                            // Fallbacks if IDs are missing
-                                                            if (n.type == 'job' || n.type == 'job_approved') {
-                                                              context.push(isEmployer ? '/employer/jobs' : '/seeker/jobs');
-                                                            } else if (n.type == 'application' || n.type == 'new_application' || n.type == 'application_submitted') {
-                                                              context.push(isEmployer ? '/employer/applicants' : '/seeker/applied');
-                                                            }
-                                                          }
+                                                          await handleNotificationTap({
+                                                            ...?n.data,
+                                                            'type': n.type,
+                                                          });
                                                         },
                                                         style: ElevatedButton.styleFrom(
                                                           backgroundColor: primaryColor,

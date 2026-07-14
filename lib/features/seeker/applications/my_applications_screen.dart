@@ -11,6 +11,8 @@ import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_error.dart';
 import '../../../core/widgets/ujob_image.dart';
 import '../../../core/widgets/ujob_pill_tab_bar.dart';
+import '../../../core/widgets/ujob_toast.dart';
+import '../../shared/chat/conversation_provider.dart' hide ApplicationStatus;
 import '../../../core/models/application.dart';
 import 'seeker_application_provider.dart';
 
@@ -241,11 +243,51 @@ class _ApplicationList extends ConsumerWidget {
   }
 }
 
-class _ApplicationCard extends StatelessWidget {
+class _ApplicationCard extends ConsumerStatefulWidget {
   final Application application;
   final VoidCallback onTap;
 
   const _ApplicationCard({required this.application, required this.onTap});
+
+  @override
+  ConsumerState<_ApplicationCard> createState() => _ApplicationCardState();
+}
+
+class _ApplicationCardState extends ConsumerState<_ApplicationCard> {
+  bool _openingChat = false;
+
+  Application get application => widget.application;
+
+  Future<void> _openChat() async {
+    if (_openingChat) return;
+    setState(() => _openingChat = true);
+    try {
+      final companyName = application.job.company?.name;
+      final conv = await resolveJobConversation(ref, companyName: companyName);
+      if (!mounted) return;
+      if (conv == null) {
+        context.push('/seeker/messages');
+        return;
+      }
+      final displayName =
+          conv.otherName.isNotEmpty ? conv.otherName : (companyName ?? '');
+      context.push(
+        '/conversations/${conv.id}',
+        extra: {
+          'otherId': conv.otherId,
+          'name': displayName,
+          'initials': conv.otherInitials,
+          'avatar': conv.otherAvatar,
+          'jobId': application.job.id.toString(),
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      context.push('/seeker/messages');
+    } finally {
+      if (mounted) setState(() => _openingChat = false);
+    }
+  }
 
   String _formatAppliedDate() =>
       'Applied ${DateFormat('d MMM yyyy').format(application.createdAt)}';
@@ -334,7 +376,7 @@ class _ApplicationCard extends StatelessWidget {
       color: AppColors.surface,
       child: InkWell(
         borderRadius: AppRadius.xl2,
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Container(
           padding: EdgeInsets.all(14.r),
           decoration: BoxDecoration(
@@ -381,16 +423,76 @@ class _ApplicationCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 8.w),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.12),
-                      borderRadius: AppRadius.pill,
-                    ),
-                    child: Text(
-                      _statusLabel(),
-                      style: AppText.label.copyWith(color: statusColor),
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.12),
+                          borderRadius: AppRadius.pill,
+                        ),
+                        child: Text(
+                          _statusLabel(),
+                          style: AppText.label.copyWith(color: statusColor),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      GestureDetector(
+                        onTap: () {
+                          if (application.job.chatEnabled) {
+                            _openChat();
+                          } else {
+                            UJobToast.info(
+                              context,
+                              context.l10n.messageAction,
+                              sub: context.l10n.chatNotYetAvailableMessage,
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                          decoration: BoxDecoration(
+                            color: (application.job.chatEnabled
+                                    ? AppColors.seekPrimary
+                                    : AppColors.muted)
+                                .withValues(alpha: 0.12),
+                            borderRadius: AppRadius.pill,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_openingChat)
+                                SizedBox(
+                                  width: 14.r,
+                                  height: 14.r,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.seekPrimary,
+                                  ),
+                                )
+                              else
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedMessage02,
+                                  color: application.job.chatEnabled
+                                      ? AppColors.seekPrimary
+                                      : AppColors.muted,
+                                  size: 14.r,
+                                ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                context.l10n.messageAction,
+                                style: AppText.label.copyWith(
+                                  color: application.job.chatEnabled
+                                      ? AppColors.seekPrimary
+                                      : AppColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

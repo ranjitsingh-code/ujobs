@@ -57,6 +57,8 @@ class Ep {
   static const seekerJobs = '/seeker/jobs';
   static const seekerResumes =
       '/seeker/resumes'; // multipart/form-data — NOT JSON
+  static const seekerCoverLetters =
+      '/seeker/cover-letters'; // multipart/form-data — NOT JSON
   static const seekerApplications = '/seeker/applications';
   static const seekerSavedJobs = '/seeker/saved-jobs';
   static const seekerMatching = '/seeker/matching-jobs';
@@ -101,4 +103,6 @@ class Ep {
   // Conversations
   static const conversations = '/conversations';
   static String messages(String id) => '/conversations/$id/messages';
+  static String conversationChatStatus(String id) =>
+      '/conversations/$id/chat-status';
 }

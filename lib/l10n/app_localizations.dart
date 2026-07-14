@@ -1373,7 +1373,7 @@ abstract class AppLocalizations {
   /// No description provided for @messages.
   ///
   /// In en, this message translates to:
-  /// **'Messages'**
+  /// **'Contact'**
   String get messages;
 
   /// No description provided for @profile.
@@ -1670,6 +1670,12 @@ abstract class AppLocalizations {
   /// **'Upload Resume'**
   String get uploadResume;
 
+  /// No description provided for @uploadCoverLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Cover Letter'**
+  String get uploadCoverLetter;
+
   /// No description provided for @allTab.
   ///
   /// In en, this message translates to:
@@ -1753,6 +1759,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hi, I\'m excited to apply for this role because...'**
   String get coverLetterHint;
+
+  /// No description provided for @successTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get successTitle;
+
+  /// No description provided for @errorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get errorTitle;
+
+  /// No description provided for @uploadFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Failed'**
+  String get uploadFailedTitle;
+
+  /// No description provided for @fileTooLargeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'File Too Large'**
+  String get fileTooLargeTitle;
+
+  /// No description provided for @tryAgainMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again.'**
+  String get tryAgainMessage;
+
+  /// No description provided for @coverLettersLoadErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load cover letters'**
+  String get coverLettersLoadErrorTitle;
+
+  /// No description provided for @coverLetterFileSizeLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'File must be smaller than 3 MB.'**
+  String get coverLetterFileSizeLimit;
+
+  /// No description provided for @coverLetterUploadedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover letter uploaded successfully!'**
+  String get coverLetterUploadedMessage;
+
+  /// No description provided for @coverLetterDeletedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover letter deleted successfully!'**
+  String get coverLetterDeletedMessage;
+
+  /// No description provided for @coverLetterDeleteErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting cover letter: {error}'**
+  String coverLetterDeleteErrorMessage(Object error);
+
+  /// No description provided for @deleteCoverLetterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Cover Letter?'**
+  String get deleteCoverLetterTitle;
+
+  /// No description provided for @deleteCoverLetterConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to delete this cover letter?'**
+  String get deleteCoverLetterConfirmMessage;
+
+  /// No description provided for @coverLetterExceedsLimitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover letter exceeds server limit. Try a smaller file.'**
+  String get coverLetterExceedsLimitMessage;
+
+  /// No description provided for @coverLetterUploadErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload cover letter. Please try again.'**
+  String get coverLetterUploadErrorMessage;
+
+  /// No description provided for @coverLetterRequiredEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No cover letter found. Please upload one to continue.'**
+  String get coverLetterRequiredEmptyMessage;
+
+  /// No description provided for @coverLetterOptionalEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No cover letter uploaded yet. You can continue without one.'**
+  String get coverLetterOptionalEmptyMessage;
+
+  /// No description provided for @pdfCoverLetterMaxSizeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF only — max 3 MB'**
+  String get pdfCoverLetterMaxSizeHint;
+
+  /// No description provided for @myCoverLetterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Cover Letter'**
+  String get myCoverLetterTitle;
+
+  /// No description provided for @coverLetterSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a cover letter for employers to review'**
+  String get coverLetterSectionSubtitle;
+
+  /// No description provided for @coverLetterEmptyStateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your cover letter'**
+  String get coverLetterEmptyStateTitle;
+
+  /// No description provided for @pdfDocumentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Document'**
+  String get pdfDocumentLabel;
+
+  /// No description provided for @downloadAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get downloadAction;
+
+  /// No description provided for @noCoverLetterProvidedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No cover letter provided.'**
+  String get noCoverLetterProvidedMessage;
+
+  /// No description provided for @couldNotLaunchDownloadUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not launch download URL.'**
+  String get couldNotLaunchDownloadUrl;
+
+  /// No description provided for @messageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get messageAction;
+
+  /// No description provided for @startMessageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get startMessageAction;
+
+  /// No description provided for @openChatAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get openChatAction;
+
+  /// No description provided for @chatNotYetAvailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only message the company once they reach out first.'**
+  String get chatNotYetAvailableMessage;
+
+  /// No description provided for @stopMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Contact'**
+  String get stopMessageTitle;
+
+  /// No description provided for @stopMessageConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to stop messaging with this applicant? They will not be able to send or receive messages until you reopen it.'**
+  String get stopMessageConfirmMessage;
+
+  /// No description provided for @reopenChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen Chat'**
+  String get reopenChatTitle;
+
+  /// No description provided for @chatStoppedBannerSeeker.
+  ///
+  /// In en, this message translates to:
+  /// **'The employer has stopped this chat. You cannot send messages.'**
+  String get chatStoppedBannerSeeker;
+
+  /// No description provided for @chatStoppedBannerEmployer.
+  ///
+  /// In en, this message translates to:
+  /// **'You have stopped this chat. Reopen it to send messages again.'**
+  String get chatStoppedBannerEmployer;
+
+  /// No description provided for @chatStoppedInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat stopped by employer...'**
+  String get chatStoppedInputHint;
+
+  /// No description provided for @copiedToClipboardMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboardMessage;
 
   /// No description provided for @reviewAndSubmit.
   ///
@@ -2071,6 +2287,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No messages yet. Say hello!'**
   String get sayHello;
+
+  /// No description provided for @newMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'New message'**
+  String get newMessages;
 
   /// No description provided for @searchConversations.
   ///

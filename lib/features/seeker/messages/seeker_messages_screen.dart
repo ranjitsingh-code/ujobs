@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/l10n_extensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,7 +25,8 @@ class SeekerMessagesScreen extends ConsumerStatefulWidget {
   ConsumerState<SeekerMessagesScreen> createState() => _SeekerMessagesState();
 }
 
-class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
+class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen>
+    with WidgetsBindingObserver {
   final _searchCtrl = TextEditingController();
   String _query = '';
 
@@ -33,7 +35,27 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
   final Set<String> _selectedIds = {};
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  // No more polling (too many API calls) — refresh on pull-to-refresh, the
+  // app bar refresh button, or resuming the app.
+  Future<void> _refreshConversations() async {
+    await ref.read(seekerConversationsProvider.notifier).refresh();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshConversations();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -189,15 +211,29 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
               ],
             )
           : UJobAppBar(
-              title: 'Messages',
+              title: context.l10n.messages,
               showBack: false,
-              rightWidget: IconButton(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedMoreVerticalCircle01,
-                  color: AppColors.text,
-                  size: 24.r,
-                ),
-                onPressed: () => _showMoreOptionsSheet(context, ref),
+              rightGutter: 88.w,
+              rightWidget: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedRefresh,
+                      color: AppColors.text,
+                      size: 24.r,
+                    ),
+                    onPressed: _refreshConversations,
+                  ),
+                  IconButton(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedMoreVerticalCircle01,
+                      color: AppColors.text,
+                      size: 24.r,
+                    ),
+                    onPressed: () => _showMoreOptionsSheet(context, ref),
+                  ),
+                ],
               ),
             ),
       body: Column(
@@ -243,11 +279,21 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
               ),
             ),
           Expanded(
-            child: async.when(
-              loading: () => const UJobLoading(count: 5),
-              error: (e, _) => UJobError(
-                message: 'Failed to load messages',
-                onRetry: () => ref.refresh(seekerConversationsProvider),
+            child: RefreshIndicator(
+              onRefresh: _refreshConversations,
+              child: async.when(
+              loading: () => ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [UJobLoading(count: 5)],
+              ),
+              error: (e, _) => ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  UJobError(
+                    message: 'Failed to load messages',
+                    onRetry: () => ref.refresh(seekerConversationsProvider),
+                  ),
+                ],
               ),
               data: (convs) {
                 var list = convs;
@@ -258,11 +304,19 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                 }
 
                 if (list.isEmpty) {
-                  return UJobEmpty(
-                    title: 'No messages',
-                    subtitle:
-                        'Try changing your search or start a conversation.',
-                    icon: HugeIcons.strokeRoundedBubbleChat,
+                  return ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(
+                        height: 300.h,
+                        child: UJobEmpty(
+                          title: 'No messages',
+                          subtitle:
+                              'Try changing your search or start a conversation.',
+                          icon: HugeIcons.strokeRoundedBubbleChat,
+                        ),
+                      ),
+                    ],
                   );
                 }
 
@@ -296,6 +350,7 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                       ),
                     Expanded(
                       child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         padding: AppSpacing.pagePad,
                         itemCount: list.length,
                         separatorBuilder: (_, _) => SizedBox(height: 12.h),
@@ -342,6 +397,7 @@ class _SeekerMessagesState extends ConsumerState<SeekerMessagesScreen> {
                   ],
                 );
               },
+              ),
             ),
           ),
         ],
@@ -475,7 +531,8 @@ class _ConvTile extends StatelessWidget {
                   children: [
                     UJobAvatar(
                       imageUrl: conv.otherAvatar,
-                      initials: conv.otherInitials ?? conv.otherName[0],
+                      initials: conv.otherInitials ??
+                          (conv.otherName.isNotEmpty ? conv.otherName[0] : '?'),
                       size: 56.r,
                     ),
                     if (conv.otherOnline)

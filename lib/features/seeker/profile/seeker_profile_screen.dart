@@ -22,15 +22,15 @@ import '../../../core/widgets/ujob_document_viewer_screen.dart';
 import '../../../core/widgets/ujob_loading.dart';
 import '../../../core/widgets/ujob_text_field.dart';
 import '../../../core/widgets/ujob_dropdown_field.dart';
-import '../../../core/widgets/ujob_skill_autocomplete.dart';
+// import '../../../core/widgets/ujob_skill_autocomplete.dart'; // unused while Skills section hidden
 import '../../../core/models/skill.dart';
 import '../../../core/widgets/ujob_rich_text_editor.dart';
 import '../../../core/models/seeker_profile.dart';
 import 'seeker_profile_provider.dart';
 import '../dashboard/seeker_dashboard_provider.dart';
-import 'widgets/add_experience_sheet.dart';
-import 'widgets/add_education_sheet.dart';
-import '../../../core/providers/job_form_options_provider.dart';
+// import 'widgets/add_experience_sheet.dart'; // unused while Work Experience section hidden
+// import 'widgets/add_education_sheet.dart'; // unused while Education section hidden
+// import '../../../core/providers/job_form_options_provider.dart'; // unused while salary section hidden
 import '../../../core/providers/skills_provider.dart';
 import '../../../core/widgets/ujob_phone_number_field.dart';
 import '../../../core/widgets/ujob_profile_setup_prompt.dart';
@@ -65,6 +65,9 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   // Resume
   List<SeekerResume> _resumes = [];
 
+  // Cover Letter
+  List<CoverLetter> _coverLetters = [];
+
   // Professional Info
   final _headlineCtrl = TextEditingController();
   String? _expYears;
@@ -94,6 +97,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
   final _websiteCtrl = TextEditingController();
 
   bool _isLoading = false;
+  bool _isUpdating = false;
   int _refreshKey = 0;
 
   @override
@@ -161,6 +165,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
       // But we will just initialize empty for now.
 
       _resumes = List<SeekerResume>.from(profile.resumes);
+      _coverLetters = List<CoverLetter>.from(profile.coverLetters);
 
       _headlineCtrl.text = profile.headline ?? '';
       if (profile.experienceYearsInt != null) {
@@ -392,6 +397,126 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
     }
   }
 
+  Future<void> _deleteCoverLetter(String id) async {
+    try {
+      final service = ref.read(seekerProfileServiceProvider);
+      await service.deleteCoverLetter(id);
+      setState(() {
+        _coverLetters.removeWhere((cl) => cl.id == id);
+      });
+      ref.invalidate(seekerDashboardProvider);
+      if (!mounted) return;
+      UJobToast.success(
+        context,
+        context.l10n.successTitle,
+        sub: context.l10n.coverLetterDeletedMessage,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      UJobToast.error(
+        context,
+        context.l10n.errorTitle,
+        sub: context.l10n.coverLetterDeleteErrorMessage(e.toString()),
+      );
+    }
+  }
+
+  void _confirmDeleteCoverLetter(CoverLetter coverLetter) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => UJobAlertDialog(
+        icon: HugeIcon(
+          icon: HugeIcons.strokeRoundedDelete01,
+          color: AppColors.error,
+          size: 32.r,
+        ),
+        title: context.l10n.deleteCoverLetterTitle,
+        description: context.l10n.deleteCoverLetterConfirmMessage,
+        confirmText: context.l10n.delete,
+        confirmColor: AppColors.error,
+        onConfirm: () {
+          Navigator.pop(dialogContext);
+          _deleteCoverLetter(coverLetter.id);
+        },
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadCoverLetter() async {
+    var loadingShown = false;
+    CoverLetter? uploadedCoverLetter;
+    Object? uploadError;
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      final path = result?.files.single.path;
+      if (path == null) return;
+
+      final file = File(path);
+
+      // 3MB limit
+      if (file.lengthSync() > 3 * 1024 * 1024) {
+        if (!mounted) return;
+        UJobToast.error(
+          context,
+          context.l10n.errorTitle,
+          sub: context.l10n.coverLetterFileSizeLimit,
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      loadingShown = true;
+      await EasyLoading.show(
+        status: context.l10n.loading,
+        maskType: EasyLoadingMaskType.black,
+      );
+
+      uploadedCoverLetter = await ref
+          .read(seekerProfileServiceProvider)
+          .uploadCoverLetter(path);
+    } catch (e) {
+      uploadError = e;
+    } finally {
+      if (loadingShown) {
+        await EasyLoading.dismiss();
+      }
+    }
+
+    if (!mounted) return;
+
+    if (uploadError != null) {
+      final is413 = uploadError is DioException &&
+          uploadError.response?.statusCode == 413;
+      UJobToast.error(
+        context,
+        is413 ? context.l10n.fileTooLargeTitle : context.l10n.uploadFailedTitle,
+        sub: is413
+            ? context.l10n.coverLetterExceedsLimitMessage
+            : context.l10n.coverLetterUploadErrorMessage,
+      );
+      return;
+    }
+
+    final coverLetter = uploadedCoverLetter;
+    if (coverLetter != null) {
+      setState(() {
+        _coverLetters = [..._coverLetters, coverLetter];
+      });
+      ref.invalidate(seekerDashboardProvider);
+
+      UJobToast.success(
+        context,
+        context.l10n.successTitle,
+        sub: context.l10n.coverLetterUploadedMessage,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final profileData = ref.watch(seekerProfileProvider);
@@ -534,7 +659,8 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                     ),
                     SizedBox(height: 16.h),
 
-                    // 3. Relocation
+                    // 3. Relocation — hidden for now (client request, will re-add later)
+                    /*
                     _SectionCard(
                       title: 'Relocation',
                       subtitle: "Let employers know if you're open to moving",
@@ -728,7 +854,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 16.h),
+                    */
 
                     // 4. Resume
                     _SectionCard(
@@ -850,6 +976,128 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                     ),
                     SizedBox(height: 16.h),
 
+                    // 4b. Cover Letter
+                    _SectionCard(
+                      title: context.l10n.coverLetterTitle,
+                      subtitle: context.l10n.coverLetterSectionSubtitle,
+                      icon: HugeIcons.strokeRoundedNote01,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_coverLetters.isNotEmpty) ...[
+                            ..._coverLetters.map(
+                              (coverLetter) => Padding(
+                                padding: EdgeInsets.only(bottom: 12.h),
+                                child: Container(
+                                  padding: EdgeInsets.all(16.r),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    borderRadius: AppRadius.md,
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      HugeIcon(
+                                        icon: HugeIcons.strokeRoundedPdf01,
+                                        color: AppColors.error,
+                                        size: 32.r,
+                                      ),
+                                      SizedBox(width: 12.w),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              coverLetter.fileName,
+                                              style: AppText.bodyBold,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            SizedBox(height: 4.h),
+                                            Text(
+                                              _formatResumeUpdatedAt(
+                                                coverLetter.createdAt,
+                                              ),
+                                              style: AppText.small.copyWith(
+                                                color: AppColors.muted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  UJobDocumentViewerScreen(
+                                                    title: context
+                                                        .l10n.myCoverLetterTitle,
+                                                    fileUrl: coverLetter.fileUrl,
+                                                    fileName:
+                                                        coverLetter.fileName,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                        icon: HugeIcon(
+                                          icon: HugeIcons.strokeRoundedEye,
+                                          color: AppColors.seekPrimary,
+                                          size: 20.r,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () =>
+                                            _confirmDeleteCoverLetter(coverLetter),
+                                        icon: HugeIcon(
+                                          icon: HugeIcons.strokeRoundedDelete01,
+                                          color: AppColors.error,
+                                          size: 20.r,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ] else ...[
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedCloudUpload,
+                                  color: AppColors.seekPrimary,
+                                  size: 40.r,
+                                ),
+                                SizedBox(height: 12.h),
+                                Text(
+                                  context.l10n.coverLetterEmptyStateTitle,
+                                  style: AppText.bodyBold,
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  context.l10n.pdfCoverLetterMaxSizeHint,
+                                  style: AppText.small.copyWith(
+                                    color: AppColors.muted,
+                                  ),
+                                ),
+                                SizedBox(height: 16.h),
+                                UJobButton(
+                                  label: context.l10n.uploadCoverLetter,
+                                  onTap: _pickAndUploadCoverLetter,
+                                  color: AppColors.seekPrimary,
+                                  outlined: true,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
                     // 5. Professional Info
                     _SectionCard(
                       title: 'Professional Info',
@@ -926,6 +1174,8 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               ),
                             ],
                           ),
+                          // Expected Salary / Currency / Salary Period — hidden for now (client request, will re-add later)
+                          /*
                           SizedBox(height: 16.h),
                           Row(
                             children: [
@@ -983,6 +1233,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                             onChanged: (v) =>
                                 setState(() => _salaryPeriod = v ?? 'yearly'),
                           ),
+                          */
                           SizedBox(height: 16.h),
                           UJobDropdownField<String>(
                             label: 'Availability',
@@ -1000,9 +1251,9 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 16.h),
 
-                    // 6. Skills
+                    // 6. Skills — hidden for now (client request, will re-add later)
+                    /*
                     _SectionCard(
                       title: 'Skills',
                       subtitle: "Add skills to improve your job matches",
@@ -1062,9 +1313,10 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 16.h),
+                    */
 
-                    // 7. Work Experience
+                    // 7. Work Experience — hidden for now (client request, will re-add later)
+                    /*
                     _SectionCard(
                       title: 'Work Experience',
                       subtitle: "Your work history",
@@ -1443,6 +1695,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                         ],
                       ),
                     ),
+                    */
                     SizedBox(height: 16.h),
 
                     // 9. Online Presence
@@ -1490,18 +1743,12 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                     UJobButton(
                       label: "Update Profile",
                       color: AppColors.seekPrimary,
+                      isLoading: _isUpdating,
                       onTap: () async {
-                        if (!_isFresher && _experiences.isEmpty) {
-                          UJobToast.error(context, 'Work Experience Required',
-                              sub: 'Please add at least 1 work experience entry.');
-                          return;
-                        }
-                        if (_educations.isEmpty) {
-                          UJobToast.error(context, 'Education Required',
-                              sub: 'Please add at least 1 education entry.');
-                          return;
-                        }
+                        // Work Experience / Education required checks disabled —
+                        // those sections are hidden in the UI (client request, will re-add later).
                         final service = ref.read(seekerProfileServiceProvider);
+                        setState(() => _isUpdating = true);
                         try {
                           final data = {
                             "first_name": _firstNameCtrl.text,
@@ -1606,6 +1853,7 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                               'Success',
                               sub: 'Profile updated successfully!',
                             );
+                            context.go('/seeker');
                           }
                         } catch (e) {
                           if (context.mounted) {
@@ -1616,6 +1864,8 @@ class _SeekerProfileState extends ConsumerState<SeekerProfileScreen> {
                                   'Failed to update profile. Please try again.',
                             );
                           }
+                        } finally {
+                          if (mounted) setState(() => _isUpdating = false);
                         }
                       },
                     ),

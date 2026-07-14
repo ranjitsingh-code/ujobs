@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/l10n_extensions.dart';
@@ -21,6 +22,7 @@ import '../../../core/widgets/ujob_app_bar.dart';
 import '../../../core/widgets/ujob_pdf_viewer.dart';
 import '../../../core/providers/role_provider.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/services/notification_navigation.dart';
 import 'conversation_provider.dart';
 import '../../../core/widgets/ujob_alert_dialog.dart';
 import '../../../core/widgets/ujob_toast.dart';
@@ -73,6 +75,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     with WidgetsBindingObserver {
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  final _msgFocusNode = FocusNode();
   bool _sending = false;
 
   String? _stagedFileType;
@@ -83,17 +86,103 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   Applicant? _applicant;
   Company? _company;
   bool _didInitialScroll = false;
+  int _prevMsgCount = 0;
+  bool _showNewMessagePill = false;
 
   void _jumpToBottom() {
+    void doJump() {
+      if (mounted && _scrollCtrl.hasClients) {
+        _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+      }
+    }
+    // A single post-frame jump can land short: opening via a notification
+    // deep-link (fresh route push, page-transition still animating) or the
+    // page-route transition settling after this frame both change
+    // maxScrollExtent after the first jump already ran. Re-jump on the next
+    // frame and again after a short delay so it always lands on the real
+    // bottom instead of leaving the last message just off-screen.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      doJump();
+      WidgetsBinding.instance.addPostFrameCallback((_) => doJump());
+      Future.delayed(const Duration(milliseconds: 250), doJump);
+    });
+  }
+
+  void _animateToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollCtrl.hasClients) {
-        _scrollCtrl.jumpTo(_scrollCtrl.position.maxScrollExtent);
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
 
-  static const _pollInterval = Duration(seconds: 4);
-  Timer? _pollTimer;
+  // Messenger-style: only auto-follow new messages if the viewer was
+  // already near the bottom. Someone scrolled up reading history shouldn't
+  // get yanked down by an incoming message — they get the pill instead.
+  bool _isNearBottom() {
+    if (!_scrollCtrl.hasClients) return true;
+    final position = _scrollCtrl.position;
+    return (position.maxScrollExtent - position.pixels) < 120.h;
+  }
+
+  // Reacts to every message-list change (poll refresh, own send, incoming
+  // message) regardless of whether async.when's `data` branch happens to
+  // rebuild — ref.listen fires on state transitions themselves.
+  void _onMessagesChanged(
+    AsyncValue<List<ChatMessage>>? previous,
+    AsyncValue<List<ChatMessage>> next,
+  ) {
+    final messages = next.valueOrNull;
+    if (messages == null) return;
+    if (!_didInitialScroll) {
+      _didInitialScroll = true;
+      _prevMsgCount = messages.length;
+      if (messages.isNotEmpty) _jumpToBottom();
+      return;
+    }
+    if (messages.length <= _prevMsgCount) {
+      _prevMsgCount = messages.length;
+      return;
+    }
+    _prevMsgCount = messages.length;
+    final lastMsg = messages.last;
+    if (lastMsg.isMine || _isNearBottom()) {
+      if (_showNewMessagePill) setState(() => _showNewMessagePill = false);
+      _animateToBottom();
+    } else {
+      setState(() => _showNewMessagePill = true);
+    }
+  }
+
+  void _onScroll() {
+    if (_showNewMessagePill && _isNearBottom()) {
+      setState(() => _showNewMessagePill = false);
+    }
+  }
+
+  double _lastBottomInset = 0;
+
+  // Keyboard covers the input bar's usual spot, pushing the last message up
+  // behind it unless we scroll to follow. Triggering off focus-change plus a
+  // guessed delay was flaky — it worked the first time (coincidentally
+  // riding the unrelated initial-load auto-scroll) but not on a later
+  // refocus, since keyboard animation duration isn't fixed/predictable.
+  // didChangeMetrics fires with the real, already-updated view insets
+  // whenever the keyboard's height actually changes, for every open, not a
+  // one-off — the correct direct signal instead of a proxy guess.
+  @override
+  void didChangeMetrics() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+      if (bottomInset > _lastBottomInset) _animateToBottom();
+      _lastBottomInset = bottomInset;
+    });
+  }
 
   // conversationsProvider and seekerConversationsProvider both hit the
   // identical GET /conversations endpoint — only one is ever "this
@@ -110,6 +199,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     super.initState();
     _fallbackClosed = widget.isClosed;
     WidgetsBinding.instance.addObserver(this);
+    _scrollCtrl.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         if (_isEmployer) {
@@ -119,22 +209,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         }
       }
     });
-    _fetchApplicant();
-    _fetchJobCompany();
-    _startPolling();
+    _applicantFuture = _fetchApplicant();
+    _companyFuture = _fetchJobCompany();
+    registerChatRefreshCallback(widget.conversationId, _refreshChat);
   }
+
+  // Kept so _showUserDetailsSheet can await an in-flight fetch instead of
+  // racing it — tapping the 3-dot right after landing on this screen (e.g.
+  // list -> "Open Chat" shortcut, skipping the applicant-detail screen that
+  // would otherwise have given the fetch time to finish) used to open the
+  // sheet with _applicant/_company still null, showing no email/phone.
+  Future<void>? _applicantFuture;
+  Future<void>? _companyFuture;
 
   Future<void> _fetchApplicant() async {
     final applicantId = widget.applicantId;
+    final isEmployer = ref.read(activeRoleProvider.notifier).isEmployer;
     if (applicantId == null || applicantId.isEmpty) return;
-    if (!ref.read(activeRoleProvider.notifier).isEmployer) return;
+    if (!isEmployer) return;
     try {
       final applicant = await ref
           .read(employerApplicantServiceProvider)
           .getApplicantDetails(applicantId);
       if (mounted) setState(() => _applicant = applicant);
-    } catch (_) {
-      // Silent — screen falls back to whatever route `extra` provided.
+    } catch (e) {
+      debugPrint('[CHAT] applicant fetch failed: $e');
     }
   }
 
@@ -152,7 +251,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     }
   }
 
+  // GET /conversations' `other_user.name` is the source of truth for who
+  // this chat is with — checked first because the FCM `message` push's
+  // `sender_name` field has been observed sending the *recipient's own*
+  // name instead of the actual sender's (backend bug), which would
+  // otherwise show a seeker their own name at the top of the chat they
+  // opened from that notification.
   String get _displayName {
+    for (final c in _myConversations) {
+      if (c.id == widget.conversationId && c.otherName.isNotEmpty) {
+        return c.otherName;
+      }
+    }
     if (_applicant?.name.isNotEmpty ?? false) return _applicant!.name;
     if (_company?.name.isNotEmpty ?? false) return _company!.name;
     return widget.otherName;
@@ -169,34 +279,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   // backend exposes employer contact info to seekers.
   String? get _displayEmail =>
       (_applicant?.email.isNotEmpty ?? false) ? _applicant!.email : null;
+  // Shown whenever the applicant has a phone on file — matches
+  // ApplicantDetailScreen, which also shows it unconditionally.
   String? get _displayPhone =>
-      (_applicant?.showPhone ?? true) && (_applicant?.phone.isNotEmpty ?? false)
-          ? _applicant!.phone
-          : null;
+      (_applicant?.phone.isNotEmpty ?? false) ? _applicant!.phone : null;
 
-  // Conversation-level chat_enabled isn't pushed in real time — poll this
-  // viewer's own conversation list alongside messages so an employer
-  // stopping the chat (from another screen/device) surfaces here within
-  // one interval.
-  void _startPolling() {
-    _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(_pollInterval, (_) {
-      ref.read(chatMessagesProvider(widget.conversationId).notifier).refresh();
-      if (_isEmployer) {
-        ref.read(conversationsProvider.notifier).refresh();
-      } else {
-        ref.read(seekerConversationsProvider.notifier).refresh();
-      }
-    });
+  // Company has no email/phone (confirmed above), but GET /seeker/jobs/:id
+  // does return a company website — show that instead so seekers still get
+  // a way to reach/verify the company from the chat sheet.
+  String? get _displayWebsite =>
+      (_company?.website?.isNotEmpty ?? false) ? _company!.website : null;
+
+  String? get _displayLocation {
+    if (_applicant?.location.isNotEmpty ?? false) return _applicant!.location;
+    if (_company?.location?.isNotEmpty ?? false) return _company!.location;
+    return widget.otherLocation;
+  }
+
+  Future<void> _openWebsite(String url) async {
+    final normalized = url.startsWith('http') ? url : 'https://$url';
+    try {
+      final launched = await launchUrl(
+        Uri.parse(normalized),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) throw Exception('Could not launch');
+    } catch (_) {
+      if (mounted) UJobToast.error(context, context.l10n.errorTitle);
+    }
+  }
+
+  // Chat no longer polls (too many API calls) — messages are reloaded on
+  // pull-to-refresh, the app bar refresh button, resuming the app, or a
+  // "message" push notification for this exact conversation arriving while
+  // it's already open (see registerChatRefreshCallback in
+  // notification_navigation.dart). Conversation-level chat_enabled isn't
+  // pushed in real time either, so this also refreshes this viewer's own
+  // conversation list alongside messages.
+  Future<void> _refreshChat() async {
+    await ref.read(chatMessagesProvider(widget.conversationId).notifier).refresh();
+    if (_isEmployer) {
+      ref.read(conversationsProvider.notifier).refresh();
+    } else {
+      ref.read(seekerConversationsProvider.notifier).refresh();
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      ref.read(chatMessagesProvider(widget.conversationId).notifier).refresh();
-      _startPolling();
-    } else if (state == AppLifecycleState.paused) {
-      _pollTimer?.cancel();
+      _refreshChat();
     }
   }
 
@@ -210,9 +342,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _pollTimer?.cancel();
+    unregisterChatRefreshCallback(widget.conversationId);
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
+    _msgFocusNode.dispose();
     super.dispose();
   }
 
@@ -281,9 +414,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 
   void _showUserDetailsSheet() {
-    final isClosed = _liveIsClosed();
-    final email = _displayEmail;
-    final phone = _displayPhone;
+    // Snapshot at tap time: is a fetch still in flight? If so the sheet
+    // shows a spinner and waits for it, INSIDE this one sheet route,
+    // instead of blocking on a separate showDialog route beforehand — a
+    // separate route risked being left orphaned (stuck on screen, eating a
+    // back-press) if the chat screen got popped while it awaited the fetch.
+    final stillLoading =
+        (_applicant == null && _applicantFuture != null) ||
+        (_company == null && _companyFuture != null);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -292,7 +430,39 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       builder: (context) {
-        return Padding(
+        if (!stillLoading) return _buildUserDetailsSheetBody(context);
+        return FutureBuilder<void>(
+          future: Future.wait([
+            _applicantFuture ?? Future.value(),
+            _companyFuture ?? Future.value(),
+          ]),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return SizedBox(
+                height: 240.h,
+                child: const Center(child: CircularProgressIndicator()),
+              );
+            }
+            return _buildUserDetailsSheetBody(context);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildUserDetailsSheetBody(BuildContext context) {
+    final isClosed = _liveIsClosed();
+    final email = _displayEmail;
+    final phone = _displayPhone;
+    final website = _displayWebsite;
+    final location = _displayLocation;
+    final hasInfo = widget.jobTitle != null ||
+        email != null ||
+        phone != null ||
+        website != null ||
+        location != null ||
+        widget.applicationStatus != null;
+    return Padding(
           padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 40.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -323,6 +493,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 style: AppText.body.copyWith(color: AppColors.success),
               ),
 
+              if (hasInfo) ...[
               SizedBox(height: 16.h),
               Container(
                 padding: EdgeInsets.all(16.r),
@@ -401,7 +572,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           ],
                         ),
                       ),
-                    if (widget.otherLocation != null) ...[
+                    if (website != null) ...[
+                      SizedBox(height: 12.h),
+                      InkWell(
+                        onTap: () => _openWebsite(website),
+                        borderRadius: BorderRadius.circular(8.r),
+                        child: Row(
+                          children: [
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedGlobal,
+                              size: 16.r,
+                              color: AppColors.muted,
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                website,
+                                style: AppText.body,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedArrowUpRight01,
+                              size: 16.r,
+                              color: AppColors.muted,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (location != null) ...[
                       SizedBox(height: 12.h),
                       Row(
                         children: [
@@ -413,7 +614,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           SizedBox(width: 12.w),
                           Expanded(
                             child: Text(
-                              widget.otherLocation!,
+                              location,
                               style: AppText.body,
                             ),
                           ),
@@ -444,6 +645,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   ],
                 ),
               ),
+              ],
 
               SizedBox(height: 24.h),
               if (ref.read(activeRoleProvider) == 'employer') ...[
@@ -533,14 +735,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             ],
           ),
         );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final async = ref.watch(chatMessagesProvider(widget.conversationId));
+    ref.listen<AsyncValue<List<ChatMessage>>>(
+      chatMessagesProvider(widget.conversationId),
+      _onMessagesChanged,
+    );
+    // ref.listen only fires on a state TRANSITION after it's registered —
+    // it never fires for a value already resolved at registration time.
+    // chatMessagesProvider isn't autoDispose, so reopening a conversation
+    // already loaded earlier this session hands back cached AsyncData with
+    // no transition at all, and the screen would silently stay scrolled to
+    // wherever it started instead of jumping to the latest message. Handle
+    // that "already resolved" case directly here, once.
+    final currentMessages = async.valueOrNull;
+    if (!_didInitialScroll && currentMessages != null) {
+      _didInitialScroll = true;
+      _prevMsgCount = currentMessages.length;
+      if (currentMessages.isNotEmpty) _jumpToBottom();
+    }
     final me = ref.watch(authProvider).valueOrNull;
     final viewerIsEmployer = ref.read(activeRoleProvider.notifier).isEmployer;
     final myConvs = viewerIsEmployer
@@ -564,6 +781,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       backgroundColor: AppColors.bg,
       appBar: UJobAppBar(
         title: '',
+        rightGutter: 88.w,
         customTitle: InkWell(
           onTap: () {
             final isEmployer = ref.read(activeRoleProvider.notifier).isEmployer;
@@ -626,48 +844,78 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             ],
           ),
         ),
-        rightWidget: IconButton(
-          icon: HugeIcon(
-            icon: HugeIcons.strokeRoundedMoreVertical,
-            color: AppColors.text,
-            size: 24.r,
-          ),
-          onPressed: _showUserDetailsSheet,
+        rightWidget: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedRefresh,
+                color: AppColors.text,
+                size: 24.r,
+              ),
+              onPressed: _refreshChat,
+            ),
+            IconButton(
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedMoreVertical,
+                color: AppColors.text,
+                size: 24.r,
+              ),
+              onPressed: _showUserDetailsSheet,
+            ),
+          ],
         ),
       ),
       body: Column(
         children: [
           Expanded(
-            child: async.when(
-              loading: () => const UJobLoading(count: 5),
-              error: (e, _) => UJobError(
-                message: l10n.failedLoadMessages,
-                onRetry: () =>
-                    ref.refresh(chatMessagesProvider(widget.conversationId)),
+            child: Stack(
+              children: [
+                RefreshIndicator(
+                  onRefresh: _refreshChat,
+                  child: async.when(
+              loading: () => ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [UJobLoading(count: 5)],
+              ),
+              error: (e, _) => ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  UJobError(
+                    message: l10n.failedLoadMessages,
+                    onRetry: () =>
+                        ref.refresh(chatMessagesProvider(widget.conversationId)),
+                  ),
+                ],
               ),
               data: (messages) {
-                if (messages.isNotEmpty && !_didInitialScroll) {
-                  _didInitialScroll = true;
-                  _jumpToBottom();
-                }
                 if (messages.isEmpty) {
-                  return Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedMessage01,
-                          size: 18.r,
-                          color: AppColors.muted,
+                  return ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(
+                        height: 300.h,
+                        child: Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedMessage01,
+                                size: 18.r,
+                                color: AppColors.muted,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(l10n.sayHello),
+                            ],
+                          ),
                         ),
-                        SizedBox(width: 8.w),
-                        Text(l10n.sayHello),
-                      ],
-                    ),
+                      ),
+                    ],
                   );
                 }
                 return ListView.builder(
                   controller: _scrollCtrl,
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.symmetric(
                     horizontal: 16.w,
                     vertical: 16.h,
@@ -695,12 +943,58 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   },
                 );
               },
+                  ),
+                ),
+                if (_showNewMessagePill)
+                  Positioned(
+                    bottom: 12.h,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() => _showNewMessagePill = false);
+                          _animateToBottom();
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 14.w,
+                            vertical: 8.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(100.r),
+                            boxShadow: AppShadow.card(),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedArrowDown01,
+                                color: AppColors.white,
+                                size: 16.r,
+                              ),
+                              SizedBox(width: 6.w),
+                              Text(
+                                l10n.newMessages,
+                                style: AppText.small.copyWith(
+                                  color: AppColors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           if (isClosed)
             _ChatStoppedBanner(isEmployer: viewerIsEmployer),
           _InputBar(
             controller: _msgCtrl,
+            focusNode: _msgFocusNode,
             sending: _sending,
             enabled: !isClosed,
             hintText: isClosed ? l10n.chatStoppedInputHint : null,
@@ -1129,23 +1423,25 @@ class _MessageBubble extends StatelessWidget {
       size: 28.r,
     );
 
-    return Row(
-      mainAxisAlignment: isRight ? MainAxisAlignment.end : MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        if (!isRight) ...[avatar, SizedBox(width: 8.w)],
-        Flexible(
-          child: Container(
-            margin: EdgeInsets.only(bottom: 8.h),
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.7,
-            ),
-            child: Column(
-              crossAxisAlignment: isRight
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                Container(
+    final avatarGap = 28.r + 8.w; // avatar size + spacing, so time row lines up under the bubble, not the avatar
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Column(
+        crossAxisAlignment:
+            isRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment:
+                isRight ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (!isRight) ...[avatar, SizedBox(width: 8.w)],
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.7,
+                  ),
                   padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
                   decoration: BoxDecoration(
                     gradient: isRight
@@ -1159,48 +1455,50 @@ class _MessageBubble extends StatelessWidget {
                           )
                         : null,
                     color: isRight ? null : AppColors.surface,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16.r),
-                      topRight: Radius.circular(16.r),
-                      bottomLeft: Radius.circular(isRight ? 16.r : 4.r),
-                      bottomRight: Radius.circular(isRight ? 4.r : 16.r),
-                    ),
+                    borderRadius: BorderRadius.circular(16.r),
                     boxShadow: AppShadow.card(),
                   ),
                   child: contentWidget,
                 ),
-                SizedBox(height: 3.h),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      time,
-                      style: AppText.caption.copyWith(color: AppColors.muted2),
-                    ),
-                    if (message.isMine) ...[
-                      SizedBox(width: 4.w),
-                      HugeIcon(
-                        icon: HugeIcons.strokeRoundedTickDouble02,
-                        size: 14.r,
-                        color: message.isRead
-                            ? AppColors.primary
-                            : AppColors.muted2,
-                      ),
-                    ],
+              ),
+              if (isRight) ...[SizedBox(width: 8.w), avatar],
+            ],
+          ),
+          SizedBox(height: 3.h),
+          Padding(
+            padding: EdgeInsets.only(
+              left: isRight ? 0 : avatarGap,
+              right: isRight ? avatarGap : 0,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  time,
+                  style: AppText.caption.copyWith(color: AppColors.muted2),
+                ),
+                if (message.isMine) ...[
+                  SizedBox(width: 4.w),
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedTickDouble02,
+                    size: 14.r,
+                    color: message.isRead
+                        ? AppColors.primary
+                        : AppColors.muted2,
+                  ),
+                ],
               ],
             ),
-          ],
-            ),
           ),
-        ),
-        if (isRight) ...[SizedBox(width: 8.w), avatar],
-      ],
+        ],
+      ),
     );
   }
 }
 
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final bool sending;
   final bool enabled;
   final String? hintText;
@@ -1213,6 +1511,7 @@ class _InputBar extends StatelessWidget {
 
   const _InputBar({
     required this.controller,
+    this.focusNode,
     required this.sending,
     this.enabled = true,
     this.hintText,
@@ -1366,6 +1665,7 @@ class _InputBar extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     controller: controller,
+                    focusNode: focusNode,
                     enabled: enabled,
                     textCapitalization: TextCapitalization.sentences,
                     style: AppText.body,

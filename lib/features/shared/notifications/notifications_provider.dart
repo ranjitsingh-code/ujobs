@@ -167,14 +167,11 @@ class NotificationsNotifier extends AsyncNotifier<NotificationState> {
 }
 
 
-final unreadNotificationCountProvider = StreamProvider<int>((ref) async* {
+// Single fetch, no polling — refreshed only by an actual trigger:
+// app resume (see EmployerShell/SeekerShell), a foreground push notification
+// arriving (see handleForegroundMessage in notification_navigation.dart), or
+// an explicit mark-as-read/delete action (ref.invalidate calls above).
+final unreadNotificationCountProvider = FutureProvider<int>((ref) {
   final service = ref.watch(notificationServiceProvider);
-  
-  // Initial fetch
-  yield await service.getUnreadCount();
-  
-  // Poll every 30 seconds
-  await for (final _ in Stream.periodic(const Duration(seconds: 30))) {
-    yield await service.getUnreadCount();
-  }
+  return service.getUnreadCount();
 });
